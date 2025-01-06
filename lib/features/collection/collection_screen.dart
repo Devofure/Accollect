@@ -2,29 +2,16 @@ import 'package:flutter/material.dart';
 import '../../../core/navigation/app_router.dart';
 
 class CollectionScreen extends StatelessWidget {
-  const CollectionScreen({super.key});
+  final String collectionKey;
+  const CollectionScreen({super.key, required this.collectionKey});
 
   @override
   Widget build(BuildContext context) {
-    // For demonstration, show a mock list of items
+    // Use `id` to fetch the collection from a backend, for example
     return Scaffold(
-      appBar: AppBar(title: const Text('Collection Details')),
-      body: ListView.builder(
-        itemCount: 5, // mock item count
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text('Item ${index + 1}'),
-            onTap: () {
-              Navigator.pushNamed(context, AppRouter.itemDetailsRoute);
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, AppRouter.addNewItemRoute);
-        },
-        child: const Icon(Icons.add),
+      appBar: AppBar(title: Text('Collection: $collectionKey')),
+      body: Center(
+        child: Text('Details for collection with ID: $collectionKey'),
       ),
     );
   }
