@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "256581349302",
+    "project_id": "accollect-1ca43",
+    "storage_bucket": "accollect-1ca43.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:256581349302:android:e9dc3007f529e9af8d9b17",
+        "android_client_info": {
+          "package_name": "com.devofure.accollect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdIzma4381QKTxvjT38odTQrxNKTri6DU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
