@@ -12,7 +12,12 @@
           "package_name": "com.devofure.accollect"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "256581349302-cu3676dq09s1ub8eg84pl3r9k4uottat.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDdIzma4381QKTxvjT38odTQrxNKTri6DU"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "256581349302-cu3676dq09s1ub8eg84pl3r9k4uottat.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
