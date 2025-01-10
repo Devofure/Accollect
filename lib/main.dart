@@ -124,10 +124,15 @@ class MyApp extends StatelessWidget {
           path: AppRouter.collectionRoute, // '/collection/:key'
           builder: (context, state) {
             final collectionKey = state.pathParameters['key'];
-            return CollectionScreen(collectionKey: collectionKey!);
+            final mockData = _getMockCollectionData(collectionKey);
+            return CollectionScreen(
+              collectionKey: collectionKey!,
+              items: mockData['items'] as List<Map<String, String>>,
+              collectionName: mockData['name'] as String,
+              collectionImageUrl: mockData['imageUrl'] as String?,
+            );
           },
         ),
-
         // Add New Item
         GoRoute(
           path: AppRouter.addNewItemRoute, // '/add-item'
@@ -144,6 +149,45 @@ class MyApp extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  // Helper Function to Generate Mock Data
+  Map<String, Object> _getMockCollectionData(String? key) {
+    if (key == '1') {
+      return {
+        'name': 'My Wines',
+        'imageUrl': 'https://via.placeholder.com/150',
+        'items': [
+          {
+            'title': 'Chateau Margaux',
+            'year': '2015',
+            'origin': 'France',
+            'description':
+                'A rich and full-bodied wine with hints of blackcurrant.',
+            'imageUrl': 'https://via.placeholder.com/80',
+          },
+          {
+            'title': 'Riesling',
+            'year': '2018',
+            'origin': 'Germany',
+            'description': 'A crisp and refreshing white wine.',
+            'imageUrl': 'https://via.placeholder.com/80',
+          },
+        ],
+      };
+    } else if (key == '2') {
+      return {
+        'name': 'LEGO Collection',
+        'imageUrl': 'https://via.placeholder.com/150',
+        'items': [],
+      };
+    } else {
+      return {
+        'name': 'Unknown Collection',
+        'imageUrl': '',
+        'items': [],
+      };
+    }
   }
 
   // -------------------------------

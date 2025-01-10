@@ -15,9 +15,7 @@ class SettingsScreen extends StatelessWidget {
         title: const Text('Settings', style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.of(context).pop(); // Go back to the previous screen
-          },
+          onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           IconButton(
