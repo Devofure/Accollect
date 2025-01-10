@@ -1,4 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider, EmailAuthProvider;
+import 'package:firebase_auth/firebase_auth.dart'
+    hide AuthProvider, EmailAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
@@ -15,6 +16,9 @@ import 'features/collection/item_details_screen.dart';
 import 'features/collection/item_model.dart';
 import 'features/home/home_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'features/settings/settings_screen.dart';
+
+// Core navigation
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,7 +53,8 @@ class MyApp extends StatelessWidget {
     return [
       EmailAuthProvider(),
       GoogleProvider(
-        clientId: '256581349302-cu3676dq09s1ub8eg84pl3r9k4uottat.apps.googleusercontent.com',
+        clientId:
+            '256581349302-cu3676dq09s1ub8eg84pl3r9k4uottat.apps.googleusercontent.com',
       ),
     ];
   }
@@ -57,8 +62,12 @@ class MyApp extends StatelessWidget {
   // -------------------------------
   // Helper: Configure Routes
   // -------------------------------
-  GoRouter _configureRouter(List<AuthProvider<AuthListener, AuthCredential>> providers) {
+  GoRouter _configureRouter(
+      List<AuthProvider<AuthListener, AuthCredential>> providers) {
     return GoRouter(
+      initialLocation: FirebaseAuth.instance.currentUser != null
+          ? AppRouter.homeRoute // If already signed in, navigate to Home
+          : AppRouter.onboardingRoute, // Otherwise, go to Onboarding
       routes: [
         // Onboarding
         GoRoute(
@@ -81,19 +90,27 @@ class MyApp extends StatelessWidget {
             },
           ),
         ),
+
         // Home
         GoRoute(
           path: AppRouter.homeRoute, // '/home'
           builder: (_, __) {
             final user = FirebaseAuth.instance.currentUser;
             final userName = user?.displayName ?? 'User';
+            final photoUrl = user?.photoURL;
             return HomeScreen(
               userName: userName,
-              photoUrl: user?.photoURL,
+              photoUrl: photoUrl,
               collections: _mockCollections(),
-            latestItems: _mockItems(),
+              latestItems: _mockItems(),
             );
           },
+        ),
+
+        // Settings
+        GoRoute(
+          path: AppRouter.settingsRoute, // '/settings'
+          builder: (_, __) => const SettingsScreen(),
         ),
 
         // Create Collection

@@ -3,6 +3,7 @@ class AppRouter {
   static const String onboardingRoute = '/';
   static const String signupRoute = '/signup';
   static const String homeRoute = '/home';
+  static const String settingsRoute = '/settings';
   static const String createCollectionRoute = '/create-collection';
   static const String addNewItemRoute = '/add-item';
   static const String collectionRoute = '/collection/:key';

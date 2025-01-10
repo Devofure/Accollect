@@ -108,15 +108,12 @@ class HomeScreen extends StatelessWidget {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: Colors.grey[700],
-                backgroundImage: photoUrl != null
-                    ? NetworkImage(
-                        photoUrl!) // Load the user's photo from the URL
-                    : null,
+                backgroundImage: photoUrl != null ? NetworkImage(photoUrl!) : null,
                 child: photoUrl == null
                     ? const Icon(
                         Icons.person,
-                  color: Colors.white,
-                  size: 20,
+                        color: Colors.white,
+                        size: 20,
                       )
                     : null, // Show default icon if no photoURL
               ),
@@ -133,7 +130,7 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
-              // TODO: Navigate to Settings screen
+              context.push(AppRouter.settingsRoute); // Use push instead of go
             },
           )
         ],
