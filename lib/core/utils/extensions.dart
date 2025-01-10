@@ -2,19 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 extension GoRouterOrderedParamsExtension on BuildContext {
-  /// Replaces all segments that start with a colon ":" in [routePath]
-  /// with consecutive values from [paramValues].
-  ///
-  /// Example:
-  ///   routePath = "/collection/:colId/data/:someId"
-  ///   paramValues = ["abc123", "def456"]
-  ///
-  ///   => final path = "/collection/abc123/data/def456"
-  void goWithParams(String routePath, List<String> paramValues) {
+  String _buildPathWithParams(String routePath, List<String> paramValues) {
     final segments = routePath.split('/');
     final placeholders = segments.where((s) => s.startsWith(':')).length;
 
-    // If you want to enforce exact matching:
     if (paramValues.length != placeholders) {
       throw ArgumentError(
         'Expected $placeholders parameters, but got ${paramValues.length}.',
@@ -29,7 +20,18 @@ extension GoRouterOrderedParamsExtension on BuildContext {
       }
     }
 
-    final finalPath = segments.join('/');
+    return segments.join('/');
+  }
+
+  /// Navigates to a route by replacing placeholders in [routePath] with [paramValues].
+  void goWithParams(String routePath, List<String> paramValues) {
+    final finalPath = _buildPathWithParams(routePath, paramValues);
     go(finalPath);
+  }
+
+  /// Pushes a new route onto the stack by replacing placeholders in [routePath] with [paramValues].
+  void pushWithParams(String routePath, List<String> paramValues) {
+    final finalPath = _buildPathWithParams(routePath, paramValues);
+    push(finalPath);
   }
 }

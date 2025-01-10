@@ -55,7 +55,7 @@ class HomeScreen extends StatelessWidget {
                     return CollectionTile(
                       collection: collection,
                       onTap: () {
-                        context.goWithParams(
+                        context.pushWithParams(
                           AppRouter.collectionRoute,
                           [collection.key],
                         );
@@ -77,7 +77,8 @@ class HomeScreen extends StatelessWidget {
                       item: item,
                       onTap: () {
                         // Example: pass an item key/ID to item details
-                        context.go('${AppRouter.itemDetailsRoute}/${item.key}');
+                        context
+                            .push('${AppRouter.itemDetailsRoute}/${item.key}');
                       },
                     );
                   },
@@ -161,7 +162,7 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             onPressed: () {
-              context.go(AppRouter.createCollectionRoute);
+              context.push(AppRouter.createCollectionRoute);
             },
             child: const Text('Create'),
           ),
