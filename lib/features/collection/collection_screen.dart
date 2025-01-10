@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/navigation/app_router.dart';
 
 class CollectionScreen extends StatelessWidget {
   final String collectionKey;
