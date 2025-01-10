@@ -102,7 +102,7 @@ class MyApp extends StatelessWidget {
               userName: userName,
               photoUrl: photoUrl,
               collections: _mockCollections(),
-              latestItems: _mockItems(),
+              latestItems: List.empty(),
             );
           },
         ),

@@ -34,11 +34,10 @@ class HomeScreen extends StatelessWidget {
           slivers: [
             // 1) Header (User + Settings)
             SliverToBoxAdapter(child: _buildHeader(context)),
-            SliverToBoxAdapter(child: const SizedBox(height: 24)),
 
             // 2) "Collections" title row
             SliverToBoxAdapter(child: _buildTitleRow(context)),
-            SliverToBoxAdapter(child: const SizedBox(height: 16)),
+            SliverToBoxAdapter(child: const SizedBox(height: 8)),
 
             // 3) If collections are empty, show empty placeholder
             if (isCollectionEmpty)
@@ -150,7 +149,7 @@ class HomeScreen extends StatelessWidget {
             'Collections',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 24,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
