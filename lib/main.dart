@@ -1,15 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider, EmailAuthProvider;
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 // Core navigation
 import 'core/navigation/app_router.dart';
-
-// Features
-import 'features/auth/signup_screen.dart';
 import 'features/collection/add_new_item_screen.dart';
 import 'features/collection/collection_model.dart';
 import 'features/collection/collection_screen.dart';
@@ -84,21 +81,19 @@ class MyApp extends StatelessWidget {
             },
           ),
         ),
-
-        // Signup
-        GoRoute(
-          path: AppRouter.signupRoute, // '/signup'
-          builder: (_, __) => const SignupScreen(),
-        ),
-
         // Home
         GoRoute(
           path: AppRouter.homeRoute, // '/home'
-          builder: (_, __) => HomeScreen(
-            userName: 'Alex Johnson',
-            collections: _mockCollections(),
+          builder: (_, __) {
+            final user = FirebaseAuth.instance.currentUser;
+            final userName = user?.displayName ?? 'User';
+            return HomeScreen(
+              userName: userName,
+              photoUrl: user?.photoURL,
+              collections: _mockCollections(),
             latestItems: _mockItems(),
-          ),
+            );
+          },
         ),
 
         // Create Collection

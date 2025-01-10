@@ -1,22 +1,24 @@
 // lib/features/home/home_screen.dart
 
-import 'package:accollect/core/utils/extensions.dart';
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:accollect/core/navigation/app_router.dart';
+import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/features/collection/collection_model.dart';
 import 'package:accollect/features/collection/item_model.dart';
 import 'package:accollect/features/home/collection_tile.dart';
 import 'package:accollect/features/home/latest_item_tile.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatelessWidget {
   final String userName;
+  final String? photoUrl;
   final List<CollectionModel> collections;
   final List<ItemModel> latestItems;
 
   const HomeScreen({
     super.key,
     required this.userName,
+    required this.photoUrl,
     required this.collections,
     required this.latestItems,
   });
@@ -102,15 +104,21 @@ class HomeScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              // Mock user avatar
+              // Display the user's profile picture if available, otherwise show a default icon
               CircleAvatar(
                 radius: 16,
                 backgroundColor: Colors.grey[700],
-                child: const Icon(
-                  Icons.person,
+                backgroundImage: photoUrl != null
+                    ? NetworkImage(
+                        photoUrl!) // Load the user's photo from the URL
+                    : null,
+                child: photoUrl == null
+                    ? const Icon(
+                        Icons.person,
                   color: Colors.white,
                   size: 20,
-                ),
+                      )
+                    : null, // Show default icon if no photoURL
               ),
               const SizedBox(width: 8),
               Text(
