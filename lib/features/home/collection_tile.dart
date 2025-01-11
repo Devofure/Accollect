@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:accollect/features/collection/collection_model.dart';
+
+import 'collection_ui_model.dart';
 
 class CollectionTile extends StatelessWidget {
-  final CollectionModel collection;
-  final VoidCallback? onTap;
+  final CollectionUIModel collection;
+  final VoidCallback onTap;
 
   const CollectionTile({
     super.key,
     required this.collection,
-    this.onTap,
+    required this.onTap,
   });
 
   @override
@@ -24,18 +25,23 @@ class CollectionTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Collection image (could be rectangular, or circle, etc.)
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                'assets/images/collection_image.png',
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-              ),
+              child: collection.imageUrl != null
+                  ? Image.network(
+                      collection.imageUrl!,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      width: 60,
+                      height: 60,
+                      color: Colors.grey,
+                      child: const Icon(Icons.image, color: Colors.white),
+                    ),
             ),
             const SizedBox(width: 12),
-            // Collection info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

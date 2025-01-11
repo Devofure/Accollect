@@ -18,8 +18,6 @@ import 'features/home/home_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/settings/settings_screen.dart';
 
-// Core navigation
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -47,7 +45,7 @@ class MyApp extends StatelessWidget {
   }
 
   // -------------------------------
-  // Helper: Authentication Providers
+  // Authentication Providers
   // -------------------------------
   List<AuthProvider<AuthListener, AuthCredential>> _authProviders() {
     return [
@@ -60,7 +58,7 @@ class MyApp extends StatelessWidget {
   }
 
   // -------------------------------
-  // Helper: Configure Routes
+  // Configure Routes
   // -------------------------------
   GoRouter _configureRouter(
       List<AuthProvider<AuthListener, AuthCredential>> providers) {
@@ -71,7 +69,7 @@ class MyApp extends StatelessWidget {
       routes: [
         // Onboarding
         GoRoute(
-          path: AppRouter.onboardingRoute, // '/'
+          path: AppRouter.onboardingRoute,
           builder: (_, __) => const OnboardingScreen(),
         ),
 
@@ -93,38 +91,31 @@ class MyApp extends StatelessWidget {
 
         // Home
         GoRoute(
-          path: AppRouter.homeRoute, // '/home'
+          path: AppRouter.homeRoute,
           builder: (_, __) {
-            final user = FirebaseAuth.instance.currentUser;
-            final userName = user?.displayName ?? 'User';
-            final photoUrl = user?.photoURL;
-            return HomeScreen(
-              userName: userName,
-              photoUrl: photoUrl,
-              collections: _mockCollections(),
-              latestItems: List.empty(),
-            );
+            return HomeScreen();
           },
         ),
 
         // Settings
         GoRoute(
-          path: AppRouter.settingsRoute, // '/settings'
+          path: AppRouter.settingsRoute,
           builder: (_, __) => const SettingsScreen(),
         ),
 
         // Create Collection
         GoRoute(
-          path: AppRouter.createCollectionRoute, // '/create-collection'
+          path: AppRouter.createCollectionRoute,
           builder: (_, __) => const CreateCollectionScreen(),
         ),
 
         // Collection Details
         GoRoute(
-          path: AppRouter.collectionRoute, // '/collection/:key'
+          path: AppRouter.collectionRoute,
           builder: (context, state) {
             final collectionKey = state.pathParameters['key'];
             final mockData = _getMockCollectionData(collectionKey);
+
             return CollectionScreen(
               collectionKey: collectionKey!,
               items: mockData['items'] as List<Map<String, String>>,
@@ -133,61 +124,26 @@ class MyApp extends StatelessWidget {
             );
           },
         ),
+
         // Add New Item
         GoRoute(
-          path: AppRouter.addNewItemRoute, // '/add-item'
+          path: AppRouter.addNewItemRoute,
           builder: (_, __) => const AddNewItemScreen(),
         ),
 
         // Item Details
         GoRoute(
-          path: AppRouter.itemDetailsRoute, // '/item-details/:key'
+          path: AppRouter.itemDetailsRoute,
           builder: (context, state) {
             final itemKey = state.pathParameters['key'];
-            return ItemDetailsScreen(itemId: itemKey!);
+
+            return ItemDetailsScreen(
+              itemId: itemKey!,
+            );
           },
         ),
       ],
     );
-  }
-
-  // Helper Function to Generate Mock Data
-  Map<String, Object> _getMockCollectionData(String? key) {
-    if (key == '1') {
-      return {
-        'name': 'My Wines',
-        'imageUrl': 'https://via.placeholder.com/150',
-        'items': [
-          {
-            'title': 'Chateau Margaux',
-            'year': '2015',
-            'origin': 'France',
-            'description':
-                'A rich and full-bodied wine with hints of blackcurrant.',
-            'imageUrl': 'https://via.placeholder.com/80',
-          },
-          {
-            'title': 'Riesling',
-            'year': '2018',
-            'origin': 'Germany',
-            'description': 'A crisp and refreshing white wine.',
-            'imageUrl': 'https://via.placeholder.com/80',
-          },
-        ],
-      };
-    } else if (key == '2') {
-      return {
-        'name': 'LEGO Collection',
-        'imageUrl': 'https://via.placeholder.com/150',
-        'items': [],
-      };
-    } else {
-      return {
-        'name': 'Unknown Collection',
-        'imageUrl': '',
-        'items': [],
-      };
-    }
   }
 
   // -------------------------------
@@ -240,6 +196,46 @@ class MyApp extends StatelessWidget {
         addedOn: DateTime(2023, 10, 1),
       ),
     ];
+  }
+
+  // -------------------------------
+  // Mock Data for Collection Screen
+  // -------------------------------
+  Map<String, Object> _getMockCollectionData(String? key) {
+    if (key == '1') {
+      return {
+        'name': 'My Wines',
+        'imageUrl': 'https://via.placeholder.com/150',
+        'items': [
+          {
+            'title': 'Chateau Margaux',
+            'year': '2015',
+            'origin': 'France',
+            'description': 'A rich and full-bodied wine.',
+            'imageUrl': 'https://via.placeholder.com/80',
+          },
+          {
+            'title': 'Riesling',
+            'year': '2018',
+            'origin': 'Germany',
+            'description': 'A crisp and refreshing white wine.',
+            'imageUrl': 'https://via.placeholder.com/80',
+          },
+        ],
+      };
+    } else if (key == '2') {
+      return {
+        'name': 'LEGO Collection',
+        'imageUrl': 'https://via.placeholder.com/150',
+        'items': [],
+      };
+    } else {
+      return {
+        'name': 'Unknown Collection',
+        'imageUrl': '',
+        'items': [],
+      };
+    }
   }
 }
 

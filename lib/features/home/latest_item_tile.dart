@@ -1,9 +1,9 @@
+import 'package:accollect/features/home/ui_model.dart';
 import 'package:flutter/material.dart';
-import 'package:accollect/features/collection/item_model.dart';
 import 'package:intl/intl.dart';
 
 class LatestItemTile extends StatelessWidget {
-  final ItemModel item;
+  final LatestItemUIModel item;
   final VoidCallback? onTap;
 
   const LatestItemTile({
@@ -25,11 +25,12 @@ class LatestItemTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            ClipRRect(
+            if (item.imageUrl != null)
+              ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                'assets/images/collection_image.png',
-                width: 80,
+                child: Image.network(
+                  item.imageUrl!,
+                  width: 80,
                 height: 80,
                 fit: BoxFit.cover,
               ),

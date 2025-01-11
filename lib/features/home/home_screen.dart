@@ -1,91 +1,102 @@
-// lib/features/home/home_screen.dart
-
 import 'package:accollect/core/navigation/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
-import 'package:accollect/features/collection/collection_model.dart';
-import 'package:accollect/features/collection/item_model.dart';
 import 'package:accollect/features/home/collection_tile.dart';
+import 'package:accollect/features/home/home_view_model.dart';
 import 'package:accollect/features/home/latest_item_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatelessWidget {
-  final String userName;
-  final String? photoUrl;
-  final List<CollectionModel> collections;
-  final List<ItemModel> latestItems;
-
-  const HomeScreen({
-    super.key,
-    required this.userName,
-    required this.photoUrl,
-    required this.collections,
-    required this.latestItems,
-  });
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isCollectionEmpty = collections.isEmpty;
+    return ChangeNotifierProvider(
+      create: (_) => HomeViewModel(),
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Consumer<HomeViewModel>(
+            builder: (context, viewModel, child) {
+              if (viewModel.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // 1) Header (User + Settings)
-            SliverToBoxAdapter(child: _buildHeader(context)),
+              if (viewModel.errorMessage != null) {
+                return Center(
+                  child: Text(
+                    viewModel.errorMessage!,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                );
+              }
 
-            // 2) "Collections" title row
-            SliverToBoxAdapter(child: _buildTitleRow(context)),
-            SliverToBoxAdapter(child: const SizedBox(height: 8)),
+              final collections = viewModel.collections;
+              final latestItems = viewModel.latestItems;
 
-            // 3) If collections are empty, show empty placeholder
-            if (isCollectionEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: _buildEmptyState(),
-              )
-            else ...[
-              // 4) SliverList of collections
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final collection = collections[index];
-                    return CollectionTile(
-                      collection: collection,
-                      onTap: () {
-                        context.pushWithParams(
-                          AppRouter.collectionRoute,
-                          [collection.key],
-                        );
-                      },
-                    );
-                  },
-                  childCount: collections.length,
-                ),
-              ),
+              final isCollectionEmpty = collections.isEmpty;
 
-              SliverToBoxAdapter(child: const SizedBox(height: 24)),
-              SliverToBoxAdapter(child: _buildLatestAddedTitle()),
-              SliverToBoxAdapter(child: const SizedBox(height: 8)),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final item = latestItems[index];
-                    return LatestItemTile(
-                      item: item,
-                      onTap: () {
-                        // Example: pass an item key/ID to item details
-                        context
-                            .push('${AppRouter.itemDetailsRoute}/${item.key}');
-                      },
-                    );
-                  },
-                  childCount: latestItems.length,
-                ),
-              ),
-            ],
-          ],
+              return CustomScrollView(
+                slivers: [
+                  // 1) Header (User + Settings)
+                  SliverToBoxAdapter(child: _buildHeader(context)),
+
+                  // 2) "Collections" title row
+                  SliverToBoxAdapter(child: _buildTitleRow(context)),
+                  SliverToBoxAdapter(child: const SizedBox(height: 8)),
+
+                  // 3) If collections are empty, show empty placeholder
+                  if (isCollectionEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: _buildEmptyState(),
+                    )
+                  else ...[
+                    // 4) SliverList of collections
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final collection = collections[index];
+                          return CollectionTile(
+                            collection: collection,
+                            onTap: () {
+                              context.pushWithParams(
+                                AppRouter.collectionRoute,
+                                [collection.id],
+                              );
+                            },
+                          );
+                        },
+                        childCount: collections.length,
+                      ),
+                    ),
+
+                    SliverToBoxAdapter(child: const SizedBox(height: 24)),
+                      SliverToBoxAdapter(child: _buildLatestAddedTitle()),
+                      SliverToBoxAdapter(child: const SizedBox(height: 8)),
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                            final item = latestItems[index];
+                            return LatestItemTile(
+                              item: item,
+                              onTap: () {
+                                context.pushWithParams(
+                                  AppRouter.itemDetailsRoute,
+                                  [item.id],
+                                );
+                              },
+                            );
+                          },
+                          childCount: latestItems.length,
+                        ),
+                      ),
+                    ],
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -95,8 +106,10 @@ class HomeScreen extends StatelessWidget {
   // UI Sections
   // ----------------------------------------------------------------------------
 
-  /// Top user row: user avatar + name, and settings icon
   Widget _buildHeader(BuildContext context) {
+    final viewModel = Provider.of<HomeViewModel>(context, listen: false);
+    final currentUser = viewModel.currentUser;
+    final photoUrl = currentUser?.photoURL;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -104,42 +117,33 @@ class HomeScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              // Display the user's profile picture if available, otherwise show a default icon
               CircleAvatar(
                 radius: 16,
                 backgroundColor: Colors.grey[700],
                 backgroundImage:
-                    photoUrl != null ? NetworkImage(photoUrl!) : null,
+                    photoUrl != null ? NetworkImage(photoUrl) : null,
                 child: photoUrl == null
-                    ? const Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 20,
-                      )
-                    : null, // Show default icon if no photoURL
+                    ? const Icon(Icons.person, color: Colors.white, size: 20)
+                    : null,
               ),
               const SizedBox(width: 8),
               Text(
-                userName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
+                currentUser?.displayName ?? 'User',
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ],
           ),
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
-              context.push(AppRouter.settingsRoute); // Use push instead of go
+              context.push(AppRouter.settingsRoute);
             },
-          )
+          ),
         ],
       ),
     );
   }
 
-  /// "Collections" title + "Create" button
   Widget _buildTitleRow(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -171,7 +175,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  /// Empty state if there are no collections
   Widget _buildEmptyState() {
     return Center(
       child: Column(
@@ -184,43 +187,30 @@ class HomeScreen extends StatelessWidget {
               color: Colors.grey[700],
               shape: BoxShape.circle,
             ),
-            child: const Center(
-              child: Icon(
-                Icons.inbox,
-                size: 40,
-                color: Colors.white,
-              ),
-            ),
+            child: const Icon(Icons.inbox, size: 40, color: Colors.white),
           ),
           const SizedBox(height: 16),
           const Text(
             'No Collections Yet',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-            ),
+            style: TextStyle(color: Colors.white, fontSize: 16),
           ),
           const SizedBox(height: 8),
           const Text(
             'Start adding your collections by\n'
             'clicking the "Create" button above.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey, fontSize: 14),
           ),
         ],
       ),
     );
   }
 
-  /// Title for "Latest Added Item" section
   Widget _buildLatestAddedTitle() {
     return const Padding(
       padding: EdgeInsets.symmetric(horizontal: 16),
       child: Text(
-        'Latest Added Item',
+        'Latest Added Items',
         style: TextStyle(
           color: Colors.white,
           fontSize: 18,
