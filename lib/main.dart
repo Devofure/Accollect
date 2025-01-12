@@ -1,3 +1,5 @@
+import 'package:accollect/features/collection/add_or_select_item_screen.dart';
+import 'package:accollect/features/collection/data/ItemRepository.dart';
 import 'package:accollect/features/collection/data/collection_repository.dart';
 import 'package:accollect/features/collection/data/create_collection_repository.dart';
 import 'package:accollect/features/home/home_view_model.dart';
@@ -11,7 +13,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'core/navigation/app_router.dart';
-import 'features/collection/add_new_item_screen.dart';
 import 'features/collection/collection_screen.dart';
 import 'features/collection/create_collection_screen.dart';
 import 'features/collection/item_details_screen.dart';
@@ -125,8 +126,16 @@ class MyApp extends StatelessWidget {
 
         // Add New Item
         GoRoute(
-          path: AppRouter.addNewItemRoute,
-          builder: (_, __) => const AddNewItemScreen(),
+          path: AppRouter.addOrSelectItemRoute,
+          builder: (context, state) {
+            final collectionKey = state.pathParameters['key'];
+            final collectionName = state.pathParameters['name'];
+            return AddOrSelectItemScreen(
+              collectionName: collectionName!,
+              collectionKey: collectionKey!,
+              repository: ItemRepository(),
+            );
+          },
         ),
 
         // Item Details

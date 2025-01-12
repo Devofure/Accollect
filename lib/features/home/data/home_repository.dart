@@ -21,7 +21,7 @@ class HomeRepository implements IHomeRepository {
   @override
   Future<List<ItemUIModel>> fetchLatestItems() async {
     return Future.delayed(const Duration(milliseconds: 500), () {
-      final allItems = _db.allItems.values.expand((items) => items).toList();
+      final allItems = _db.getAllItems();
       allItems.sort((a, b) => b.addedOn.compareTo(a.addedOn));
       return allItems.take(5).toList();
     });

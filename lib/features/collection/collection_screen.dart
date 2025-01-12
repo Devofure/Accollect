@@ -1,4 +1,5 @@
 import 'package:accollect/core/navigation/app_router.dart';
+import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/features/collection/data/collection_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -79,7 +80,10 @@ class CollectionScreen extends StatelessWidget {
                             return ItemTile(
                               item: item,
                               onTap: () {
-                                // TODO: Navigate to item details
+                                context.pushWithParams(
+                                    AppRouter.itemDetailsRoute, [
+                                  item.key,
+                                ]);
                               },
                             );
                           },
@@ -91,12 +95,19 @@ class CollectionScreen extends StatelessWidget {
             },
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: Colors.white,
-          onPressed: () {
-            // TODO: Navigate to Add New Item screen
+        floatingActionButton: Consumer<CollectionViewModel>(
+          builder: (context, viewModel, _) {
+            return FloatingActionButton(
+              backgroundColor: Colors.white,
+              onPressed: () {
+                context.pushWithParams(
+                  AppRouter.addOrSelectItemRoute,
+                  [collectionKey, viewModel.collectionName],
+                );
+              },
+              child: const Icon(Icons.add, color: Colors.black),
+            );
           },
-          child: const Icon(Icons.add, color: Colors.black),
         ),
       ),
     );

@@ -1,10 +1,9 @@
+import 'package:accollect/core/models/collection_ui_model.dart';
+import 'package:accollect/features/collection/data/collection_repository.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/models/collection_ui_model.dart';
-import 'data/create_collection_repository.dart';
-
 class CreateCollectionViewModel extends ChangeNotifier {
-  final ICreateCollectionRepository repository;
+  final ICollectionRepository repository;
 
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   String? collectionName;

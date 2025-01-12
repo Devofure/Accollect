@@ -1,13 +1,13 @@
 import 'package:accollect/core/navigation/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
+import 'package:accollect/features/collection/data/collection_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'create_collection_view_model.dart';
-import 'data/create_collection_repository.dart';
 
 class CreateCollectionScreen extends StatelessWidget {
-  final ICreateCollectionRepository repository;
+  final ICollectionRepository repository;
 
   const CreateCollectionScreen({super.key, required this.repository});
 

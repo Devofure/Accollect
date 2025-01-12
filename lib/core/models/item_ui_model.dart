@@ -1,15 +1,20 @@
 class ItemUIModel {
   final String key;
+  final String? collectionKey;
   final String title;
+  final String category;
+  final String description;
   final String? imageUrl;
   final DateTime addedOn;
 
   ItemUIModel({
     required this.key,
+    required this.collectionKey,
     required this.title,
+    required this.category,
     required this.imageUrl,
     required this.addedOn,
-    required String description,
+    required this.description,
   });
 
   // Factory to convert from domain entity
@@ -18,9 +23,11 @@ class ItemUIModel {
       key: entity.key,
       // Adjust based on your domain entity
       title: entity.title,
+      category: entity.category,
       imageUrl: entity.imageUrl,
       addedOn: entity.addedOn,
-      description: '',
+      description: entity.description,
+      collectionKey: entity.collectionKey,
     );
   }
 
@@ -29,9 +36,11 @@ class ItemUIModel {
     return ItemUIModel(
       key: map['id'],
       title: map['title'],
+      category: map['category'],
       imageUrl: map['imageUrl'],
       addedOn: map['addedOn'],
-      description: '',
+      description: map['description'],
+      collectionKey: map['collectionKey'],
     );
   }
 
@@ -43,5 +52,25 @@ class ItemUIModel {
       'imageUrl': imageUrl,
       'addedOn': addedOn.toIso8601String(),
     };
+  }
+
+  ItemUIModel copyWith({
+    String? key,
+    String? collectionKey,
+    String? title,
+    String? imageUrl,
+    String? category,
+    DateTime? addedOn,
+    String? description,
+  }) {
+    return ItemUIModel(
+      key: key ?? this.key,
+      collectionKey: collectionKey ?? this.collectionKey,
+      title: title ?? this.title,
+      imageUrl: imageUrl ?? this.imageUrl,
+      addedOn: addedOn ?? this.addedOn,
+      description: description ?? this.description,
+      category: category ?? this.category,
+    );
   }
 }
