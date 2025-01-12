@@ -1,24 +1,14 @@
-# Project Guidelines and Architecture
+# ACCollect
 
-## Table of Contents
+A Flutter application for managing and tracking collections like wine, LEGO, and Funko Pops. Built
+with modular architecture for scalability and maintainability.
 
-1. [Introduction](#introduction)
-2. [Folder Structure](#folder-structure)
-3. [Architecture](#architecture)
-4. [Guidelines](#guidelines)
-   - [State Management](#state-management)
-   - [UI Development](#ui-development)
-   - [Data Handling](#data-handling)
-5. [Examples](#examples)
+## Features
 
----
-
-## Introduction
-
-This project is a collection management app aimed at helping users organize and track various
-collections, such as wines, Funko Pops, and LEGO. The app is built using the **MVVM (
-Model-View-ViewModel)** architecture and **Provider** for state management. The design emphasizes
-modularity, scalability, and ease of maintenance.
+- **Manage Collections**: Create, view, and manage collections.
+- **Add Items**: Add new items or associate existing items with collections.
+- **Onboarding**: User-friendly onboarding screens.
+- **In-Memory Database**: Simulates backend storage for local development and testing.
 
 ---
 
@@ -26,91 +16,107 @@ modularity, scalability, and ease of maintenance.
 
 ```plaintext
 lib/
-├── core/                       # Core modules shared across the app
-│   ├── models/                 # Shared UI models
+├── core/                       # Core utilities and shared modules
+│   ├── data/                   # Shared repositories and in-memory database
+│   │   ├── collection_repository.dart
+│   │   ├── in_memory_database.dart
+│   │   ├── item_repository.dart
+│   ├── models/                 # Shared data models
 │   │   ├── collection_ui_model.dart
 │   │   ├── item_ui_model.dart
-│   ├── navigation/             # Navigation-related files
+│   ├── navigation/             # App-wide navigation setup
 │   │   ├── app_router.dart
-│   ├── styles/                 # Theme and styling files
-│   │   ├── app_themes.dart
-│   ├── utils/                  # Utility extensions and constants
-│   │   ├── constants.dart
-│   │   ├── extensions.dart
+│   ├── styles/                 # App-wide theme and styles
+│   ├── utils/                  # Extensions and constants
 │   ├── widgets/                # Reusable widgets
 │       ├── collection_tile.dart
 │       ├── custom_button.dart
 │       ├── empty_state.dart
 │       ├── filters.dart
 │       ├── item_tile.dart
-├── features/                   # Feature-specific code
-│   ├── home/                   # Home feature
-│   │   ├── data/               # Data layer for home feature
-│   │   │   ├── home_repository.dart
-│   │   ├── home_screen.dart    # Main Home Screen widget
-│   │   ├── home_view_model.dart # ViewModel for Home Screen
+├── features/                   # Feature-specific modules
 │   ├── collection/             # Collection-related features
+│   │   ├── collection_screen.dart
+│   │   ├── collection_view_model.dart
 │   │   ├── create_collection_screen.dart
-│   │   ├── collection_ui_model.dart
-│   │   ├── collection_repository.dart
-│   ├── auth/                   # Authentication-related features
-│   ├── onboarding/             # Onboarding screens
-│   ├── settings/               # Settings feature
-├── main.dart                   # Entry point of the application
+│   │   ├── create_collection_view_model.dart
+│   ├── home/                   # Home screen logic
+│   │   ├── home_screen.dart
+│   │   ├── home_view_model.dart
+│   ├── item/                   # Item-related logic
+│   │   ├── add_new_item_screen.dart
+│   │   ├── add_or_select_item_screen.dart
+│   │   ├── add_or_select_item_view_model.dart
+│   │   ├── item_details_screen.dart
+│   ├── onboarding/             # Onboarding logic
+│       ├── onboarding_screen.dart
+├── main.dart                   # Entry point of the app
 ```
 
 ---
 
-## Architecture
+## Key Features of the Architecture
 
-The app follows the **MVVM (Model-View-ViewModel)** architecture to ensure a clean separation of
-concerns. Each feature includes its own View, ViewModel, and Repository.
+1. **Core Module:**
+   - Contains reusable components like widgets, data models, and utility functions.
+   - Includes an `InMemoryDatabase` for local storage simulation.
+   - Shared repositories like `CollectionRepository` and `ItemRepository` reside here.
 
-### Components
+2. **Feature Modules:**
+   - Each feature (e.g., `collection`, `home`, `item`) is self-contained with its screens, view
+     models, and other logic.
+   - Clear separation ensures features can evolve independently.
 
-1. **View (UI):**
-   - Widgets like `HomeScreen` or `CollectionScreen`.
-   - Responsible for rendering the UI and handling user interactions.
+3. **Navigation:**
+   - Centralized in `app_router.dart` for maintainable route management using `go_router`.
 
-2. **ViewModel:**
-   - Manages the state of the UI using `ChangeNotifier`.
-   - Handles business logic and communicates with the Repository.
-
-3. **Model:**
-   - Represents UI data or domain entities (e.g., `CollectionUIModel`).
-
-4. **Repository:**
-   - Abstracts data handling, whether from local storage, APIs, or Firebase.
-   - Provides a clean interface for ViewModels to fetch data.
+4. **Reusable Components:**
+   - Widgets such as `collection_tile.dart`, `item_tile.dart`, and `empty_state.dart` promote UI
+     consistency.
 
 ---
 
-## Guidelines
+## How to Run
 
-### State Management
+### Prerequisites
 
-- Use **Provider** for dependency injection and state management.
-- Each feature should have its own `ChangeNotifier` for managing state.
-- Avoid business logic in the UI layer; delegate it to the ViewModel.
+- Install Flutter SDK.
+- Run `flutter pub get` to install dependencies.
 
-### UI Development
+### Run the App
 
-- Keep UI widgets focused and reusable.
-- Place reusable widgets in `core/widgets/` and feature-specific widgets in
-  `features/{feature_name}/widgets/`.
-- Avoid embedding logic in UI components.
+```bash
+flutter run
+```
 
-### Data Handling
+### Run Tests
 
-- Use repositories for all data access.
-- Define repository interfaces (e.g., `IHomeRepository`) for flexibility and testing.
-- Implement local repositories (e.g., `LocalHomeRepository`) for mock data during development.
+```bash
+flutter test
+```
+
+---
+
+## Continuous Integration (CI)
+
+This project uses GitHub Actions for CI. On every push to the `master` branch:
+
+1. The app is analyzed using `flutter analyze`.
+2. Tests are executed using `flutter test`.
+
+---
+
+## Future Improvements
+
+- **Persistent Storage:** Replace the `InMemoryDatabase` with Firebase or another backend.
+- **Authentication:** Add user login to associate collections with specific users.
+- **UI Enhancements:** Introduce animations and transitions for a better user experience.
 
 ---
 
 ## Examples
 
-### 1. ViewModel Example: `HomeViewModel`
+### ViewModel Example: `HomeViewModel`
 
 ```dart
 import 'package:flutter/foundation.dart';
@@ -152,7 +158,7 @@ class HomeViewModel extends ChangeNotifier {
 }
 ```
 
-### 2. Repository Example: `HomeRepository`
+### Repository Example: `HomeRepository`
 
 ```dart
 import 'package:accollect/core/models/collection_ui_model.dart';
@@ -215,7 +221,7 @@ class HomeRepository implements IHomeRepository {
 }
 ```
 
-### 3. UI Example: `HomeScreen`
+### UI Example: `HomeScreen`
 
 ```dart
 import 'package:flutter/material.dart';
@@ -230,43 +236,43 @@ class HomeScreen extends StatelessWidget {
 
    const HomeScreen({super.key, required this.repository});
 
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-       create: (_) => HomeViewModel(repository: repository),
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: SafeArea(
-          child: Consumer<HomeViewModel>(
-            builder: (context, viewModel, _) {
-              if (viewModel.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
+   @override
+   Widget build(BuildContext context) {
+      return ChangeNotifierProvider(
+         create: (_) => HomeViewModel(repository: repository),
+         child: Scaffold(
+            backgroundColor: Colors.black,
+            body: SafeArea(
+               child: Consumer<HomeViewModel>(
+                  builder: (context, viewModel, _) {
+                     if (viewModel.isLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                     }
 
-              if (viewModel.errorMessage != null) {
-                 return Center(
-                    child: Text(
-                       viewModel.errorMessage!,
-                       style: const TextStyle(color: Colors.white),
-                    ),
-                 );
-              }
+                     if (viewModel.errorMessage != null) {
+                        return Center(
+                           child: Text(
+                              viewModel.errorMessage!,
+                              style: const TextStyle(color: Colors.white),
+                           ),
+                        );
+                     }
 
-              final collections = viewModel.collections;
-              final latestItems = viewModel.latestItems;
+                     final collections = viewModel.collections;
+                     final latestItems = viewModel.latestItems;
 
-              return ListView.builder(
-                 itemCount: collections.length,
-                itemBuilder: (context, index) {
-                   return CollectionTile(collection: collections[index]);
-                },
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
+                     return ListView.builder(
+                        itemCount: collections.length,
+                        itemBuilder: (context, index) {
+                           return CollectionTile(collection: collections[index]);
+                        },
+                     );
+                  },
+               ),
+            ),
+         ),
+      );
+   }
 }
 ```
 
