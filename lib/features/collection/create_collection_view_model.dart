@@ -36,7 +36,7 @@ class CreateCollectionViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> saveCollection() async {
+  Future<String?> saveCollection() async {
     if (formKey.currentState!.validate()) {
       formKey.currentState!.save();
 
@@ -54,10 +54,13 @@ class CreateCollectionViewModel extends ChangeNotifier {
       try {
         await repository.createCollection(newCollection);
         debugPrint('Collection successfully created: ${newCollection.name}');
+        return newCollection.key; // Return the key
       } catch (e) {
         debugPrint('Failed to create collection: $e');
+        return null;
       }
     }
+    return null;
   }
 
   String? validateCollectionName(String? value) {

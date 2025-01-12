@@ -1,4 +1,3 @@
-import 'package:accollect/core/models/item_ui_model.dart';
 import 'package:accollect/features/collection/data/collection_repository.dart';
 import 'package:accollect/features/collection/data/create_collection_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart'
@@ -138,58 +137,6 @@ class MyApp extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  List<ItemUIModel> _mockItems() {
-    return [
-      ItemUIModel(
-        key: '1',
-        title: 'Chateau Margaux',
-        imageUrl: 'https://via.placeholder.com/80',
-        addedOn: DateTime.now(),
-        description: '',
-      ),
-    ];
-  }
-
-  // -------------------------------
-  // Mock Data for Collection Screen
-  // -------------------------------
-  Map<String, Object> _getMockCollectionData(String? key) {
-    if (key == '1') {
-      return {
-        'name': 'My Wines',
-        'imageUrl': 'https://via.placeholder.com/150',
-        'items': [
-          {
-            'title': 'Chateau Margaux',
-            'year': '2015',
-            'origin': 'France',
-            'description': 'A rich and full-bodied wine.',
-            'imageUrl': 'https://via.placeholder.com/80',
-          },
-          {
-            'title': 'Riesling',
-            'year': '2018',
-            'origin': 'Germany',
-            'description': 'A crisp and refreshing white wine.',
-            'imageUrl': 'https://via.placeholder.com/80',
-          },
-        ],
-      };
-    } else if (key == '2') {
-      return {
-        'name': 'LEGO Collection',
-        'imageUrl': 'https://via.placeholder.com/150',
-        'items': [],
-      };
-    } else {
-      return {
-        'name': 'Unknown Collection',
-        'imageUrl': '',
-        'items': [],
-      };
-    }
   }
 }
 

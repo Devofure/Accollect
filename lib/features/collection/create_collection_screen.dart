@@ -1,15 +1,15 @@
-import 'package:accollect/features/collection/create_collection_view_model.dart';
-import 'package:accollect/features/collection/data/create_collection_repository.dart';
+import 'package:accollect/core/navigation/app_router.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
+import 'create_collection_view_model.dart';
+import 'data/create_collection_repository.dart';
 
 class CreateCollectionScreen extends StatelessWidget {
   final ICreateCollectionRepository repository;
 
-  const CreateCollectionScreen({
-    super.key,
-    required this.repository,
-  });
+  const CreateCollectionScreen({super.key, required this.repository});
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +125,16 @@ class CreateCollectionScreen extends StatelessWidget {
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
-                            onPressed: viewModel.saveCollection,
+                            onPressed: () async {
+                              final newCollectionKey =
+                                  await viewModel.saveCollection();
+                              if (newCollectionKey != null && context.mounted) {
+                                context.goNamed(
+                                  AppRouter.collectionRoute,
+                                  pathParameters: {'key': newCollectionKey},
+                                );
+                              }
+                            },
                             child: const Text('Save Collection'),
                           ),
                         ),
