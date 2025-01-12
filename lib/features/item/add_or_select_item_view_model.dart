@@ -1,5 +1,5 @@
+import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/core/models/item_ui_model.dart';
-import 'package:accollect/features/collection/data/item_repository.dart';
 import 'package:flutter/foundation.dart';
 
 class ItemViewModel extends ChangeNotifier {

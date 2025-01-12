@@ -1,8 +1,7 @@
-import 'package:accollect/features/collection/add_or_select_item_screen.dart';
-import 'package:accollect/features/collection/data/ItemRepository.dart';
-import 'package:accollect/features/collection/data/collection_repository.dart';
-import 'package:accollect/features/collection/data/create_collection_repository.dart';
+import 'package:accollect/core/data/collection_repository.dart';
+import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/features/home/home_view_model.dart';
+import 'package:accollect/features/item/add_or_select_item_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider, EmailAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
@@ -15,9 +14,8 @@ import 'package:provider/provider.dart';
 import 'core/navigation/app_router.dart';
 import 'features/collection/collection_screen.dart';
 import 'features/collection/create_collection_screen.dart';
-import 'features/collection/item_details_screen.dart';
-import 'features/home/data/home_repository.dart';
 import 'features/home/home_screen.dart';
+import 'features/item/item_details_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/settings/settings_screen.dart';
 
@@ -93,7 +91,9 @@ class MyApp extends StatelessWidget {
           path: AppRouter.homeRoute,
           builder: (context, state) {
             return ChangeNotifierProvider(
-              create: (_) => HomeViewModel(repository: HomeRepository()),
+              create: (_) => HomeViewModel(
+                  collectionRepository: CollectionRepository(),
+                  itemRepository: ItemRepository()),
               child: const HomeScreen(),
             );
           },
@@ -108,7 +108,7 @@ class MyApp extends StatelessWidget {
         GoRoute(
           path: AppRouter.createCollectionRoute,
           builder: (_, __) => CreateCollectionScreen(
-            repository: CreateCollectionRepository(),
+            repository: CollectionRepository(),
           ),
         ),
 
@@ -119,7 +119,8 @@ class MyApp extends StatelessWidget {
             final collectionKey = state.pathParameters['key'];
             return CollectionScreen(
               collectionKey: collectionKey!,
-              repository: CollectionRepository(),
+              collectionRepository: CollectionRepository(),
+              itemRepository: ItemRepository(),
             );
           },
         ),

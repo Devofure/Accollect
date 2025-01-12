@@ -1,11 +1,12 @@
 // CollectionViewModel
+import 'package:accollect/core/data/collection_repository.dart';
+import 'package:accollect/core/data/item_repository.dart';
+import 'package:accollect/core/models/item_ui_model.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../core/models/item_ui_model.dart';
-import 'data/collection_repository.dart';
-
 class CollectionViewModel extends ChangeNotifier {
-  final ICollectionRepository repository;
+  final ICollectionRepository collectionRepository;
+  final IItemRepository itemRepository;
   final String collectionKey;
 
   String collectionName = '';
@@ -14,7 +15,11 @@ class CollectionViewModel extends ChangeNotifier {
   bool isLoading = true;
   String? errorMessage;
 
-  CollectionViewModel({required this.repository, required this.collectionKey}) {
+  CollectionViewModel({
+    required this.collectionKey,
+    required this.collectionRepository,
+    required this.itemRepository,
+  }) {
     _loadData();
   }
 
@@ -24,10 +29,11 @@ class CollectionViewModel extends ChangeNotifier {
       errorMessage = null;
       notifyListeners();
 
-      final collection = await repository.fetchCollectionDetails(collectionKey);
+      final collection =
+          await collectionRepository.fetchCollectionDetails(collectionKey);
       collectionName = collection.name;
       collectionImageUrl = collection.imageUrl;
-      items = await repository.fetchItems(collectionKey);
+      items = await itemRepository.fetchItems(collectionKey);
 
       isLoading = false;
     } catch (e) {

@@ -1,6 +1,7 @@
+import 'package:accollect/core/data/collection_repository.dart';
+import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/core/navigation/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
-import 'package:accollect/features/collection/data/collection_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -10,20 +11,25 @@ import '../../core/widgets/item_tile.dart';
 import 'collection_view_model.dart';
 
 class CollectionScreen extends StatelessWidget {
-  final ICollectionRepository repository;
+  final ICollectionRepository collectionRepository;
+  final IItemRepository itemRepository;
   final String collectionKey;
 
   const CollectionScreen({
     super.key,
-    required this.repository,
     required this.collectionKey,
+    required this.collectionRepository,
+    required this.itemRepository,
   });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => CollectionViewModel(
-          repository: repository, collectionKey: collectionKey),
+        collectionKey: collectionKey,
+        collectionRepository: collectionRepository,
+        itemRepository: itemRepository,
+      ),
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: _buildAppBar(context),

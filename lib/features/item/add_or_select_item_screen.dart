@@ -1,6 +1,6 @@
+import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/core/widgets/empty_state.dart';
-import 'package:accollect/features/collection/add_or_select_item_view_model.dart';
-import 'package:accollect/features/collection/data/item_repository.dart';
+import 'package:accollect/features/item/add_or_select_item_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

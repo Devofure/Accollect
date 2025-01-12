@@ -1,5 +1,5 @@
+import 'package:accollect/core/data/collection_repository.dart';
 import 'package:accollect/core/models/collection_ui_model.dart';
-import 'package:accollect/features/collection/data/collection_repository.dart';
 import 'package:flutter/material.dart';
 
 class CreateCollectionViewModel extends ChangeNotifier {
