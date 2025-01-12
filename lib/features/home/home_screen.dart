@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/navigation/app_router.dart';
 import '../../core/widgets/collection_tile.dart';
-import 'home_repository.dart';
+import 'data/home_repository.dart';
 import 'home_view_model.dart';
 
 class HomeScreen extends StatelessWidget {

@@ -1,8 +1,6 @@
-// lib/features/home/repositories/home_repository.dart
-
 import 'package:accollect/core/models/item_ui_model.dart';
 
-import '../../core/models/collection_ui_model.dart';
+import '../../../core/models/collection_ui_model.dart';
 
 abstract class IHomeRepository {
   Future<List<CollectionUIModel>> fetchCollections();
@@ -11,7 +9,7 @@ abstract class IHomeRepository {
 }
 
 // lib/features/home/repositories/local_home_repository.dart
-class LocalHomeRepository implements IHomeRepository {
+class HomeRepository implements IHomeRepository {
   @override
   Future<List<CollectionUIModel>> fetchCollections() async {
     return Future.delayed(

@@ -3,7 +3,7 @@ import 'package:accollect/core/models/item_ui_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
-import 'home_repository.dart';
+import 'data/home_repository.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final IHomeRepository repository;

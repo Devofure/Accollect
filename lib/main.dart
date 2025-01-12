@@ -8,13 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/models/collection_model.dart';
-// Core navigation
 import 'core/navigation/app_router.dart';
 import 'features/collection/add_new_item_screen.dart';
 import 'features/collection/collection_screen.dart';
 import 'features/collection/create_collection_screen.dart';
 import 'features/collection/item_details_screen.dart';
-import 'features/home/home_repository.dart';
+import 'features/home/data/home_repository.dart';
 import 'features/home/home_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/settings/settings_screen.dart';
@@ -94,7 +93,7 @@ class MyApp extends StatelessWidget {
         GoRoute(
           path: AppRouter.homeRoute, // '/home'
           builder: (context, state) {
-            return HomeScreen(repository: LocalHomeRepository());
+            return HomeScreen(repository: HomeRepository());
           },
         ),
 
