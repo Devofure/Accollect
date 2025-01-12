@@ -17,8 +17,8 @@ class ItemTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.only(bottom: 8), // Consistent margin
+        padding: const EdgeInsets.all(12), // Adjust padding
         decoration: BoxDecoration(
           color: Colors.grey[800],
           borderRadius: BorderRadius.circular(12),
@@ -30,35 +30,27 @@ class ItemTile extends StatelessWidget {
               child: item.imageUrl != null
                   ? Image.network(
                       item.imageUrl!,
-                      width: 80,
-                      height: 80,
-                fit: BoxFit.cover,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          width: 80,
-                          height: 80,
+                          width: 60,
+                          height: 60,
                           color: Colors.grey[700],
-                          child: const Icon(
-                            Icons.broken_image,
-                            color: Colors.white,
-                            size: 40,
-                          ),
+                          child: const Icon(Icons.broken_image,
+                              color: Colors.white),
                         );
                       },
                     )
                   : Container(
-                      width: 80,
-                      height: 80,
+                      width: 60,
+                      height: 60,
                       color: Colors.grey[700],
-                      child: const Icon(
-                        Icons.photo,
-                        color: Colors.white,
-                        size: 40,
-                      ),
+                      child: const Icon(Icons.photo, color: Colors.white),
                     ),
             ),
             const SizedBox(width: 12),
-            // Item details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +59,7 @@ class ItemTile extends StatelessWidget {
                     item.title,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 15,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -76,7 +68,7 @@ class ItemTile extends StatelessWidget {
                     'Added on: ${_formatDate(item.addedOn)}',
                     style: const TextStyle(
                       color: Colors.grey,
-                      fontSize: 12,
+                      fontSize: 14,
                     ),
                   ),
                 ],

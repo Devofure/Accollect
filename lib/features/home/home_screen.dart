@@ -1,4 +1,5 @@
 import 'package:accollect/core/utils/extensions.dart';
+import 'package:accollect/core/widgets/empty_state.dart';
 import 'package:accollect/core/widgets/item_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -10,9 +11,9 @@ import 'home_repository.dart';
 import 'home_view_model.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key, required this.repository});
-
   final IHomeRepository repository;
+
+  const HomeScreen({super.key, required this.repository});
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +30,19 @@ class HomeScreen extends StatelessWidget {
 
               if (viewModel.errorMessage != null) {
                 return Center(
-                  child: Text(
-                    viewModel.errorMessage!,
-                    style: const TextStyle(color: Colors.white),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        viewModel.errorMessage!,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => viewModel.retryFetchingData(),
+                        child: const Text('Retry'),
+                      ),
+                    ],
                   ),
                 );
               }
@@ -46,7 +57,13 @@ class HomeScreen extends StatelessWidget {
                   if (collections.isEmpty)
                     SliverFillRemaining(
                       hasScrollBody: false,
-                      child: _buildEmptyState(),
+                      child: EmptyStateWidget(
+                        message: 'No Collections Yet',
+                        actionMessage: 'Start adding your collections.',
+                        onPressed: () {
+                          context.push(AppRouter.createCollectionRoute);
+                        },
+                      ),
                     )
                   else ...[
                     SliverList(
@@ -135,37 +152,6 @@ class HomeScreen extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.grey[700],
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.inbox, size: 40, color: Colors.white),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'No Collections Yet',
-            style: TextStyle(color: Colors.white, fontSize: 16),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Start adding your collections by\n'
-            'clicking the "Create" button above.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey, fontSize: 14),
-          ),
-        ],
-      ),
     );
   }
 

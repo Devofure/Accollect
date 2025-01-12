@@ -1,7 +1,6 @@
 # Project Guidelines and Architecture
 
 ## Table of Contents
-
 1. [Introduction](#introduction)
 2. [Folder Structure](#folder-structure)
 3. [Architecture](#architecture)
@@ -50,7 +49,6 @@ lib/
 ---
 
 ## Architecture
-
 The app uses **MVVM (Model-View-ViewModel)** to separate concerns and ensure modularity.
 
 ### Components
@@ -75,19 +73,16 @@ The app uses **MVVM (Model-View-ViewModel)** to separate concerns and ensure mod
 ## Guidelines
 
 ### State Management
-
 - Use **Provider** for dependency injection and state management.
 - Create a `ChangeNotifier` for each screen or feature that requires state management.
 - Avoid business logic in the UI layer; delegate it to ViewModels.
 
 ### UI Development
-
 - Keep UI widgets focused and reusable.
 - Avoid embedding complex logic in the UI; extract it to ViewModels or separate widgets.
 - Structure feature-specific widgets under `widgets/` in their respective feature folder.
 
 ### Data Handling
-
 - Use repositories for all data access (e.g., `CollectionRepository`).
 - Create interfaces for repositories (e.g., `ICollectionRepository`) to enable mocking and future
   migrations.

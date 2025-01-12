@@ -1,4 +1,6 @@
 import 'package:accollect/core/models/item_ui_model.dart';
+import 'package:accollect/core/widgets/empty_state.dart';
+import 'package:accollect/core/widgets/filters.dart';
 import 'package:accollect/core/widgets/item_tile.dart';
 import 'package:flutter/material.dart';
 
@@ -32,16 +34,31 @@ class CollectionScreen extends StatelessWidget {
               _buildCollectionHeader(),
               const SizedBox(height: 16),
               if (isCollectionEmpty)
-                _buildEmptyState()
-              else ...{
-                ..._buildSearchAndFilters(),
+                EmptyStateWidget(
+                  message: 'No items in your collection.',
+                  actionMessage: 'Add a new item to get started.',
+                  onPressed: () {
+                    // TODO: Navigate to add item screen
+                  },
+                )
+              else ...[
+                SearchBar(),
+                const SizedBox(height: 16),
+                FiltersWidget(),
+                const SizedBox(height: 16),
                 _buildItemList(),
-              }
+              ],
             ],
           ),
         ),
       ),
-      floatingActionButton: _buildFloatingActionButton(),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.white,
+        onPressed: () {
+          // TODO: Navigate to Add New Item screen
+        },
+        child: const Icon(Icons.add, color: Colors.black),
+      ),
     );
   }
 
@@ -92,89 +109,6 @@ class CollectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Expanded(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.grey[800],
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.inbox, color: Colors.white, size: 40),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'No items in your collection.',
-              style: TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _buildSearchAndFilters() {
-    return [
-      TextField(
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: 'Search...',
-          hintStyle: const TextStyle(color: Colors.grey),
-          filled: true,
-          fillColor: Colors.grey[800],
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          prefixIcon: const Icon(Icons.search, color: Colors.white),
-        ),
-      ),
-      const SizedBox(height: 16),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[800],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onPressed: () {
-              // TODO: Implement filter functionality
-            },
-            icon: const Icon(Icons.filter_list, color: Colors.white),
-            label: const Text(
-              'Filter',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[800],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onPressed: () {
-              // TODO: Implement sorting functionality
-            },
-            icon: const Icon(Icons.sort, color: Colors.white),
-            label: const Text(
-              'Year',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    ];
-  }
-
   Widget _buildItemList() {
     return Expanded(
       child: ListView.builder(
@@ -189,16 +123,6 @@ class CollectionScreen extends StatelessWidget {
           );
         },
       ),
-    );
-  }
-
-  FloatingActionButton _buildFloatingActionButton() {
-    return FloatingActionButton(
-      backgroundColor: Colors.white,
-      onPressed: () {
-        // TODO: Navigate to Add New Item screen
-      },
-      child: const Icon(Icons.add, color: Colors.black),
     );
   }
 }

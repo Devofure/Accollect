@@ -1,4 +1,3 @@
-// lib/features/home/home_view_model.dart
 import 'package:accollect/core/models/collection_ui_model.dart';
 import 'package:accollect/core/models/item_ui_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -22,6 +21,10 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> _loadData() async {
     try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
       collections = await repository.fetchCollections();
       latestItems = await repository.fetchLatestItems();
       isLoading = false;
@@ -31,5 +34,10 @@ class HomeViewModel extends ChangeNotifier {
     } finally {
       notifyListeners();
     }
+  }
+
+  /// Retry fetching data by calling `_loadData` again
+  void retryFetchingData() {
+    _loadData();
   }
 }

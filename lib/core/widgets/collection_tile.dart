@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/collection_ui_model.dart';
+import '../../core/models/collection_ui_model.dart';
 
 class CollectionTile extends StatelessWidget {
   final CollectionUIModel collection;
@@ -17,8 +17,8 @@ class CollectionTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.only(bottom: 8), // Adjust margin
+        padding: const EdgeInsets.all(12), // Consistent padding
         decoration: BoxDecoration(
           color: Colors.grey[800],
           borderRadius: BorderRadius.circular(12),
@@ -37,22 +37,20 @@ class CollectionTile extends StatelessWidget {
                         return Container(
                           width: 60,
                           height: 60,
-                          color: Colors.grey,
-                          child: const Icon(
-                            Icons.broken_image,
-                            color: Colors.white,
-                          ),
+                          color: Colors.grey[700],
+                          child: const Icon(Icons.broken_image,
+                              color: Colors.white),
                         );
                       },
                     )
                   : Container(
                       width: 60,
                       height: 60,
-                      color: Colors.grey,
+                      color: Colors.grey[700],
                       child: const Icon(Icons.image, color: Colors.white),
                     ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 12), // Adjust spacing
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,7 +74,6 @@ class CollectionTile extends StatelessWidget {
                 ],
               ),
             ),
-            // Item count
             Text(
               collection.itemCount.toString(),
               style: const TextStyle(
