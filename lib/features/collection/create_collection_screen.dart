@@ -1,6 +1,6 @@
 import 'package:accollect/core/navigation/app_router.dart';
+import 'package:accollect/core/utils/extensions.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'create_collection_view_model.dart';
@@ -17,136 +17,77 @@ class CreateCollectionScreen extends StatelessWidget {
       create: (_) => CreateCollectionViewModel(repository: repository),
       child: Scaffold(
         backgroundColor: Colors.black,
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ),
+        appBar: _buildAppBar(context),
         body: SafeArea(
-          child: Consumer<CreateCollectionViewModel>(
-            builder: (context, viewModel, _) {
-              return SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Form(
-                    key: viewModel.formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title and Subtitle
-                        const Text(
-                          'Start collecting',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Create a new collection by filling in the details below.',
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Collection Name Input
-                        _buildTextInput(
-                          label: 'Collection Name',
-                          hint: 'Enter collection name',
-                          onSaved: viewModel.setCollectionName,
-                          validator: viewModel.validateCollectionName,
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Description Input
-                        _buildTextInput(
-                          label: 'Description',
-                          hint: 'Enter collection description',
-                          onSaved: viewModel.setDescription,
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Category Dropdown
-                        _buildDropdownInput(viewModel),
-
-                        const SizedBox(height: 24),
-
-                        // Upload Image Section
-                        Center(
-                          child: Column(
-                            children: [
-                              if (viewModel.uploadedImage != null)
-                                CircleAvatar(
-                                  radius: 40,
-                                  backgroundImage:
-                                      NetworkImage(viewModel.uploadedImage!),
-                                )
-                              else
-                                GestureDetector(
-                                  onTap: viewModel.uploadImage,
-                                  child: Container(
-                                    width: 80,
-                                    height: 80,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[800],
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.photo_camera,
-                                      color: Colors.white,
-                                      size: 32,
-                                    ),
-                                  ),
-                                ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Upload Image',
-                                style:
-                                    TextStyle(color: Colors.grey, fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Save Collection Button
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                            onPressed: () async {
-                              final newCollectionKey =
-                                  await viewModel.saveCollection();
-                              if (newCollectionKey != null && context.mounted) {
-                                context.goNamed(
-                                  AppRouter.collectionRoute,
-                                  pathParameters: {'key': newCollectionKey},
-                                );
-                              }
-                            },
-                            child: const Text('Save Collection'),
-                          ),
-                        ),
-                      ],
-                    ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Consumer<CreateCollectionViewModel>(
+              builder: (context, viewModel, _) => Form(
+                key: viewModel.formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(),
+                      const SizedBox(height: 24),
+                      _buildTextInput(
+                        label: 'Collection Name',
+                        hint: 'Enter collection name',
+                        onSaved: viewModel.setCollectionName,
+                        validator: viewModel.validateCollectionName,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextInput(
+                        label: 'Description',
+                        hint: 'Enter collection description',
+                        onSaved: viewModel.setDescription,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDropdownInput(viewModel),
+                      const SizedBox(height: 24),
+                      _buildImageUpload(viewModel),
+                      const SizedBox(height: 24),
+                      _buildSaveButton(viewModel, context),
+                    ],
                   ),
                 ),
-              );
-            },
+              ),
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.black,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.close, color: Colors.white),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          'Start collecting',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 8),
+        Text(
+          'Create a new collection by filling in the details below.',
+          style: TextStyle(color: Colors.grey, fontSize: 14),
+        ),
+      ],
     );
   }
 
@@ -159,10 +100,7 @@ class CreateCollectionScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.grey, fontSize: 14),
-        ),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
         const SizedBox(height: 8),
         TextFormField(
           style: const TextStyle(color: Colors.white),
@@ -191,10 +129,8 @@ class CreateCollectionScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Category',
-          style: TextStyle(color: Colors.grey, fontSize: 14),
-        ),
+        const Text('Category',
+            style: TextStyle(color: Colors.grey, fontSize: 14)),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: viewModel.category,
@@ -221,6 +157,64 @@ class CreateCollectionScreen extends StatelessWidget {
           onChanged: viewModel.setCategory,
         ),
       ],
+    );
+  }
+
+  Widget _buildImageUpload(CreateCollectionViewModel viewModel) {
+    return Center(
+      child: GestureDetector(
+        onTap: viewModel.uploadImage,
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 40,
+              backgroundImage: viewModel.uploadedImage != null
+                  ? NetworkImage(viewModel.uploadedImage!)
+                  : null,
+              child: viewModel.uploadedImage == null
+                  ? Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[800],
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.photo_camera,
+                          color: Colors.white, size: 32),
+                    )
+                  : null,
+            ),
+            const SizedBox(height: 8),
+            const Text('Upload Image',
+                style: TextStyle(color: Colors.grey, fontSize: 14)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSaveButton(
+      CreateCollectionViewModel viewModel, BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+        onPressed: () async {
+          final newCollectionKey = await viewModel.saveCollection();
+          if (newCollectionKey != null && context.mounted) {
+            context.goWithParams(
+              AppRouter.collectionRoute,
+              [newCollectionKey],
+            );
+          }
+        },
+        child: const Text('Save Collection'),
+      ),
     );
   }
 }

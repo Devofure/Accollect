@@ -1,9 +1,8 @@
 import 'package:accollect/core/models/collection_ui_model.dart';
 import 'package:accollect/core/models/item_ui_model.dart';
+import 'package:accollect/features/home/data/home_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-
-import 'data/home_repository.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final IHomeRepository repository;
@@ -14,12 +13,12 @@ class HomeViewModel extends ChangeNotifier {
   String? errorMessage;
 
   HomeViewModel({required this.repository}) {
-    _loadData();
+    loadData();
   }
 
   get currentUser => FirebaseAuth.instance.currentUser;
 
-  Future<void> _loadData() async {
+  Future<void> loadData() async {
     try {
       isLoading = true;
       errorMessage = null;
@@ -27,6 +26,7 @@ class HomeViewModel extends ChangeNotifier {
 
       collections = await repository.fetchCollections();
       latestItems = await repository.fetchLatestItems();
+
       isLoading = false;
     } catch (e) {
       errorMessage = 'Failed to load data';
@@ -36,8 +36,7 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-  /// Retry fetching data by calling `_loadData` again
   void retryFetchingData() {
-    _loadData();
+    loadData();
   }
 }

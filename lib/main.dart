@@ -1,5 +1,6 @@
 import 'package:accollect/features/collection/data/collection_repository.dart';
 import 'package:accollect/features/collection/data/create_collection_repository.dart';
+import 'package:accollect/features/home/home_view_model.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider, EmailAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
@@ -7,6 +8,7 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import 'core/navigation/app_router.dart';
 import 'features/collection/add_new_item_screen.dart';
@@ -87,9 +89,12 @@ class MyApp extends StatelessWidget {
 
         // Home
         GoRoute(
-          path: AppRouter.homeRoute, // '/home'
+          path: AppRouter.homeRoute,
           builder: (context, state) {
-            return HomeScreen(repository: HomeRepository());
+            return ChangeNotifierProvider(
+              create: (_) => HomeViewModel(repository: HomeRepository()),
+              child: const HomeScreen(),
+            );
           },
         ),
 

@@ -1,5 +1,7 @@
+import 'package:accollect/core/navigation/app_router.dart';
 import 'package:accollect/features/collection/data/collection_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/widgets/empty_state.dart';
@@ -109,7 +111,13 @@ class CollectionScreen extends StatelessWidget {
       ),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: () {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          } else {
+            context.go(AppRouter.homeRoute);
+          }
+        },
       ),
       actions: [
         IconButton(
