@@ -39,7 +39,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: () => viewModel.retryFetchingData(),
+                        onPressed: viewModel.retryFetchingData,
                         child: const Text('Retry'),
                       ),
                     ],
@@ -50,60 +50,63 @@ class HomeScreen extends StatelessWidget {
               final collections = viewModel.collections;
               final latestItems = viewModel.latestItems;
 
-              return CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _buildHeader(context)),
-                  SliverToBoxAdapter(child: const SizedBox(height: 8)),
-                  if (collections.isEmpty)
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: EmptyStateWidget(
-                        message: 'No Collections Yet',
-                        actionMessage: 'Start adding your collections.',
-                        onPressed: () {
-                          context.push(AppRouter.createCollectionRoute);
-                        },
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(child: _buildHeader(context)),
+                    SliverToBoxAdapter(child: const SizedBox(height: 8)),
+                    if (collections.isEmpty)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: EmptyStateWidget(
+                          message: 'No Collections Yet',
+                          actionMessage: 'Start adding your collections.',
+                          onPressed: () {
+                            context.push(AppRouter.createCollectionRoute);
+                          },
+                        ),
+                      )
+                    else ...[
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final collection = collections[index];
+                            return CollectionTile(
+                              collection: collection,
+                              onTap: () {
+                                context.pushWithParams(
+                                  AppRouter.collectionRoute,
+                                  [collection.key],
+                                );
+                              },
+                            );
+                          },
+                          childCount: collections.length,
+                        ),
                       ),
-                    )
-                  else ...[
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final collection = collections[index];
-                          return CollectionTile(
-                            collection: collection,
-                            onTap: () {
-                              context.pushWithParams(
-                                AppRouter.collectionRoute,
-                                [collection.key],
-                              );
-                            },
-                          );
-                        },
-                        childCount: collections.length,
+                      SliverToBoxAdapter(child: const SizedBox(height: 24)),
+                      SliverToBoxAdapter(child: _buildLatestAddedTitle()),
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final item = latestItems[index];
+                            return ItemTile(
+                              item: item,
+                              onTap: () {
+                                context.pushWithParams(
+                                  AppRouter.itemDetailsRoute,
+                                  [item.key],
+                                );
+                              },
+                            );
+                          },
+                          childCount: latestItems.length,
+                        ),
                       ),
-                    ),
-                    SliverToBoxAdapter(child: const SizedBox(height: 24)),
-                    SliverToBoxAdapter(child: _buildLatestAddedTitle()),
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final item = latestItems[index];
-                          return ItemTile(
-                            item: item,
-                            onTap: () {
-                              context.pushWithParams(
-                                AppRouter.itemDetailsRoute,
-                                [item.key],
-                              );
-                            },
-                          );
-                        },
-                        childCount: latestItems.length,
-                      ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               );
             },
           ),

@@ -27,7 +27,7 @@ class CollectionScreen extends StatelessWidget {
       appBar: _buildAppBar(context),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -97,7 +97,7 @@ class CollectionScreen extends StatelessWidget {
           ),
         ),
         CircleAvatar(
-          radius: 20,
+          radius: 30,
           backgroundImage: collectionImageUrl != null
               ? NetworkImage(collectionImageUrl!)
               : null,
