@@ -1,5 +1,6 @@
 import 'package:accollect/core/models/item_ui_model.dart';
 import 'package:accollect/features/collection/data/collection_repository.dart';
+import 'package:accollect/features/collection/data/create_collection_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider, EmailAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
@@ -101,7 +102,9 @@ class MyApp extends StatelessWidget {
 
         GoRoute(
           path: AppRouter.createCollectionRoute,
-          builder: (_, __) => CreateCollectionScreen(),
+          builder: (_, __) => CreateCollectionScreen(
+            repository: CreateCollectionRepository(),
+          ),
         ),
 
         // Collection Details

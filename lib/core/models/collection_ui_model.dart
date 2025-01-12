@@ -48,6 +48,23 @@ class CollectionUIModel {
     };
   }
 
+  // Copy with method to create a new instance with overridden fields
+  CollectionUIModel copyWith({
+    String? key,
+    String? name,
+    String? description,
+    String? imageUrl,
+    int? itemCount,
+  }) {
+    return CollectionUIModel(
+      key: key ?? this.key,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      imageUrl: imageUrl ?? this.imageUrl,
+      itemCount: itemCount ?? this.itemCount,
+    );
+  }
+
   @override
   String toString() {
     return 'CollectionUIModel(id: $key, name: $name, description: $description, itemCount: $itemCount)';

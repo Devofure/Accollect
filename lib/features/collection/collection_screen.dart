@@ -1,4 +1,3 @@
-// CollectionScreen with MVVM Architecture
 import 'package:accollect/features/collection/data/collection_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
