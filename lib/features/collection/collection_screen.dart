@@ -88,16 +88,20 @@ class CollectionScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          collectionName,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+        Expanded(
+          child: Text(
+            collectionName,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
+        const SizedBox(width: 16),
         CircleAvatar(
-          radius: 30,
+          radius: 40,
           backgroundImage: collectionImageUrl != null
               ? NetworkImage(collectionImageUrl!)
               : null,
