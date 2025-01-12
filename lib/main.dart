@@ -7,7 +7,6 @@ import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'core/models/collection_model.dart';
 import 'core/navigation/app_router.dart';
 import 'features/collection/add_new_item_screen.dart';
 import 'features/collection/collection_screen.dart';
@@ -143,35 +142,6 @@ class MyApp extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  // -------------------------------
-  // Mock Data for Home Screen
-  // -------------------------------
-  List<CollectionModel> _mockCollections() {
-    return [
-      CollectionModel(
-        key: '1',
-        name: 'LEGO',
-        description: 'Build your imagination',
-        imageUrl: 'https://via.placeholder.com/50',
-        itemCount: 12,
-      ),
-      CollectionModel(
-        key: '2',
-        name: 'My wines',
-        description: 'Collection of exquisite wines',
-        imageUrl: 'https://via.placeholder.com/50',
-        itemCount: 23,
-      ),
-      CollectionModel(
-        key: '3',
-        name: 'Funko Pop',
-        description: 'Collectible superhero figurine',
-        imageUrl: 'https://via.placeholder.com/50',
-        itemCount: 7,
-      ),
-    ];
   }
 
   List<ItemUIModel> _mockItems() {

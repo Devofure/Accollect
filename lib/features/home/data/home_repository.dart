@@ -8,7 +8,6 @@ abstract class IHomeRepository {
   Future<List<ItemUIModel>> fetchLatestItems();
 }
 
-// lib/features/home/repositories/local_home_repository.dart
 class HomeRepository implements IHomeRepository {
   @override
   Future<List<CollectionUIModel>> fetchCollections() async {
