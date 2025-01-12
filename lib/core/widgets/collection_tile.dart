@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'collection_ui_model.dart';
+import '../models/collection_ui_model.dart';
 
 class CollectionTile extends StatelessWidget {
   final CollectionUIModel collection;
@@ -33,6 +33,17 @@ class CollectionTile extends StatelessWidget {
                       width: 60,
                       height: 60,
                       fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 60,
+                          height: 60,
+                          color: Colors.grey,
+                          child: const Icon(
+                            Icons.broken_image,
+                            color: Colors.white,
+                          ),
+                        );
+                      },
                     )
                   : Container(
                       width: 60,

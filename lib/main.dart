@@ -1,3 +1,4 @@
+import 'package:accollect/core/models/item_ui_model.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider, EmailAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
@@ -6,14 +7,14 @@ import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/models/collection_model.dart';
 // Core navigation
 import 'core/navigation/app_router.dart';
 import 'features/collection/add_new_item_screen.dart';
-import 'features/collection/collection_model.dart';
 import 'features/collection/collection_screen.dart';
 import 'features/collection/create_collection_screen.dart';
 import 'features/collection/item_details_screen.dart';
-import 'features/collection/item_model.dart';
+import 'features/home/home_repository.dart';
 import 'features/home/home_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/settings/settings_screen.dart';
@@ -91,9 +92,9 @@ class MyApp extends StatelessWidget {
 
         // Home
         GoRoute(
-          path: AppRouter.homeRoute,
-          builder: (_, __) {
-            return HomeScreen();
+          path: AppRouter.homeRoute, // '/home'
+          builder: (context, state) {
+            return HomeScreen(repository: LocalHomeRepository());
           },
         ),
 
@@ -103,10 +104,9 @@ class MyApp extends StatelessWidget {
           builder: (_, __) => const SettingsScreen(),
         ),
 
-        // Create Collection
         GoRoute(
           path: AppRouter.createCollectionRoute,
-          builder: (_, __) => const CreateCollectionScreen(),
+          builder: (_, __) => CreateCollectionScreen(),
         ),
 
         // Collection Details
@@ -118,7 +118,7 @@ class MyApp extends StatelessWidget {
 
             return CollectionScreen(
               collectionKey: collectionKey!,
-              items: mockData['items'] as List<Map<String, String>>,
+              items: _mockItems(),
               collectionName: mockData['name'] as String,
               collectionImageUrl: mockData['imageUrl'] as String?,
             );
@@ -175,25 +175,14 @@ class MyApp extends StatelessWidget {
     ];
   }
 
-  List<ItemModel> _mockItems() {
+  List<ItemUIModel> _mockItems() {
     return [
-      ItemModel(
-        key: 'afasd',
-        title: 'Super Guy',
-        imageUrl: 'https://via.placeholder.com/40',
-        addedOn: DateTime(2023, 10, 16),
-      ),
-      ItemModel(
-        key: 'afasd1',
-        title: 'Super Guy',
-        imageUrl: 'https://via.placeholder.com/40',
-        addedOn: DateTime(2023, 10, 10),
-      ),
-      ItemModel(
-        key: 'afasd2',
-        title: 'Super Guy',
-        imageUrl: 'https://via.placeholder.com/40',
-        addedOn: DateTime(2023, 10, 1),
+      ItemUIModel(
+        key: '1',
+        title: 'Chateau Margaux',
+        imageUrl: 'https://via.placeholder.com/80',
+        addedOn: DateTime.now(),
+        description: '',
       ),
     ];
   }

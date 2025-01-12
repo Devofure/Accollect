@@ -1,12 +1,12 @@
-import 'package:accollect/features/home/ui_model.dart';
+import 'package:accollect/core/models/item_ui_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class LatestItemTile extends StatelessWidget {
-  final LatestItemUIModel item;
+class ItemTile extends StatelessWidget {
+  final ItemUIModel item;
   final VoidCallback? onTap;
 
-  const LatestItemTile({
+  const ItemTile({
     super.key,
     required this.item,
     this.onTap,
@@ -25,15 +25,37 @@ class LatestItemTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            if (item.imageUrl != null)
-              ClipRRect(
+            ClipRRect(
               borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  item.imageUrl!,
-                  width: 80,
-                height: 80,
+              child: item.imageUrl != null
+                  ? Image.network(
+                      item.imageUrl!,
+                      width: 80,
+                      height: 80,
                 fit: BoxFit.cover,
-              ),
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 80,
+                          height: 80,
+                          color: Colors.grey[700],
+                          child: const Icon(
+                            Icons.broken_image,
+                            color: Colors.white,
+                            size: 40,
+                          ),
+                        );
+                      },
+                    )
+                  : Container(
+                      width: 80,
+                      height: 80,
+                      color: Colors.grey[700],
+                      child: const Icon(
+                        Icons.photo,
+                        color: Colors.white,
+                        size: 40,
+                      ),
+                    ),
             ),
             const SizedBox(width: 12),
             // Item details

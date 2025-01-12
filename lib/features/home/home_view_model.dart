@@ -1,18 +1,20 @@
 // lib/features/home/home_view_model.dart
-
-import 'package:accollect/features/home/ui_model.dart';
+import 'package:accollect/core/models/collection_ui_model.dart';
+import 'package:accollect/core/models/item_ui_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
-import 'collection_ui_model.dart';
+import 'home_repository.dart';
 
 class HomeViewModel extends ChangeNotifier {
+  final IHomeRepository repository;
+
   List<CollectionUIModel> collections = [];
-  List<LatestItemUIModel> latestItems = [];
+  List<ItemUIModel> latestItems = [];
   bool isLoading = true;
   String? errorMessage;
 
-  HomeViewModel() {
+  HomeViewModel({required this.repository}) {
     _loadData();
   }
 
@@ -20,40 +22,8 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> _loadData() async {
     try {
-      // Simulate a delay for fetching data
-      await Future.delayed(const Duration(seconds: 2));
-      // Mock collections
-      collections = [
-        CollectionUIModel(
-          id: '1',
-          name: 'LEGO',
-          description: 'Build your imagination',
-          itemCount: 12,
-        ),
-        CollectionUIModel(
-          id: '2',
-          name: 'Wines',
-          description: 'A collection of exquisite wines.',
-          itemCount: 8,
-        ),
-      ];
-
-      // Mock latest items
-      latestItems = [
-        LatestItemUIModel(
-          id: 'item1',
-          title: 'Super Guy',
-          imageUrl: null,
-          addedOn: DateTime.now(),
-        ),
-        LatestItemUIModel(
-          id: 'item2',
-          title: 'Mega Hero',
-          imageUrl: null,
-          addedOn: DateTime.now().subtract(const Duration(days: 1)),
-        ),
-      ];
-
+      collections = await repository.fetchCollections();
+      latestItems = await repository.fetchLatestItems();
       isLoading = false;
     } catch (e) {
       errorMessage = 'Failed to load data';
