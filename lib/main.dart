@@ -1,4 +1,5 @@
 import 'package:accollect/core/models/item_ui_model.dart';
+import 'package:accollect/features/collection/data/collection_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider, EmailAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
@@ -108,13 +109,9 @@ class MyApp extends StatelessWidget {
           path: AppRouter.collectionRoute,
           builder: (context, state) {
             final collectionKey = state.pathParameters['key'];
-            final mockData = _getMockCollectionData(collectionKey);
-
             return CollectionScreen(
               collectionKey: collectionKey!,
-              items: _mockItems(),
-              collectionName: mockData['name'] as String,
-              collectionImageUrl: mockData['imageUrl'] as String?,
+              repository: CollectionRepository(),
             );
           },
         ),

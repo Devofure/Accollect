@@ -55,6 +55,7 @@ class HomeScreen extends StatelessWidget {
                 child: CustomScrollView(
                   slivers: [
                     SliverToBoxAdapter(child: _buildHeader(context)),
+                    SliverToBoxAdapter(child: _buildTitleRow(context)),
                     SliverToBoxAdapter(child: const SizedBox(height: 8)),
                     if (collections.isEmpty)
                       SliverFillRemaining(
@@ -168,6 +169,37 @@ class HomeScreen extends StatelessWidget {
           fontSize: 18,
           fontWeight: FontWeight.bold,
         ),
+      ),
+    );
+  }
+
+  Widget _buildTitleRow(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Collections',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey[800],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              context.push(AppRouter.createCollectionRoute);
+            },
+            child: const Text('Create'),
+          ),
+        ],
       ),
     );
   }
