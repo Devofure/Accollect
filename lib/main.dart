@@ -28,12 +28,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Configure authentication providers
     final providers = _authProviders();
-
-    // Configure the app's routes
     final router = _configureRouter(providers);
-
     return MaterialApp.router(
       routerConfig: router,
       title: 'Accollect',
