@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
 class EmptyStateWidget extends StatelessWidget {
-  final String message;
-  final String? actionMessage;
-  final VoidCallback? onPressed;
+  final String title;
+  final String? description;
 
   const EmptyStateWidget({
     super.key,
-    required this.message,
-    this.actionMessage,
-    this.onPressed,
+    required this.title,
+    this.description,
   });
 
   @override
@@ -29,22 +27,14 @@ class EmptyStateWidget extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            message,
-            style: const TextStyle(color: Colors.grey, fontSize: 16),
+            title,
+            style: const TextStyle(color: Colors.grey, fontSize: 20),
             textAlign: TextAlign.center,
           ),
-          if (actionMessage != null && onPressed != null) ...[
-            const SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: onPressed,
-              child: Text(actionMessage!),
+          if (description != null) ...[
+            Text(
+              description!,
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
             ),
           ],
         ],

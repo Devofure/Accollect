@@ -1,4 +1,5 @@
 import 'package:accollect/core/data/item_repository.dart';
+import 'package:accollect/core/models/item_ui_model.dart';
 import 'package:accollect/core/widgets/empty_state.dart';
 import 'package:accollect/features/item/add_or_select_item_view_model.dart';
 import 'package:flutter/material.dart';
@@ -40,12 +41,7 @@ class AddOrSelectItemScreen extends StatelessWidget {
               }
 
               if (viewModel.errorMessage != null) {
-                return Center(
-                  child: Text(
-                    viewModel.errorMessage!,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                );
+                return _buildErrorState(viewModel.errorMessage!);
               }
 
               final availableItemsByCategory =
@@ -53,151 +49,174 @@ class AddOrSelectItemScreen extends StatelessWidget {
 
               return Column(
                 children: [
-                  // Title and Search Bar
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          collectionName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                style: const TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  hintText: 'Filter items...',
-                                  hintStyle:
-                                      const TextStyle(color: Colors.grey),
-                                  filled: true,
-                                  fillColor: Colors.grey[800],
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                onChanged: viewModel.filterItems,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton(
-                              onPressed: () => _navigateToAddNewItemScreen(
-                                  context, viewModel),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.grey[800],
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: const Text('New Item'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Available Items List
+                  _buildHeader(context, viewModel),
                   if (availableItemsByCategory.isEmpty)
-                    Expanded(
+                    const Expanded(
                       child: EmptyStateWidget(
-                        message: 'No available items',
-                        actionMessage: 'Create a new item to get started.',
-                        onPressed: () =>
-                            _navigateToAddNewItemScreen(context, viewModel),
+                        title: 'No available items',
+                        description: 'Create a new item to get started.',
                       ),
                     )
                   else
-                    Expanded(
-                      child: ListView(
-                        children: availableItemsByCategory.entries.map((entry) {
-                          final category = entry.key;
-                          final items = entry.value;
-
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16),
-                                  child: Text(
-                                    category,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                ...items.map((item) {
-                                  return ListTile(
-                                    title: Text(
-                                      item.title,
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                    ),
-                                    trailing: Checkbox(
-                                      value: viewModel.isSelected(item.key),
-                                      onChanged: (isSelected) {
-                                        viewModel.toggleItemSelection(
-                                            item.key, isSelected!);
-                                      },
-                                    ),
-                                  );
-                                }).toList(),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-
-                  // Action Buttons
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[800],
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Cancel'),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () => viewModel.addSelectedItems(),
-                          child: const Text('Add Items'),
-                        ),
-                      ],
-                    ),
-                  ),
+                    _buildItemList(availableItemsByCategory, viewModel),
+                  _buildActionButtons(context, viewModel),
                 ],
               );
             },
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, ItemViewModel viewModel) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            collectionName,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Filter items...',
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    filled: true,
+                    fillColor: Colors.grey[800],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onChanged: viewModel.filterItems,
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () =>
+                    _navigateToAddNewItemScreen(context, viewModel),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[800],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('New Item'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItemList(
+    Map<String, List<ItemUIModel>> itemsByCategory,
+    ItemViewModel viewModel,
+  ) {
+    return Expanded(
+      child: ListView.builder(
+        itemCount: itemsByCategory.length,
+        itemBuilder: (context, index) {
+          final category = itemsByCategory.keys.elementAt(index);
+          final items = itemsByCategory[category]!;
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    category,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                ...items.map((item) {
+                  return ListTile(
+                    title: Text(
+                      item.title,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    trailing: Checkbox(
+                      value: viewModel.isSelected(item.key),
+                      onChanged: (isSelected) {
+                        viewModel.toggleItemSelection(item.key, isSelected!);
+                      },
+                    ),
+                  );
+                }),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, ItemViewModel viewModel) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[800],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ),
+          const SizedBox(width: 8), // Space between buttons
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              onPressed: () {
+                viewModel.addSelectedItems();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Add Items'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String errorMessage) {
+    return Center(
+      child: Text(
+        errorMessage,
+        style: const TextStyle(color: Colors.white),
       ),
     );
   }

@@ -56,11 +56,8 @@ class HomeScreen extends StatelessWidget {
                     SliverFillRemaining(
                       hasScrollBody: false,
                       child: EmptyStateWidget(
-                        message: 'No Collections Yet',
-                        actionMessage: 'Start adding your collections.',
-                        onPressed: () {
-                          context.push(AppRouter.createCollectionRoute);
-                        },
+                        title: 'No Collections Yet',
+                        description: 'Start adding your collections.',
                       ),
                     )
                   else ...[

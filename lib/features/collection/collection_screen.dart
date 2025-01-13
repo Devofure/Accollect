@@ -30,90 +30,98 @@ class CollectionScreen extends StatelessWidget {
         collectionRepository: collectionRepository,
         itemRepository: itemRepository,
       ),
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        appBar: _buildAppBar(context),
-        body: SafeArea(
-          child: Consumer<CollectionViewModel>(
-            builder: (context, viewModel, _) {
-              if (viewModel.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
+      child: PopScope(
+        onPopInvokedWithResult: (bool didPop, dynamic result) {
+          if (didPop) {
+            context.go(AppRouter.homeRoute); // Navigate to HomeScreen
+          }
+        },
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          appBar: _buildAppBar(context),
+          body: SafeArea(
+            child: Consumer<CollectionViewModel>(
+              builder: (context, viewModel, _) {
+                if (viewModel.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-              if (viewModel.errorMessage != null) {
-                return Center(
+                if (viewModel.errorMessage != null) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          viewModel.errorMessage!,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: viewModel.retryFetchingData,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final items = viewModel.items;
+                final isCollectionEmpty = items.isEmpty;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        viewModel.errorMessage!,
-                        style: const TextStyle(color: Colors.white),
-                      ),
+                      _buildCollectionHeader(viewModel),
                       const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: viewModel.retryFetchingData,
-                        child: const Text('Retry'),
-                      ),
+                      if (isCollectionEmpty)
+                        Expanded(
+                          child: Center(
+                            child: EmptyStateWidget(
+                              title: 'No items in your collection.',
+                              description: 'Add a new item to get started.',
+                            ),
+                          ),
+                        )
+                      else
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: items.length,
+                            itemBuilder: (context, index) {
+                              final item = items[index];
+                              return ItemTile(
+                                item: item,
+                                onTap: () {
+                                  context.pushWithParams(
+                                      AppRouter.itemDetailsRoute, [
+                                    item.key,
+                                  ]);
+                                },
+                              );
+                            },
+                          ),
+                        ),
                     ],
                   ),
                 );
-              }
-
-              final items = viewModel.items;
-              final isCollectionEmpty = items.isEmpty;
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildCollectionHeader(viewModel),
-                    const SizedBox(height: 16),
-                    if (isCollectionEmpty)
-                      EmptyStateWidget(
-                        message: 'No items in your collection.',
-                        actionMessage: 'Add a new item to get started.',
-                        onPressed: () {
-                          // TODO: Navigate to add item screen
-                        },
-                      )
-                    else
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: items.length,
-                          itemBuilder: (context, index) {
-                            final item = items[index];
-                            return ItemTile(
-                              item: item,
-                              onTap: () {
-                                context.pushWithParams(
-                                    AppRouter.itemDetailsRoute, [
-                                  item.key,
-                                ]);
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                  ],
-                ),
+              },
+            ),
+          ),
+          floatingActionButton: Consumer<CollectionViewModel>(
+            builder: (context, viewModel, _) {
+              return FloatingActionButton(
+                backgroundColor: Colors.white,
+                onPressed: () {
+                  context.goWithParams(
+                    AppRouter.addOrSelectItemRoute,
+                    [collectionKey, viewModel.collectionName],
+                  );
+                },
+                child: const Icon(Icons.add, color: Colors.black),
               );
             },
           ),
-        ),
-        floatingActionButton: Consumer<CollectionViewModel>(
-          builder: (context, viewModel, _) {
-            return FloatingActionButton(
-              backgroundColor: Colors.white,
-              onPressed: () {
-                context.pushWithParams(
-                  AppRouter.addOrSelectItemRoute,
-                  [collectionKey, viewModel.collectionName],
-                );
-              },
-              child: const Icon(Icons.add, color: Colors.black),
-            );
-          },
         ),
       ),
     );
@@ -129,11 +137,7 @@ class CollectionScreen extends StatelessWidget {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () {
-          if (Navigator.of(context).canPop()) {
-            Navigator.of(context).pop();
-          } else {
-            context.go(AppRouter.homeRoute);
-          }
+          context.go(AppRouter.homeRoute);
         },
       ),
       actions: [
