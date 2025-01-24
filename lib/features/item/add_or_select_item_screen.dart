@@ -1,11 +1,12 @@
 import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/core/models/item_ui_model.dart';
+import 'package:accollect/core/navigation/app_router.dart';
 import 'package:accollect/core/widgets/empty_state.dart';
+import 'package:accollect/core/widgets/item_tile.dart';
 import 'package:accollect/features/item/add_or_select_item_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-
-import 'add_new_item_screen.dart';
 
 class AddOrSelectItemScreen extends StatelessWidget {
   final String collectionKey;
@@ -148,20 +149,34 @@ class AddOrSelectItemScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 8),
                 ...items.map((item) {
-                  return ListTile(
-                    title: Text(
-                      item.title,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    trailing: Checkbox(
-                      value: viewModel.isSelected(item.key),
-                      onChanged: (isSelected) {
-                        viewModel.toggleItemSelection(item.key, isSelected!);
-                      },
-                    ),
+                  return Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: ItemTile(
+                          item: item,
+                          onTap: () {
+                            viewModel.toggleItemSelection(
+                                item.key, !viewModel.isSelected(item.key));
+                          },
+                        ),
+                      ),
+                      Positioned(
+                        right: 32,
+                        top: 20,
+                        child: Checkbox(
+                          value: viewModel.isSelected(item.key),
+                          onChanged: (isSelected) {
+                            viewModel.toggleItemSelection(
+                                item.key, isSelected!);
+                          },
+                        ),
+                      ),
+                    ],
                   );
-                }),
+                }).toList(),
               ],
             ),
           );
@@ -185,7 +200,14 @@ class AddOrSelectItemScreen extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                } else {
+                  context.go(AppRouter
+                      .homeRoute); // Navigate to the home route as a fallback
+                }
+              },
               child: const Text('Cancel'),
             ),
           ),
@@ -202,7 +224,7 @@ class AddOrSelectItemScreen extends StatelessWidget {
               ),
               onPressed: () {
                 viewModel.addSelectedItems();
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(true);
               },
               child: const Text('Add Items'),
             ),
@@ -221,14 +243,12 @@ class AddOrSelectItemScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToAddNewItemScreen(
-      BuildContext context, ItemViewModel viewModel) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => AddNewItemScreen(
-          onCreateItem: (newItem) => viewModel.createAndAddItem(newItem),
-        ),
-      ),
-    );
+  void _navigateToAddNewItemScreen(BuildContext context,
+      ItemViewModel viewModel) async {
+    final newItem = await context.push<ItemUIModel>(AppRouter.addNewItemRoute);
+
+    if (newItem != null) {
+      await viewModel.createItem(newItem); // Add the new item
+    }
   }
 }

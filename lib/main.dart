@@ -1,6 +1,7 @@
 import 'package:accollect/core/data/collection_repository.dart';
 import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/features/home/home_view_model.dart';
+import 'package:accollect/features/item/add_new_item_screen.dart';
 import 'package:accollect/features/item/add_or_select_item_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider, EmailAuthProvider;
@@ -138,7 +139,12 @@ class MyApp extends StatelessWidget {
             );
           },
         ),
-
+        GoRoute(
+          path: AppRouter.addNewItemRoute,
+          builder: (context, state) => AddNewItemScreen(
+            onCreateItem: (item) => context.pop(item),
+          ),
+        ),
         // Item Details
         GoRoute(
           path: AppRouter.itemDetailsRoute,

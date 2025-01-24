@@ -23,7 +23,11 @@ class ItemViewModel extends ChangeNotifier {
       notifyListeners();
 
       availableItems = await repository.fetchAvailableItems();
+      debugPrint('Fetched Available Items: ${availableItems.length}');
       _groupItemsByCategory();
+
+      debugPrint(
+          'Available Items: ${availableItems.map((e) => e.title).toList()}');
     } catch (e) {
       errorMessage = 'Failed to load items';
     } finally {
@@ -74,14 +78,11 @@ class ItemViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> createAndAddItem(ItemUIModel newItem) async {
+  Future<void> createItem(ItemUIModel newItem) async {
     try {
       isLoading = true;
       notifyListeners();
-
-      final createdItem = await repository.createItem(newItem);
-      await repository.addItemToCollection(collectionKey, createdItem.key);
-
+      await repository.createItem(newItem);
       await _loadAvailableItems();
     } catch (e) {
       errorMessage = 'Failed to create and add item';

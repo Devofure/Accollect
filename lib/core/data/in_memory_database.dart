@@ -16,22 +16,27 @@ class InMemoryDatabase {
 
   // Add a collection
   void addCollection(CollectionUIModel collection) {
+    print('[InMemoryDatabase] Adding collection: ${collection.name}');
     _collections[collection.key] = collection;
   }
 
   // Get a collection by key
   CollectionUIModel? getCollection(String collectionKey) {
+    print('[InMemoryDatabase] Fetching collection for key: $collectionKey');
     return _collections[collectionKey];
   }
 
   // Get all collections
   List<CollectionUIModel> getAllCollections() {
+    print('[InMemoryDatabase] Fetching all collections');
     return _collections.values.toList();
   }
 
   // Add an item
   void addItem(ItemUIModel item) {
+    print('[InMemoryDatabase] Adding item: ${item.title}');
     _items[item.key] = item;
+/*
     final collectionKey = item.collectionKey;
     if (collectionKey != null && _collections[collectionKey] != null) {
       final collection = _collections[collectionKey]!;
@@ -39,16 +44,25 @@ class InMemoryDatabase {
           _items.values.where((i) => i.collectionKey == collectionKey).length;
       _collections[collectionKey] =
           collection.copyWith(itemCount: updatedCount);
-    }
+      print('[InMemoryDatabase] Updated item count for collection: $collectionKey to $updatedCount');
+    }*/
+  }
+
+  // Update an item
+  void updateItem(ItemUIModel updatedItem) {
+    print('[InMemoryDatabase] Updating item: ${updatedItem.title}');
+    allItems[updatedItem.key] = updatedItem;
   }
 
   // Get all items
   List<ItemUIModel> getAllItems() {
+    print('[InMemoryDatabase] Fetching all items');
     return _items.values.toList();
   }
 
   // Get all items for a collection
   List<ItemUIModel> getItemsForCollection(String collectionKey) {
+    print('[InMemoryDatabase] Fetching items for collection: $collectionKey');
     return _items.values
         .where((item) => item.collectionKey == collectionKey)
         .toList();

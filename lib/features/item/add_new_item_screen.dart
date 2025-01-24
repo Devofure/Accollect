@@ -1,4 +1,6 @@
+import 'package:accollect/core/navigation/app_router.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/models/item_ui_model.dart';
 
@@ -94,11 +96,17 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         description: _description ?? '',
         category: '',
         addedOn: DateTime.now(),
-        imageUrl: '',
-        collectionKey: '',
+        imageUrl: null,
+        collectionKey: null,
       );
-      widget.onCreateItem(newItem);
-      Navigator.of(context).pop();
+
+      debugPrint('New item created: ${newItem.title}');
+      if (context.canPop()) {
+        context.pop(newItem);
+      } else {
+        debugPrint('Navigation stack empty. Redirecting to home.');
+        context.go(AppRouter.homeRoute);
+      }
     }
   }
 }

@@ -1,4 +1,3 @@
-// CollectionViewModel
 import 'package:accollect/core/data/collection_repository.dart';
 import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/core/models/item_ui_model.dart';
@@ -24,6 +23,7 @@ class CollectionViewModel extends ChangeNotifier {
   }
 
   Future<void> _loadData() async {
+    debugPrint('Loading data for collection: $collectionKey');
     try {
       isLoading = true;
       errorMessage = null;
@@ -33,11 +33,15 @@ class CollectionViewModel extends ChangeNotifier {
           await collectionRepository.fetchCollectionDetails(collectionKey);
       collectionName = collection.name;
       collectionImageUrl = collection.imageUrl;
+
+      debugPrint('Collection details loaded: $collectionName');
       items = await itemRepository.fetchItems(collectionKey);
 
+      debugPrint('Items loaded: ${items.map((e) => e.title).toList()}');
       isLoading = false;
     } catch (e) {
       errorMessage = 'Failed to load collection data';
+      debugPrint('Error while loading data: $e');
       isLoading = false;
     } finally {
       notifyListeners();
@@ -45,6 +49,12 @@ class CollectionViewModel extends ChangeNotifier {
   }
 
   void retryFetchingData() {
+    debugPrint('Retrying data fetch...');
     _loadData();
+  }
+
+  Future<void> refreshData() async {
+    debugPrint('Refreshing collection data...');
+    await _loadData();
   }
 }

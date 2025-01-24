@@ -30,11 +30,10 @@ class CollectionScreen extends StatelessWidget {
         collectionRepository: collectionRepository,
         itemRepository: itemRepository,
       ),
-      child: PopScope(
-        onPopInvokedWithResult: (bool didPop, dynamic result) {
-          if (didPop) {
-            context.go(AppRouter.homeRoute); // Navigate to HomeScreen
-          }
+      child: WillPopScope(
+        onWillPop: () async {
+          context.go(AppRouter.homeRoute);
+          return false; // Prevent the default back navigation
         },
         child: Scaffold(
           backgroundColor: Colors.black,
@@ -94,9 +93,9 @@ class CollectionScreen extends StatelessWidget {
                                 item: item,
                                 onTap: () {
                                   context.pushWithParams(
-                                      AppRouter.itemDetailsRoute, [
-                                    item.key,
-                                  ]);
+                                    AppRouter.itemDetailsRoute,
+                                    [item.key],
+                                  );
                                 },
                               );
                             },
@@ -113,10 +112,7 @@ class CollectionScreen extends StatelessWidget {
               return FloatingActionButton(
                 backgroundColor: Colors.white,
                 onPressed: () {
-                  context.goWithParams(
-                    AppRouter.addOrSelectItemRoute,
-                    [collectionKey, viewModel.collectionName],
-                  );
+                  _navigateToAddOrSelectItemScreen(context, viewModel);
                 },
                 child: const Icon(Icons.add, color: Colors.black),
               );
@@ -125,6 +121,18 @@ class CollectionScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _navigateToAddOrSelectItemScreen(
+      BuildContext context, CollectionViewModel viewModel) async {
+    // Wait for navigation to complete
+    final result = await context.pushWithParams(
+      AppRouter.addOrSelectItemRoute,
+      [collectionKey, viewModel.collectionName],
+    );
+    if (result == true) {
+      viewModel.refreshData(); // Trigger data reload
+    }
   }
 
   AppBar _buildAppBar(BuildContext context) {

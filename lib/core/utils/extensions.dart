@@ -26,12 +26,13 @@ extension GoRouterOrderedParamsExtension on BuildContext {
   /// Navigates to a route by replacing placeholders in [routePath] with [paramValues].
   void goWithParams(String routePath, List<String> paramValues) {
     final finalPath = _buildPathWithParams(routePath, paramValues);
-    go(finalPath);
+    return go(finalPath);
   }
 
   /// Pushes a new route onto the stack by replacing placeholders in [routePath] with [paramValues].
-  void pushWithParams(String routePath, List<String> paramValues) {
+  Future<T?> pushWithParams<T extends Object?>(
+      String routePath, List<String> paramValues) {
     final finalPath = _buildPathWithParams(routePath, paramValues);
-    push(finalPath);
+    return push(finalPath);
   }
 }
