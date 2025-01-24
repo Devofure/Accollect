@@ -8,30 +8,36 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+enum ItemScreenMode { collection, library }
+
 class AddOrSelectItemScreen extends StatelessWidget {
-  final String collectionKey;
-  final String collectionName;
+  final String? collectionKey; // Optional for library mode
+  final String? collectionName; // Optional for library mode
   final IItemRepository repository;
+  final ItemScreenMode mode;
 
   const AddOrSelectItemScreen({
     super.key,
-    required this.collectionKey,
-    required this.collectionName,
+    this.collectionKey,
+    this.collectionName,
     required this.repository,
+    required this.mode,
   });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) =>
-          ItemViewModel(repository: repository, collectionKey: collectionKey),
+      create: (_) => ItemViewModel(
+        repository: repository,
+        collectionKey: collectionKey,
+      ),
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
           backgroundColor: Colors.black,
-          title: const Text(
-            'Add to Collection',
-            style: TextStyle(color: Colors.white),
+          title: Text(
+            mode == ItemScreenMode.collection ? 'Add to Collection' : 'Library',
+            style: const TextStyle(color: Colors.white),
           ),
         ),
         body: SafeArea(
@@ -60,12 +66,24 @@ class AddOrSelectItemScreen extends StatelessWidget {
                     )
                   else
                     _buildItemList(availableItemsByCategory, viewModel),
-                  _buildActionButtons(context, viewModel),
+                  if (mode == ItemScreenMode.collection)
+                    _buildActionButtons(context, viewModel),
                 ],
               );
             },
           ),
         ),
+        floatingActionButton: mode == ItemScreenMode.library
+            ? Consumer<ItemViewModel>(
+                builder: (context, viewModel, _) => FloatingActionButton(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  onPressed: () =>
+                      _navigateToAddNewItemScreen(context, viewModel),
+                  child: const Icon(Icons.add),
+                ),
+              )
+            : null,
       ),
     );
   }
@@ -76,15 +94,16 @@ class AddOrSelectItemScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            collectionName,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
+          if (mode == ItemScreenMode.collection)
+            Text(
+              collectionName ?? '',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
+          if (mode == ItemScreenMode.collection) const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -104,17 +123,18 @@ class AddOrSelectItemScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () =>
-                    _navigateToAddNewItemScreen(context, viewModel),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[800],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              if (mode == ItemScreenMode.collection)
+                ElevatedButton(
+                  onPressed: () =>
+                      _navigateToAddNewItemScreen(context, viewModel),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[800],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
+                  child: const Text('New Item'),
                 ),
-                child: const Text('New Item'),
-              ),
             ],
           ),
         ],
@@ -151,30 +171,17 @@ class AddOrSelectItemScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 ...items.map((item) {
-                  return Stack(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: ItemTile(
-                          item: item,
-                          onTap: () {
-                            viewModel.toggleItemSelection(
-                                item.key, !viewModel.isSelected(item.key));
-                          },
-                        ),
-                      ),
-                      Positioned(
-                        right: 32,
-                        top: 20,
-                        child: Checkbox(
-                          value: viewModel.isSelected(item.key),
-                          onChanged: (isSelected) {
-                            viewModel.toggleItemSelection(
-                                item.key, isSelected!);
-                          },
-                        ),
-                      ),
-                    ],
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: ItemTile(
+                      item: item,
+                      onTap: () {
+                        if (mode == ItemScreenMode.collection) {
+                          viewModel.toggleItemSelection(
+                              item.key, !viewModel.isSelected(item.key));
+                        }
+                      },
+                    ),
                   );
                 }).toList(),
               ],
@@ -204,14 +211,13 @@ class AddOrSelectItemScreen extends StatelessWidget {
                 if (Navigator.of(context).canPop()) {
                   Navigator.of(context).pop();
                 } else {
-                  context.go(AppRouter
-                      .homeRoute); // Navigate to the home route as a fallback
+                  context.go(AppRouter.homeRoute);
                 }
               },
               child: const Text('Cancel'),
             ),
           ),
-          const SizedBox(width: 8), // Space between buttons
+          const SizedBox(width: 8),
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -243,12 +249,13 @@ class AddOrSelectItemScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToAddNewItemScreen(BuildContext context,
-      ItemViewModel viewModel) async {
+  void _navigateToAddNewItemScreen(
+    BuildContext context,
+    ItemViewModel viewModel,
+  ) async {
     final newItem = await context.push<ItemUIModel>(AppRouter.addNewItemRoute);
-
     if (newItem != null) {
-      await viewModel.createItem(newItem); // Add the new item
+      await viewModel.createItem(newItem);
     }
   }
 }

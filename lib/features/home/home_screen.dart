@@ -104,6 +104,20 @@ class HomeScreen extends StatelessWidget {
           },
         ),
       ),
+      floatingActionButton: _buildFloatingActionButton(context),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
+  }
+
+  Widget _buildFloatingActionButton(BuildContext context) {
+    return FloatingActionButton(
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      onPressed: () {
+        context
+            .push(AppRouter.itemLibraryRoute); // Replace with the actual route
+      },
+      child: const Icon(Icons.library_books),
     );
   }
 

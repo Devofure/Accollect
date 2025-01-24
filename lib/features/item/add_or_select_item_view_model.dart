@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 
 class ItemViewModel extends ChangeNotifier {
   final IItemRepository repository;
-  final String collectionKey;
+  final String? collectionKey;
 
   List<ItemUIModel> availableItems = [];
   Map<String, List<ItemUIModel>> groupedItems = {};
@@ -60,12 +60,17 @@ class ItemViewModel extends ChangeNotifier {
   bool isSelected(String itemKey) => selectedItems.contains(itemKey);
 
   Future<void> addSelectedItems() async {
+    if (collectionKey == null) {
+      errorMessage = 'Collection key is missing';
+      notifyListeners();
+      return;
+    }
     try {
       isLoading = true;
       notifyListeners();
 
       for (final itemKey in selectedItems) {
-        await repository.addItemToCollection(collectionKey, itemKey);
+        await repository.addItemToCollection(collectionKey!, itemKey);
       }
 
       selectedItems.clear();

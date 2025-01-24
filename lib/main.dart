@@ -136,6 +136,7 @@ class MyApp extends StatelessWidget {
               collectionName: collectionName!,
               collectionKey: collectionKey!,
               repository: ItemRepository(),
+              mode: ItemScreenMode.collection,
             );
           },
         ),
@@ -143,6 +144,14 @@ class MyApp extends StatelessWidget {
           path: AppRouter.addNewItemRoute,
           builder: (context, state) => AddNewItemScreen(
             onCreateItem: (item) => context.pop(item),
+          ),
+        ),
+        // Item Details
+        GoRoute(
+          path: AppRouter.itemLibraryRoute,
+          builder: (context, state) => AddOrSelectItemScreen(
+            repository: ItemRepository(),
+            mode: ItemScreenMode.library,
           ),
         ),
         // Item Details
