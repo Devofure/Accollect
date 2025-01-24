@@ -47,7 +47,7 @@ class CreateCollectionScreen extends StatelessWidget {
                       const SizedBox(height: 24),
                       _buildImageUpload(viewModel),
                       const SizedBox(height: 24),
-                      _buildSaveButton(viewModel, context),
+                      _buildButtons(viewModel, context),
                     ],
                   ),
                 ),
@@ -65,7 +65,11 @@ class CreateCollectionScreen extends StatelessWidget {
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.close, color: Colors.white),
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: () {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        },
       ),
     );
   }
@@ -75,17 +79,17 @@ class CreateCollectionScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
         Text(
-          'Start collecting',
+          'Create a Collection',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 26,
+            fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
         ),
         SizedBox(height: 8),
         Text(
-          'Create a new collection by filling in the details below.',
-          style: TextStyle(color: Colors.grey, fontSize: 14),
+          'Fill in the details to start your new collection.',
+          style: TextStyle(color: Colors.grey, fontSize: 16),
         ),
       ],
     );
@@ -167,54 +171,71 @@ class CreateCollectionScreen extends StatelessWidget {
         child: Column(
           children: [
             CircleAvatar(
-              radius: 40,
+              radius: 50,
               backgroundImage: viewModel.uploadedImage != null
                   ? FileImage(viewModel.uploadedImage!) as ImageProvider
                   : null,
               child: viewModel.uploadedImage == null
-                  ? Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[800],
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.photo_camera,
-                          color: Colors.white, size: 32),
-                    )
+                  ? const Icon(Icons.photo_camera,
+                      color: Colors.white, size: 36)
                   : null,
             ),
             const SizedBox(height: 8),
-            const Text('Upload Image',
-                style: TextStyle(color: Colors.grey, fontSize: 14)),
+            const Text(
+              'Upload Collection Image',
+              style: TextStyle(color: Colors.grey, fontSize: 14),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSaveButton(
+  Widget _buildButtons(
       CreateCollectionViewModel viewModel, BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey[800],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Cancel', style: TextStyle(color: Colors.white)),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 16),
         ),
-        onPressed: () async {
-          final newCollectionKey = await viewModel.saveCollection();
-          if (newCollectionKey != null && context.mounted) {
-            context.goWithParams(
-              AppRouter.collectionRoute,
-              [newCollectionKey],
-            );
-          }
-        },
-        child: const Text('Save Collection'),
-      ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () async {
+              if (viewModel.isLoading) return;
+              final newCollectionKey = await viewModel.saveCollection();
+              if (newCollectionKey != null && context.mounted) {
+                context.goWithParams(
+                    AppRouter.collectionRoute, [newCollectionKey]);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: viewModel.isLoading
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text('Save Collection',
+                    style: TextStyle(color: Colors.white)),
+          ),
+        ),
+      ],
     );
   }
 }

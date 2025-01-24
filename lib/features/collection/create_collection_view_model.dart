@@ -16,6 +16,8 @@ class CreateCollectionViewModel extends ChangeNotifier {
   String category = 'Wine';
   File? uploadedImage;
 
+  bool isLoading = false;
+
   final List<String> categories = ['Wine', 'LEGO', 'Funko Pop'];
 
   CreateCollectionViewModel({required this.repository});
@@ -60,12 +62,18 @@ class CreateCollectionViewModel extends ChangeNotifier {
         imageUrl: uploadedImage?.path,
       );
 
+      isLoading = true; // Set loading to true
+      notifyListeners();
+
       try {
         await repository.createCollection(newCollection);
         return newCollection.key;
       } catch (e) {
         debugPrint('Failed to save collection: $e');
         return null;
+      } finally {
+        isLoading = false; // Set loading to false
+        notifyListeners();
       }
     }
     return null;
