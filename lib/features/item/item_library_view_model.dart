@@ -2,9 +2,8 @@ import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/core/models/item_ui_model.dart';
 import 'package:flutter/foundation.dart';
 
-class AddOrSelectItemViewModel extends ChangeNotifier {
+class ItemLibraryViewModel extends ChangeNotifier {
   final IItemRepository repository;
-  final String? collectionKey;
 
   List<ItemUIModel> availableItems = [];
   Map<String, List<ItemUIModel>> groupedItems = {};
@@ -12,8 +11,11 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
-  AddOrSelectItemViewModel(
-      {required this.repository, required this.collectionKey}) {
+  // Additional fields for category filtering and sorting
+  String selectedCategory = 'All';
+  String sortOrder = 'Year';
+
+  ItemLibraryViewModel({required this.repository}) {
     _loadAvailableItems();
   }
 
@@ -25,7 +27,7 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
 
       availableItems = await repository.fetchAvailableItems();
       debugPrint('Fetched Available Items: ${availableItems.length}');
-      _groupItemsByCategory();
+      _applyFiltersAndGrouping();
 
       debugPrint(
           'Available Items: ${availableItems.map((e) => e.title).toList()}');
@@ -37,11 +39,28 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
     }
   }
 
-  void _groupItemsByCategory() {
+  void _applyFiltersAndGrouping() {
+    // Apply category filter
+    List<ItemUIModel> filteredItems = availableItems;
+    if (selectedCategory != 'All') {
+      filteredItems = filteredItems
+          .where((item) => item.category == selectedCategory)
+          .toList();
+    }
+
+    // Apply sorting
+    if (sortOrder == 'Year') {
+      filteredItems
+          .sort((a, b) => b.addedOn.compareTo(a.addedOn)); // Descending by date
+    } else if (sortOrder == 'Name') {
+      filteredItems
+          .sort((a, b) => a.title.compareTo(b.title)); // Alphabetically by name
+    }
+
+    // Group items by category
     groupedItems.clear();
-    for (final item in availableItems) {
-      final category = item.category;
-      groupedItems.putIfAbsent(category, () => []).add(item);
+    for (final item in filteredItems) {
+      groupedItems.putIfAbsent(item.category, () => []).add(item);
     }
   }
 
@@ -60,30 +79,6 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
 
   bool isSelected(String itemKey) => selectedItems.contains(itemKey);
 
-  Future<void> addSelectedItems() async {
-    if (collectionKey == null) {
-      errorMessage = 'Collection key is missing';
-      notifyListeners();
-      return;
-    }
-    try {
-      isLoading = true;
-      notifyListeners();
-
-      for (final itemKey in selectedItems) {
-        await repository.addItemToCollection(collectionKey!, itemKey);
-      }
-
-      selectedItems.clear();
-      await _loadAvailableItems();
-    } catch (e) {
-      errorMessage = 'Failed to add selected items to collection';
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
-
   Future<void> createItem(ItemUIModel newItem) async {
     try {
       isLoading = true;
@@ -99,10 +94,36 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
   }
 
   void filterItems(String query) {
-    availableItems = availableItems
+    final filtered = availableItems
         .where((item) => item.title.toLowerCase().contains(query.toLowerCase()))
         .toList();
-    _groupItemsByCategory();
+
+    if (selectedCategory != 'All') {
+      groupedItems.clear();
+      for (final item in filtered) {
+        if (item.category == selectedCategory) {
+          groupedItems.putIfAbsent(item.category, () => []).add(item);
+        }
+      }
+    } else {
+      groupedItems.clear();
+      for (final item in filtered) {
+        groupedItems.putIfAbsent(item.category, () => []).add(item);
+      }
+    }
+
+    notifyListeners();
+  }
+
+  void selectCategory(String category) {
+    selectedCategory = category;
+    _applyFiltersAndGrouping();
+    notifyListeners();
+  }
+
+  void sortItems(String order) {
+    sortOrder = order;
+    _applyFiltersAndGrouping();
     notifyListeners();
   }
 }

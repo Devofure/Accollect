@@ -8,26 +8,22 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-enum ItemScreenMode { collection, library }
-
 class AddOrSelectItemScreen extends StatelessWidget {
   final String? collectionKey; // Optional for library mode
   final String? collectionName; // Optional for library mode
   final IItemRepository repository;
-  final ItemScreenMode mode;
 
   const AddOrSelectItemScreen({
     super.key,
     this.collectionKey,
     this.collectionName,
     required this.repository,
-    required this.mode,
   });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ItemViewModel(
+      create: (_) => AddOrSelectItemViewModel(
         repository: repository,
         collectionKey: collectionKey,
       ),
@@ -36,12 +32,12 @@ class AddOrSelectItemScreen extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: Colors.black,
           title: Text(
-            mode == ItemScreenMode.collection ? 'Add to Collection' : 'Library',
+            'Add to Collection',
             style: const TextStyle(color: Colors.white),
           ),
         ),
         body: SafeArea(
-          child: Consumer<ItemViewModel>(
+          child: Consumer<AddOrSelectItemViewModel>(
             builder: (context, viewModel, _) {
               if (viewModel.isLoading) {
                 return const Center(child: CircularProgressIndicator());
@@ -66,44 +62,32 @@ class AddOrSelectItemScreen extends StatelessWidget {
                     )
                   else
                     _buildItemList(availableItemsByCategory, viewModel),
-                  if (mode == ItemScreenMode.collection)
-                    _buildActionButtons(context, viewModel),
+                  _buildActionButtons(context, viewModel),
                 ],
               );
             },
           ),
         ),
-        floatingActionButton: mode == ItemScreenMode.library
-            ? Consumer<ItemViewModel>(
-                builder: (context, viewModel, _) => FloatingActionButton(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  onPressed: () =>
-                      _navigateToAddNewItemScreen(context, viewModel),
-                  child: const Icon(Icons.add),
-                ),
-              )
-            : null,
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, ItemViewModel viewModel) {
+  Widget _buildHeader(
+      BuildContext context, AddOrSelectItemViewModel viewModel) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (mode == ItemScreenMode.collection)
-            Text(
-              collectionName ?? '',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-              ),
+          Text(
+            collectionName ?? '',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
             ),
-          if (mode == ItemScreenMode.collection) const SizedBox(height: 16),
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -123,18 +107,17 @@ class AddOrSelectItemScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              if (mode == ItemScreenMode.collection)
-                ElevatedButton(
-                  onPressed: () =>
-                      _navigateToAddNewItemScreen(context, viewModel),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[800],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+              ElevatedButton(
+                onPressed: () =>
+                    _navigateToAddNewItemScreen(context, viewModel),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[800],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text('New Item'),
                 ),
+                child: const Text('New Item'),
+              ),
             ],
           ),
         ],
@@ -144,7 +127,7 @@ class AddOrSelectItemScreen extends StatelessWidget {
 
   Widget _buildItemList(
     Map<String, List<ItemUIModel>> itemsByCategory,
-    ItemViewModel viewModel,
+    AddOrSelectItemViewModel viewModel,
   ) {
     return Expanded(
       child: ListView.builder(
@@ -176,14 +159,14 @@ class AddOrSelectItemScreen extends StatelessWidget {
                     child: ItemTile(
                       item: item,
                       onTap: () {
-                        if (mode == ItemScreenMode.collection) {
-                          viewModel.toggleItemSelection(
-                              item.key, !viewModel.isSelected(item.key));
-                        }
+                        viewModel.toggleItemSelection(
+                          item.key,
+                          !viewModel.isSelected(item.key),
+                        );
                       },
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           );
@@ -192,7 +175,8 @@ class AddOrSelectItemScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, ItemViewModel viewModel) {
+  Widget _buildActionButtons(
+      BuildContext context, AddOrSelectItemViewModel viewModel) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -251,7 +235,7 @@ class AddOrSelectItemScreen extends StatelessWidget {
 
   void _navigateToAddNewItemScreen(
     BuildContext context,
-    ItemViewModel viewModel,
+    AddOrSelectItemViewModel viewModel,
   ) async {
     final newItem = await context.push<ItemUIModel>(AppRouter.addNewItemRoute);
     if (newItem != null) {

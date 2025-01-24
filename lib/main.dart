@@ -3,6 +3,7 @@ import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/features/home/home_view_model.dart';
 import 'package:accollect/features/item/add_new_item_screen.dart';
 import 'package:accollect/features/item/add_or_select_item_screen.dart';
+import 'package:accollect/features/item/item_library_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider, EmailAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
@@ -136,7 +137,6 @@ class MyApp extends StatelessWidget {
               collectionName: collectionName!,
               collectionKey: collectionKey!,
               repository: ItemRepository(),
-              mode: ItemScreenMode.collection,
             );
           },
         ),
@@ -149,9 +149,8 @@ class MyApp extends StatelessWidget {
         // Item Details
         GoRoute(
           path: AppRouter.itemLibraryRoute,
-          builder: (context, state) => AddOrSelectItemScreen(
+          builder: (context, state) => ItemLibraryScreen(
             repository: ItemRepository(),
-            mode: ItemScreenMode.library,
           ),
         ),
         // Item Details
