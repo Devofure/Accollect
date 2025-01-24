@@ -1,15 +1,20 @@
+import 'dart:io';
+
 import 'package:accollect/core/data/collection_repository.dart';
 import 'package:accollect/core/models/collection_ui_model.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CreateCollectionViewModel extends ChangeNotifier {
   final ICollectionRepository repository;
 
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final ImagePicker _imagePicker = ImagePicker();
+
   String? collectionName;
   String? description;
-  String category = 'Wine'; // Default category
-  String? uploadedImage;
+  String category = 'Wine';
+  File? uploadedImage;
 
   final List<String> categories = ['Wine', 'LEGO', 'Funko Pop'];
 
@@ -30,32 +35,36 @@ class CreateCollectionViewModel extends ChangeNotifier {
     }
   }
 
-  void uploadImage() {
-    uploadedImage = 'https://via.placeholder.com/150'; // Placeholder logic
-    notifyListeners();
+  Future<void> uploadImage() async {
+    try {
+      final pickedFile =
+          await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        uploadedImage = File(pickedFile.path);
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+    }
   }
 
   Future<String?> saveCollection() async {
     if (formKey.currentState!.validate()) {
       formKey.currentState!.save();
 
-      // Create a collection model to send to the repository
       final newCollection = CollectionUIModel(
         key: DateTime.now().millisecondsSinceEpoch.toString(),
-        // Example key
         name: collectionName!,
         description: description ?? '',
         itemCount: 0,
-        // Initial item count
-        imageUrl: uploadedImage,
+        imageUrl: uploadedImage?.path,
       );
 
       try {
         await repository.createCollection(newCollection);
-        debugPrint('Collection successfully created: ${newCollection.name}');
-        return newCollection.key; // Return the key
+        return newCollection.key;
       } catch (e) {
-        debugPrint('Failed to create collection: $e');
+        debugPrint('Failed to save collection: $e');
         return null;
       }
     }

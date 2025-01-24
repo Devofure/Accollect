@@ -169,7 +169,7 @@ class CreateCollectionScreen extends StatelessWidget {
             CircleAvatar(
               radius: 40,
               backgroundImage: viewModel.uploadedImage != null
-                  ? NetworkImage(viewModel.uploadedImage!)
+                  ? FileImage(viewModel.uploadedImage!) as ImageProvider
                   : null,
               child: viewModel.uploadedImage == null
                   ? Container(
