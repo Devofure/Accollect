@@ -11,38 +11,61 @@ class ItemLibraryViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
-  // Additional fields for category filtering and sorting
-  String selectedCategory = 'All';
+  List<String> categories = []; // Dynamically loaded categories
+  String? selectedCategory; // Default to the first category after loading
   String sortOrder = 'Year';
 
   ItemLibraryViewModel({required this.repository}) {
-    _loadAvailableItems();
+    _initialize();
   }
 
-  Future<void> _loadAvailableItems() async {
+  Future<void> _initialize() async {
     try {
       isLoading = true;
       errorMessage = null;
       notifyListeners();
 
-      availableItems = await repository.fetchAvailableItems();
-      debugPrint('Fetched Available Items: ${availableItems.length}');
-      _applyFiltersAndGrouping();
+      // Load categories first
+      await _loadCategories();
 
-      debugPrint(
-          'Available Items: ${availableItems.map((e) => e.title).toList()}');
+      // Then load available items
+      await _loadAvailableItems();
     } catch (e) {
-      errorMessage = 'Failed to load items';
+      errorMessage = 'Failed to initialize data';
     } finally {
       isLoading = false;
       notifyListeners();
     }
   }
 
+  Future<void> _loadAvailableItems() async {
+    try {
+      availableItems = await repository.fetchAvailableItems();
+      debugPrint('Fetched Available Items: ${availableItems.length}');
+      _applyFiltersAndGrouping();
+    } catch (e) {
+      errorMessage = 'Failed to load items';
+      debugPrint('Error loading items: $e');
+    }
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      categories = await repository.fetchCategories();
+      if (categories.isNotEmpty) {
+        selectedCategory ??= categories.first; // Default to the first category
+      } else {
+        selectedCategory = null;
+      }
+    } catch (e) {
+      errorMessage = 'Failed to load categories';
+      debugPrint('Error loading categories: $e');
+    }
+  }
+
   void _applyFiltersAndGrouping() {
-    // Apply category filter
     List<ItemUIModel> filteredItems = availableItems;
-    if (selectedCategory != 'All') {
+    if (selectedCategory != null) {
       filteredItems = filteredItems
           .where((item) => item.category == selectedCategory)
           .toList();
@@ -51,10 +74,9 @@ class ItemLibraryViewModel extends ChangeNotifier {
     // Apply sorting
     if (sortOrder == 'Year') {
       filteredItems
-          .sort((a, b) => b.addedOn.compareTo(a.addedOn)); // Descending by date
+          .sort((a, b) => b.addedOn.compareTo(a.addedOn)); // Descending
     } else if (sortOrder == 'Name') {
-      filteredItems
-          .sort((a, b) => a.title.compareTo(b.title)); // Alphabetically by name
+      filteredItems.sort((a, b) => a.title.compareTo(b.title)); // Alphabetical
     }
 
     // Group items by category
@@ -87,6 +109,7 @@ class ItemLibraryViewModel extends ChangeNotifier {
       await _loadAvailableItems();
     } catch (e) {
       errorMessage = 'Failed to create and add item';
+      debugPrint('Error creating item: $e');
     } finally {
       isLoading = false;
       notifyListeners();
@@ -98,7 +121,7 @@ class ItemLibraryViewModel extends ChangeNotifier {
         .where((item) => item.title.toLowerCase().contains(query.toLowerCase()))
         .toList();
 
-    if (selectedCategory != 'All') {
+    if (selectedCategory != null) {
       groupedItems.clear();
       for (final item in filtered) {
         if (item.category == selectedCategory) {
@@ -125,5 +148,19 @@ class ItemLibraryViewModel extends ChangeNotifier {
     sortOrder = order;
     _applyFiltersAndGrouping();
     notifyListeners();
+  }
+
+  Future<void> addCategory(String newCategory) async {
+    try {
+      if (!categories.contains(newCategory)) {
+        await repository.addCategory(newCategory); // Save in repository
+        await _loadCategories(); // Reload categories
+        selectedCategory = newCategory; // Automatically select the new category
+        notifyListeners();
+      }
+    } catch (e) {
+      errorMessage = 'Failed to add category';
+      debugPrint('Error adding category: $e');
+    }
   }
 }

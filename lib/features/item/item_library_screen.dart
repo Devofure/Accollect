@@ -42,7 +42,7 @@ class ItemLibraryScreen extends StatelessWidget {
 
               return Column(
                 children: [
-                  _buildCategorySelector(viewModel),
+                  _buildCategorySelector(context, viewModel),
                   _buildSearchAndFilterRow(viewModel),
                   if (itemsByCategory.isEmpty)
                     const Expanded(
@@ -72,8 +72,10 @@ class ItemLibraryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCategorySelector(ItemLibraryViewModel viewModel) {
-    final categories = ['All', 'Funko Pop', 'LEGO', 'Wine', 'Other'];
+  Widget _buildCategorySelector(
+      BuildContext context, ItemLibraryViewModel viewModel) {
+    final categories = ['+ New Category', ...viewModel.categories];
+
     return Container(
       height: 50,
       margin: const EdgeInsets.only(bottom: 8),
@@ -93,9 +95,19 @@ class ItemLibraryScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
               selected: isSelected,
-              onSelected: (_) => viewModel.selectCategory(category),
-              selectedColor: Colors.white,
-              backgroundColor: Colors.grey[800],
+              onSelected: (isSelected) {
+                if (category == '+ New Category') {
+                  _showAddCategoryDialog(context, viewModel);
+                } else {
+                  viewModel.selectCategory(category);
+                }
+              },
+              selectedColor: category == '+ Add New Category'
+                  ? Colors.grey[800]
+                  : Colors.white,
+              backgroundColor: category == '+ Add New Category'
+                  ? Colors.grey[800]
+                  : Colors.grey[800],
             ),
           );
         },
@@ -125,22 +137,6 @@ class ItemLibraryScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          DropdownButton<String>(
-            value: viewModel.sortOrder,
-            dropdownColor: Colors.grey[900],
-            style: const TextStyle(color: Colors.white),
-            items: ['Year', 'Name']
-                .map((order) => DropdownMenuItem(
-                      value: order,
-                      child: Text(order),
-                    ))
-                .toList(),
-            onChanged: (String? newValue) {
-              if (newValue != null) {
-                viewModel.sortItems(newValue);
-              }
-            },
-          ),
         ],
       ),
     );
@@ -201,5 +197,49 @@ class ItemLibraryScreen extends StatelessWidget {
     if (newItem != null) {
       await viewModel.createItem(newItem);
     }
+  }
+
+  void _showAddCategoryDialog(
+      BuildContext context, ItemLibraryViewModel viewModel) {
+    final TextEditingController _controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text(
+          'Add New Category',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: TextField(
+          controller: _controller,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'Enter category name',
+            hintStyle: const TextStyle(color: Colors.grey),
+            filled: true,
+            fillColor: Colors.grey[800],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () {
+              if (_controller.text.trim().isNotEmpty) {
+                viewModel.addCategory(_controller.text.trim());
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Add', style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
   }
 }

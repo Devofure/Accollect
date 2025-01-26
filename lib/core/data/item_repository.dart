@@ -13,6 +13,10 @@ abstract class IItemRepository {
   Future<ItemUIModel> createItem(ItemUIModel item);
 
   Future<void> addItemToCollection(String collectionKey, String itemKey);
+
+  Future<List<String>> fetchCategories();
+
+  Future<void> addCategory(String category);
 }
 
 class ItemRepository implements IItemRepository {
@@ -63,5 +67,17 @@ class ItemRepository implements IItemRepository {
       final updatedItem = item.copyWith(collectionKey: collectionKey);
       _database.updateItem(updatedItem); // Update the item in the database
     }
+  }
+
+  @override
+  Future<List<String>> fetchCategories() async {
+    return Future.delayed(const Duration(milliseconds: 300), () {
+      return _database.getCategories();
+    });
+  }
+
+  @override
+  Future<void> addCategory(String category) async {
+    _database.addCategory(category);
   }
 }

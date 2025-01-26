@@ -11,6 +11,7 @@ class InMemoryDatabase {
   // Storage for collections and items
   final Map<String, CollectionUIModel> _collections = {};
   final Map<String, ItemUIModel> _items = {};
+  final List<String> _categories = ['Funko Pop', 'LEGO', 'Wine', 'Other'];
 
   Map<String, ItemUIModel> get allItems => _items;
 
@@ -36,16 +37,6 @@ class InMemoryDatabase {
   void addItem(ItemUIModel item) {
     print('[InMemoryDatabase] Adding item: ${item.title}');
     _items[item.key] = item;
-/*
-    final collectionKey = item.collectionKey;
-    if (collectionKey != null && _collections[collectionKey] != null) {
-      final collection = _collections[collectionKey]!;
-      final updatedCount =
-          _items.values.where((i) => i.collectionKey == collectionKey).length;
-      _collections[collectionKey] =
-          collection.copyWith(itemCount: updatedCount);
-      print('[InMemoryDatabase] Updated item count for collection: $collectionKey to $updatedCount');
-    }*/
   }
 
   // Update an item
@@ -66,5 +57,15 @@ class InMemoryDatabase {
     return _items.values
         .where((item) => item.collectionKey == collectionKey)
         .toList();
+  }
+
+  List<String> getCategories() {
+    return List.unmodifiable(_categories);
+  }
+
+  void addCategory(String category) {
+    if (!_categories.contains(category)) {
+      _categories.add(category);
+    }
   }
 }
