@@ -55,6 +55,7 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
     } else {
       selectedItems.remove(itemKey);
     }
+    debugPrint("Selected Items: $selectedItems");
     notifyListeners();
   }
 

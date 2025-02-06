@@ -1,36 +1,45 @@
-import 'package:accollect/core/data/in_memory_database.dart';
 import 'package:accollect/core/models/collection_ui_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 abstract class ICollectionRepository {
   Future<CollectionUIModel> fetchCollectionDetails(String collectionKey);
 
-  Future<List<CollectionUIModel>> fetchCollections();
+  Stream<List<CollectionUIModel>> fetchCollectionsStream();
+
   Future<void> createCollection(CollectionUIModel collection);
 }
 
 class CollectionRepository implements ICollectionRepository {
-  final InMemoryDatabase _db = InMemoryDatabase();
+  final CollectionReference _collectionRef =
+      FirebaseFirestore.instance.collection('collections');
 
   @override
-  Future<List<CollectionUIModel>> fetchCollections() async {
-    return Future.delayed(const Duration(milliseconds: 500), () {
-      return _db.getAllCollections();
+  Stream<List<CollectionUIModel>> fetchCollectionsStream() {
+    return _collectionRef.snapshots().map((snapshot) {
+      return snapshot.docs
+          .map((doc) =>
+              CollectionUIModel.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
     });
   }
 
   @override
   Future<CollectionUIModel> fetchCollectionDetails(String collectionKey) async {
-    return Future.delayed(const Duration(milliseconds: 500), () {
-      final collection = _db.getCollection(collectionKey);
-      if (collection == null) throw Exception('Collection not found');
-      return collection;
-    });
+    try {
+      final doc = await _collectionRef.doc(collectionKey).get();
+      if (!doc.exists) throw Exception('Collection not found');
+      return CollectionUIModel.fromJson(doc.data() as Map<String, dynamic>);
+    } catch (e) {
+      throw Exception('Failed to fetch collection details: $e');
+    }
   }
 
   @override
   Future<void> createCollection(CollectionUIModel collection) async {
-    return Future.delayed(const Duration(milliseconds: 500), () {
-      _db.addCollection(collection);
-    });
+    try {
+      await _collectionRef.doc(collection.key).set(collection.toJson());
+    } catch (e) {
+      throw Exception('Failed to create collection: $e');
+    }
   }
 }

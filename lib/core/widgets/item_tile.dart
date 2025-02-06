@@ -5,11 +5,13 @@ import 'package:intl/intl.dart';
 class ItemTile extends StatelessWidget {
   final ItemUIModel item;
   final VoidCallback? onTap;
+  final bool isSelected;
 
   const ItemTile({
     super.key,
     required this.item,
     this.onTap,
+    this.isSelected = false,
   });
 
   @override
@@ -20,8 +22,9 @@ class ItemTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8), // Consistent margin
         padding: const EdgeInsets.all(12), // Adjust padding
         decoration: BoxDecoration(
-          color: Colors.grey[800],
+          color: isSelected ? Colors.blueGrey[800] : Colors.grey[800],
           borderRadius: BorderRadius.circular(12),
+          border: isSelected ? Border.all(color: Colors.blue, width: 2) : null,
         ),
         child: Row(
           children: [
@@ -74,6 +77,7 @@ class ItemTile extends StatelessWidget {
                 ],
               ),
             ),
+            if (isSelected) const Icon(Icons.check_circle, color: Colors.blue),
           ],
         ),
       ),

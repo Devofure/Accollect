@@ -14,34 +14,66 @@ class HomeViewModel extends ChangeNotifier {
   bool isLoading = true;
   String? errorMessage;
 
+  bool _hasFetchedCollections = false;
+  bool _hasFetchedItems = false;
+
   HomeViewModel({
     required this.itemRepository,
     required this.collectionRepository,
   }) {
-    loadData();
+    _listenToData();
   }
 
-  get currentUser => FirebaseAuth.instance.currentUser;
+  User? get currentUser => FirebaseAuth.instance.currentUser;
 
-  Future<void> loadData() async {
+  void _listenToData() {
     try {
       isLoading = true;
-      errorMessage = null;
       notifyListeners();
 
-      collections = await collectionRepository.fetchCollections();
-      latestItems = await itemRepository.fetchLatestItems();
+      // 🔄 Listen to Firestore collections stream
+      collectionRepository.fetchCollectionsStream().listen(
+        (fetchedCollections) {
+          collections = fetchedCollections;
+          _hasFetchedCollections = true;
+          _updateLoadingState();
+        },
+        onError: (e) {
+          errorMessage = 'Failed to load collections: $e';
+          _hasFetchedCollections = true;
+          _updateLoadingState();
+        },
+      );
 
-      isLoading = false;
+      // 🔄 Listen to Firestore latest items stream
+      itemRepository.fetchLatestItemsStream().listen(
+        (fetchedItems) {
+          latestItems = fetchedItems;
+          _hasFetchedItems = true;
+          _updateLoadingState();
+        },
+        onError: (e) {
+          errorMessage = 'Failed to load latest items: $e';
+          _hasFetchedItems = true;
+          _updateLoadingState();
+        },
+      );
     } catch (e) {
-      errorMessage = 'Failed to load data';
+      errorMessage = 'Unexpected error: $e';
       isLoading = false;
-    } finally {
       notifyListeners();
     }
   }
 
+  void _updateLoadingState() {
+    // 🛑 Stop loading after both streams have fetched at least once
+    if (_hasFetchedCollections && _hasFetchedItems) {
+      isLoading = false;
+    }
+    notifyListeners();
+  }
+
   void retryFetchingData() {
-    loadData();
+    _listenToData();
   }
 }

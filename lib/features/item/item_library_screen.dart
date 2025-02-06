@@ -1,6 +1,7 @@
 import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/core/models/item_ui_model.dart';
 import 'package:accollect/core/navigation/app_router.dart';
+import 'package:accollect/core/widgets/categoy_selector_widget.dart';
 import 'package:accollect/core/widgets/empty_state.dart';
 import 'package:accollect/core/widgets/item_tile.dart';
 import 'package:accollect/features/item/item_library_view_model.dart';
@@ -42,7 +43,13 @@ class ItemLibraryScreen extends StatelessWidget {
 
               return Column(
                 children: [
-                  _buildCategorySelector(context, viewModel),
+                  buildCategorySelector(
+                    context: context,
+                    viewModel: viewModel,
+                    onCategorySelected: (category) {
+                      viewModel.selectCategory(category);
+                    },
+                  ),
                   _buildSearchAndFilterRow(viewModel),
                   if (itemsByCategory.isEmpty)
                     const Expanded(
@@ -68,49 +75,6 @@ class ItemLibraryScreen extends StatelessWidget {
           ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      ),
-    );
-  }
-
-  Widget _buildCategorySelector(
-      BuildContext context, ItemLibraryViewModel viewModel) {
-    final categories = ['+ New Category', ...viewModel.categories];
-
-    return Container(
-      height: 50,
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          final category = categories[index];
-          final isSelected = viewModel.selectedCategory == category;
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: ChoiceChip(
-              label: Text(category),
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.black : Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-              selected: isSelected,
-              onSelected: (isSelected) {
-                if (category == '+ New Category') {
-                  _showAddCategoryDialog(context, viewModel);
-                } else {
-                  viewModel.selectCategory(category);
-                }
-              },
-              selectedColor: category == '+ Add New Category'
-                  ? Colors.grey[800]
-                  : Colors.white,
-              backgroundColor: category == '+ Add New Category'
-                  ? Colors.grey[800]
-                  : Colors.grey[800],
-            ),
-          );
-        },
       ),
     );
   }

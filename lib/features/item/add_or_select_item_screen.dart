@@ -125,10 +125,8 @@ class AddOrSelectItemScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemList(
-    Map<String, List<ItemUIModel>> itemsByCategory,
-    AddOrSelectItemViewModel viewModel,
-  ) {
+  Widget _buildItemList(Map<String, List<ItemUIModel>> itemsByCategory,
+      AddOrSelectItemViewModel viewModel,) {
     return Expanded(
       child: ListView.builder(
         itemCount: itemsByCategory.length,
@@ -154,10 +152,12 @@ class AddOrSelectItemScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 ...items.map((item) {
+                  final isSelected = viewModel.isSelected(item.key);
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: ItemTile(
                       item: item,
+                      isSelected: isSelected, // ✅ Pass selection state
                       onTap: () {
                         viewModel.toggleItemSelection(
                           item.key,
