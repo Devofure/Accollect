@@ -1,4 +1,3 @@
-import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/ui/settings/settings_collections_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,15 +8,17 @@ class CollectionManagementScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => CollectionManagementViewModel(
-        categoryRepository: CategoryRepository(),
+      create: (context) => CollectionManagementViewModel(
+        categoryRepository: context.read(),
       ),
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
           backgroundColor: Colors.black,
-          title: const Text('Collection Management',
-              style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Collection Management',
+            style: TextStyle(color: Colors.white),
+          ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
@@ -26,17 +27,6 @@ class CollectionManagementScreen extends StatelessWidget {
         body: SafeArea(
           child: Consumer<CollectionManagementViewModel>(
             builder: (context, viewModel, _) {
-              if (viewModel.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (viewModel.errorMessage != null) {
-                return Center(
-                  child: Text(viewModel.errorMessage!,
-                      style: const TextStyle(color: Colors.redAccent)),
-                );
-              }
-
               return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
@@ -92,162 +82,98 @@ class CollectionManagementScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blueGrey[700],
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          onPressed: () {
-            final newCategory = categoryController.text.trim();
-            if (newCategory.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Category name can't be empty"),
-                  backgroundColor: Colors.redAccent,
+        ValueListenableBuilder<bool>(
+          valueListenable: viewModel.addCategoryCommand.isExecuting,
+          builder: (context, isExecuting, child) {
+            return ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueGrey[700],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              );
-              return;
-            }
-            if (viewModel.categories.contains(newCategory)) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Category already exists"),
-                  backgroundColor: Colors.orangeAccent,
-                ),
-              );
-              return;
-            }
-            viewModel.addCategory(newCategory);
-            categoryController.clear();
+              ),
+              onPressed: isExecuting
+                  ? null
+                  : () {
+                      final newCategory = categoryController.text.trim();
+                      if (newCategory.isNotEmpty) {
+                        viewModel.addCategoryCommand.execute(newCategory);
+                        categoryController.clear();
+                      }
+                    },
+              child: isExecuting
+                  ? const CircularProgressIndicator()
+                  : const Text('Add'),
+            );
           },
-          child: const Text('Add'),
         ),
       ],
     );
   }
 
   Widget _buildCategoryList(CollectionManagementViewModel viewModel) {
-    return SizedBox(
-      height: 200,
-      child: ListView.separated(
-        itemCount: viewModel.categories.length,
-        separatorBuilder: (context, index) =>
-            Divider(color: Colors.grey[700], thickness: 0.5),
-        itemBuilder: (context, index) {
-          final category = viewModel.categories[index];
-          return ListTile(
-            title: Text(category, style: const TextStyle(color: Colors.white)),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete, color: Colors.redAccent),
-              onPressed: () => viewModel.deleteCategory(category),
-            ),
-          );
-        },
-      ),
+    return ValueListenableBuilder<List<String>>(
+      valueListenable: viewModel.fetchEditableCategoriesCommand,
+      builder: (context, categories, child) {
+        return ListView.builder(
+          shrinkWrap: true,
+          itemCount: categories.length,
+          itemBuilder: (context, index) {
+            final category = categories[index];
+            return ListTile(
+              title:
+                  Text(category, style: const TextStyle(color: Colors.white)),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete, color: Colors.redAccent),
+                onPressed: () =>
+                    viewModel.deleteCategoryCommand.execute(category),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
   Widget _buildDangerZone(
       BuildContext context, CollectionManagementViewModel viewModel) {
-    return Card(
-      //color: Colors.red[900],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Danger Zone',
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-            const SizedBox(height: 8),
-            _buildDangerButton(
-              context,
-              title: 'Delete All Collections',
-              icon: Icons.delete_forever,
-              color: Colors.redAccent,
-              onPressed: () => _showConfirmationDialog(
-                context,
-                title: 'Delete All Collections',
-                content:
-                    'Are you sure you want to delete all collections? This action cannot be undone.',
-                onConfirm: () => viewModel.deleteAllCollections(),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildDangerButton(
-              context,
-              title: 'Delete All Data',
-              icon: Icons.warning_amber_rounded,
-              color: Colors.red,
-              onPressed: () => _showConfirmationDialog(
-                context,
-                title: 'Delete All Data',
-                content:
-                    'Are you sure you want to delete ALL data (collections and items)? This action cannot be undone.',
-                onConfirm: () => viewModel.deleteAllData(),
-              ),
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Danger Zone',
+          style: TextStyle(color: Colors.redAccent, fontSize: 18),
         ),
-      ),
+        const SizedBox(height: 8),
+        _buildDangerButton(
+          context,
+          title: 'Delete All Collections',
+          color: Colors.redAccent,
+          onPressed: () => viewModel.deleteAllCollectionsCommand.execute(),
+        ),
+        const SizedBox(height: 8),
+        _buildDangerButton(
+          context,
+          title: 'Delete All Data',
+          color: Colors.red,
+          onPressed: () => viewModel.deleteAllDataCommand.execute(),
+        ),
+      ],
     );
   }
 
   Widget _buildDangerButton(BuildContext context,
       {required String title,
-      required IconData icon,
       required Color color,
       required VoidCallback onPressed}) {
-    return ElevatedButton.icon(
+    return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       onPressed: onPressed,
-      icon: Icon(icon),
-      label: Text(title),
-    );
-  }
-
-  void _showConfirmationDialog(BuildContext context,
-      {required String title,
-      required String content,
-      required VoidCallback onConfirm}) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          title: Text(title, style: const TextStyle(color: Colors.white)),
-          content: Text(content, style: const TextStyle(color: Colors.grey)),
-          actions: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[700],
-              ),
-              onPressed: () => Navigator.of(context).pop(),
-              child:
-                  const Text('Cancel', style: TextStyle(color: Colors.white)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              onPressed: () {
-                onConfirm();
-                Navigator.of(context).pop();
-              },
-              child:
-                  const Text('Confirm', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
+      child: Text(title),
     );
   }
 }

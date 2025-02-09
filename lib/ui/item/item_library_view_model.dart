@@ -60,7 +60,7 @@ class ItemLibraryViewModel extends ChangeNotifier {
 
   Future<void> _loadCategories() async {
     try {
-      categories = await categoryRepository.fetchCategories();
+      categories = await categoryRepository.fetchAllCategories();
       debugPrint('✅ Loaded ${categories.length} Categories');
     } catch (e) {
       errorMessage = 'Failed to load categories';

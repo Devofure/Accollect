@@ -1,83 +1,56 @@
 import 'package:accollect/data/category_repository.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_command/flutter_command.dart';
 
 class CollectionManagementViewModel extends ChangeNotifier {
   final ICategoryRepository categoryRepository;
 
-  List<String> categories = [];
-  bool isLoading = false;
-  String? errorMessage;
+  late Command<void, List<String>> fetchEditableCategoriesCommand;
+  late Command<String, void> addCategoryCommand;
+  late Command<String, void> deleteCategoryCommand;
+  late Command<void, void> deleteAllCollectionsCommand;
+  late Command<void, void> deleteAllDataCommand;
 
   CollectionManagementViewModel({required this.categoryRepository}) {
-    _loadCategories();
+    _setupCommands();
   }
 
-  Future<void> _loadCategories() async {
-    try {
-      isLoading = true;
-      notifyListeners();
-      categories = await categoryRepository.fetchCategories();
-    } catch (e) {
-      errorMessage = 'Failed to load categories';
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
+  void _setupCommands() {
+    fetchEditableCategoriesCommand = Command.createAsyncNoParam<List<String>>(
+      categoryRepository.fetchEditableCategories,
+      initialValue: [],
+    );
 
-  Future<void> addCategory(String category) async {
-    try {
-      isLoading = true;
-      notifyListeners();
-      await categoryRepository.addCategory(category);
-      await _loadCategories();
-    } catch (e) {
-      errorMessage = 'Failed to add category';
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
+    addCategoryCommand = Command.createAsync<String, void>(
+      (category) async {
+        await categoryRepository.addCategory(category);
+        fetchEditableCategoriesCommand.execute();
+      },
+      initialValue: null,
+    );
 
-  Future<void> deleteCategory(String category) async {
-    try {
-      isLoading = true;
-      notifyListeners();
-      categories.remove(category);
-      notifyListeners();
-    } catch (e) {
-      errorMessage = 'Failed to delete category';
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
+    deleteCategoryCommand = Command.createAsync<String, void>(
+      (category) async {
+        // Implement delete category logic in repository
+        fetchEditableCategoriesCommand.execute();
+      },
+      initialValue: null,
+    );
 
-  Future<void> deleteAllCollections() async {
-    try {
-      isLoading = true;
-      notifyListeners();
-      categories.clear();
-      notifyListeners();
-    } catch (e) {
-      errorMessage = 'Failed to delete collections';
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
+    deleteAllCollectionsCommand = Command.createAsyncNoParam<void>(
+      () async {
+        // Implement delete all collections logic in repository
+      },
+      initialValue: null,
+    );
 
-  Future<void> deleteAllData() async {
-    try {
-      isLoading = true;
-      notifyListeners();
-      categories.clear();
-      notifyListeners();
-    } catch (e) {
-      errorMessage = 'Failed to delete all data';
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+    deleteAllDataCommand = Command.createAsyncNoParam<void>(
+      () async {
+        // Implement delete all data logic in repository
+      },
+      initialValue: null,
+    );
+
+    fetchEditableCategoriesCommand.execute();
   }
 }

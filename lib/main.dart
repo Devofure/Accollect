@@ -11,6 +11,7 @@ import 'package:accollect/ui/item/item_details_screen.dart';
 import 'package:accollect/ui/item/item_library_screen.dart';
 import 'package:accollect/ui/onboarding/onboarding_screen.dart';
 import 'package:accollect/ui/settings/settings_collections_screen.dart';
+import 'package:accollect/ui/settings/settings_collections_viewmodel.dart';
 import 'package:accollect/ui/settings/settings_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider, EmailAuthProvider;
@@ -26,7 +27,27 @@ import 'core/app_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+
+  final categoryRepository = CategoryRepository();
+  final collectionRepository = CollectionRepository();
+  final itemRepository = ItemRepository();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        Provider<ICategoryRepository>.value(value: categoryRepository),
+        Provider<ICollectionRepository>.value(value: collectionRepository),
+        Provider<IItemRepository>.value(value: itemRepository),
+        ChangeNotifierProvider(
+          create: (_) => HomeViewModel(
+            collectionRepository: collectionRepository,
+            itemRepository: itemRepository,
+          ),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -35,7 +56,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final providers = _authProviders();
-    final router = _configureRouter(providers);
+    final router = _configureRouter(context, providers);
+
     return MaterialApp.router(
       routerConfig: router,
       title: 'Accollect',
@@ -55,8 +77,8 @@ class MyApp extends StatelessWidget {
     ];
   }
 
-  GoRouter _configureRouter(
-      List<AuthProvider<AuthListener, AuthCredential>> providers) {
+  GoRouter _configureRouter(BuildContext context,
+      List<AuthProvider<AuthListener, AuthCredential>> providers,) {
     return GoRouter(
       initialLocation: FirebaseAuth.instance.currentUser != null
           ? AppRouter.homeRoute
@@ -82,15 +104,7 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: AppRouter.homeRoute,
-          builder: (context, state) {
-            return ChangeNotifierProvider(
-              create: (_) => HomeViewModel(
-                collectionRepository: CollectionRepository(),
-                itemRepository: ItemRepository(),
-              ),
-              child: const HomeScreen(),
-            );
-          },
+          builder: (context, state) => const HomeScreen(),
         ),
         GoRoute(
           path: AppRouter.settingsRoute,
@@ -98,22 +112,34 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: AppRouter.settingsCollectionsRoute,
-          builder: (_, __) => const CollectionManagementScreen(),
+          builder: (context, state) {
+            final categoryRepo = context.read<ICategoryRepository>();
+            return ChangeNotifierProvider(
+              create: (_) => CollectionManagementViewModel(
+                categoryRepository: categoryRepo,
+              ),
+              child: const CollectionManagementScreen(),
+            );
+          },
         ),
         GoRoute(
           path: AppRouter.createCollectionRoute,
-          builder: (_, __) => CreateCollectionScreen(
-            repository: CollectionRepository(),
-          ),
+          builder: (context, state) {
+            final collectionRepo = context.read<ICollectionRepository>();
+            return CreateCollectionScreen(repository: collectionRepo);
+          },
         ),
         GoRoute(
           path: AppRouter.collectionRoute,
           builder: (context, state) {
             final collectionKey = state.pathParameters['key'];
+            final collectionRepo = context.read<ICollectionRepository>();
+            final itemRepo = context.read<IItemRepository>();
+
             return CollectionScreen(
               collectionKey: collectionKey!,
-              collectionRepository: CollectionRepository(),
-              itemRepository: ItemRepository(),
+              collectionRepository: collectionRepo,
+              itemRepository: itemRepo,
             );
           },
         ),
@@ -122,10 +148,12 @@ class MyApp extends StatelessWidget {
           builder: (context, state) {
             final collectionKey = state.pathParameters['key'];
             final collectionName = state.pathParameters['name'];
+            final itemRepo = context.read<IItemRepository>();
+
             return AddOrSelectItemScreen(
               collectionName: collectionName!,
               collectionKey: collectionKey!,
-              repository: ItemRepository(),
+              repository: itemRepo,
             );
           },
         ),
@@ -137,10 +165,15 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: AppRouter.itemLibraryRoute,
-          builder: (context, state) => ItemLibraryScreen(
-            itemRepository: ItemRepository(),
-            categoryRepository: CategoryRepository(),
-          ),
+          builder: (context, state) {
+            final itemRepo = context.read<IItemRepository>();
+            final categoryRepo = context.read<ICategoryRepository>();
+
+            return ItemLibraryScreen(
+              itemRepository: itemRepo,
+              categoryRepository: categoryRepo,
+            );
+          },
         ),
         GoRoute(
           path: AppRouter.itemDetailsRoute,
