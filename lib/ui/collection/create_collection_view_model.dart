@@ -1,9 +1,10 @@
 import 'dart:io';
 
 import 'package:accollect/data/collection_repository.dart';
-import 'package:accollect/data/models/collection_ui_model.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
+import '../../domain/models/collection_ui_model.dart';
 
 class CreateCollectionViewModel extends ChangeNotifier {
   final ICollectionRepository repository;

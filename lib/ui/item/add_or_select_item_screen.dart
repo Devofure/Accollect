@@ -1,6 +1,6 @@
 import 'package:accollect/core/app_router.dart';
 import 'package:accollect/data/item_repository.dart';
-import 'package:accollect/data/models/item_ui_model.dart';
+import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/item/add_or_select_item_view_model.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:accollect/ui/widgets/item_tile_portrait.dart';
