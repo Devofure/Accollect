@@ -1,6 +1,5 @@
 import 'package:accollect/ui/settings/settings_collections_viewmodel.dart';
 import 'package:accollect/ui/widgets/loading_border_button.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -83,33 +82,16 @@ class _CollectionManagementScreenState
           ),
         ),
         const SizedBox(width: 8),
-        ValueListenableBuilder<bool>(
-          valueListenable: viewModel.addCategoryCommand.isExecuting,
-          builder: (context, isExecuting, child) {
-            return ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueGrey[700],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: isExecuting
-                  ? null
-                  : () {
-                      final newCategory = _categoryController.text.trim();
-                      if (newCategory.isNotEmpty) {
-                        viewModel.addCategoryCommand.execute(newCategory);
-                        _categoryController.clear();
-                      }
-                    },
-              child: isExecuting
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Add'),
-            );
+        LoadingBorderButton(
+          title: 'Add Category',
+          color: Colors.blueGrey[700]!,
+          isExecuting: viewModel.addCategoryCommand.isExecuting,
+          onPressed: () {
+            final newCategory = _categoryController.text.trim();
+            if (newCategory.isNotEmpty) {
+              viewModel.addCategoryCommand.execute(newCategory);
+              _categoryController.clear();
+            }
           },
         ),
       ],
@@ -163,34 +145,20 @@ class _CollectionManagementScreenState
           style: TextStyle(color: Colors.redAccent, fontSize: 18),
         ),
         const SizedBox(height: 8),
-        _buildDangerButton(
+        LoadingBorderButton(
           title: 'Delete All Collections',
-          color: Colors.redAccent,
+          color: Colors.red,
           isExecuting: viewModel.deleteAllCollectionsCommand.isExecuting,
           onPressed: () => viewModel.deleteAllCollectionsCommand.execute(),
         ),
         const SizedBox(height: 8),
-        _buildDangerButton(
+        LoadingBorderButton(
           title: 'Delete All Data',
           color: Colors.red,
           isExecuting: viewModel.deleteAllDataCommand.isExecuting,
           onPressed: () => viewModel.deleteAllDataCommand.execute(),
         ),
       ],
-    );
-  }
-
-  Widget _buildDangerButton({
-    required String title,
-    required Color color,
-    required ValueListenable<bool> isExecuting,
-    required VoidCallback onPressed,
-  }) {
-    return LoadingBorderButton(
-      title: title,
-      color: color,
-      isExecuting: isExecuting,
-      onPressed: onPressed,
     );
   }
 }
