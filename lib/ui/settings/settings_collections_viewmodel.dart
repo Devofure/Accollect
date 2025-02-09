@@ -1,9 +1,11 @@
 import 'package:accollect/data/category_repository.dart';
+import 'package:accollect/data/collection_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_command/flutter_command.dart';
 
 class CollectionManagementViewModel extends ChangeNotifier {
   final ICategoryRepository categoryRepository;
+  final ICollectionRepository collectionRepository;
 
   late Command<void, List<String>> fetchEditableCategoriesCommand;
   late Command<String, void> addCategoryCommand;
@@ -11,7 +13,10 @@ class CollectionManagementViewModel extends ChangeNotifier {
   late Command<void, void> deleteAllCollectionsCommand;
   late Command<void, void> deleteAllDataCommand;
 
-  CollectionManagementViewModel({required this.categoryRepository}) {
+  CollectionManagementViewModel({
+    required this.categoryRepository,
+    required this.collectionRepository,
+  }) {
     _setupCommands();
   }
 
@@ -39,7 +44,7 @@ class CollectionManagementViewModel extends ChangeNotifier {
 
     deleteAllCollectionsCommand = Command.createAsyncNoParam<void>(
       () async {
-        // Implement delete all collections logic
+        await collectionRepository.deleteAllCollections();
       },
       initialValue: null,
     );

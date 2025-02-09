@@ -77,8 +77,10 @@ class MyApp extends StatelessWidget {
     ];
   }
 
-  GoRouter _configureRouter(BuildContext context,
-      List<AuthProvider<AuthListener, AuthCredential>> providers,) {
+  GoRouter _configureRouter(
+    BuildContext context,
+    List<AuthProvider<AuthListener, AuthCredential>> providers,
+  ) {
     return GoRouter(
       initialLocation: FirebaseAuth.instance.currentUser != null
           ? AppRouter.homeRoute
@@ -114,9 +116,11 @@ class MyApp extends StatelessWidget {
           path: AppRouter.settingsCollectionsRoute,
           builder: (context, state) {
             final categoryRepo = context.read<ICategoryRepository>();
+            final collectionRepo = context.read<ICollectionRepository>();
             return ChangeNotifierProvider(
               create: (_) => CollectionManagementViewModel(
                 categoryRepository: categoryRepo,
+                collectionRepository: collectionRepo,
               ),
               child: const CollectionManagementScreen(),
             );

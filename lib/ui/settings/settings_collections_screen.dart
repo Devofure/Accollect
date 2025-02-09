@@ -1,49 +1,53 @@
 import 'package:accollect/ui/settings/settings_collections_viewmodel.dart';
+import 'package:accollect/ui/widgets/loading_border_button.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class CollectionManagementScreen extends StatelessWidget {
+class CollectionManagementScreen extends StatefulWidget {
   const CollectionManagementScreen({super.key});
 
   @override
+  State<CollectionManagementScreen> createState() =>
+      _CollectionManagementScreenState();
+}
+
+class _CollectionManagementScreenState
+    extends State<CollectionManagementScreen> {
+  final TextEditingController _categoryController = TextEditingController();
+
+  @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => CollectionManagementViewModel(
-        categoryRepository: context.read(),
-      ),
-      child: Scaffold(
+    final viewModel = context.watch<CollectionManagementViewModel>();
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
         backgroundColor: Colors.black,
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          title: const Text(
-            'Collection Management',
-            style: TextStyle(color: Colors.white),
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+        title: const Text(
+          'Collection Management',
+          style: TextStyle(color: Colors.white),
         ),
-        body: SafeArea(
-          child: Consumer<CollectionManagementViewModel>(
-            builder: (context, viewModel, _) {
-              return ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _buildCategoryManagementSection(context, viewModel),
-                  const SizedBox(height: 24),
-                  _buildDangerZone(context, viewModel),
-                ],
-              );
-            },
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _buildCategoryManagementSection(viewModel),
+            const SizedBox(height: 24),
+            _buildDangerZone(viewModel),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildCategoryManagementSection(
-      BuildContext context, CollectionManagementViewModel viewModel) {
+      CollectionManagementViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -52,22 +56,19 @@ class CollectionManagementScreen extends StatelessWidget {
           style: TextStyle(color: Colors.white, fontSize: 18),
         ),
         const SizedBox(height: 8),
-        _buildAddCategoryField(context, viewModel),
+        _buildAddCategoryField(viewModel),
         const SizedBox(height: 8),
         _buildCategoryList(viewModel),
       ],
     );
   }
 
-  Widget _buildAddCategoryField(
-      BuildContext context, CollectionManagementViewModel viewModel) {
-    final TextEditingController categoryController = TextEditingController();
-
+  Widget _buildAddCategoryField(CollectionManagementViewModel viewModel) {
     return Row(
       children: [
         Expanded(
           child: TextField(
-            controller: categoryController,
+            controller: _categoryController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
               hintText: 'New category',
@@ -95,14 +96,18 @@ class CollectionManagementScreen extends StatelessWidget {
               onPressed: isExecuting
                   ? null
                   : () {
-                      final newCategory = categoryController.text.trim();
+                      final newCategory = _categoryController.text.trim();
                       if (newCategory.isNotEmpty) {
                         viewModel.addCategoryCommand.execute(newCategory);
-                        categoryController.clear();
+                        _categoryController.clear();
                       }
                     },
               child: isExecuting
-                  ? const CircularProgressIndicator()
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Text('Add'),
             );
           },
@@ -117,17 +122,31 @@ class CollectionManagementScreen extends StatelessWidget {
       builder: (context, categories, child) {
         return ListView.builder(
           shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
           itemCount: categories.length,
           itemBuilder: (context, index) {
             final category = categories[index];
-            return ListTile(
-              title:
-                  Text(category, style: const TextStyle(color: Colors.white)),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete, color: Colors.redAccent),
-                onPressed: () =>
-                    viewModel.deleteCategoryCommand.execute(category),
-              ),
+
+            return ValueListenableBuilder<bool>(
+              valueListenable: viewModel.deleteCategoryCommand.isExecuting,
+              builder: (context, isExecuting, child) {
+                return ListTile(
+                  title: Text(category,
+                      style: const TextStyle(color: Colors.white)),
+                  trailing: isExecuting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : IconButton(
+                          icon:
+                              const Icon(Icons.delete, color: Colors.redAccent),
+                          onPressed: () =>
+                              viewModel.deleteCategoryCommand.execute(category),
+                        ),
+                );
+              },
             );
           },
         );
@@ -135,8 +154,7 @@ class CollectionManagementScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDangerZone(
-      BuildContext context, CollectionManagementViewModel viewModel) {
+  Widget _buildDangerZone(CollectionManagementViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -146,34 +164,33 @@ class CollectionManagementScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         _buildDangerButton(
-          context,
           title: 'Delete All Collections',
           color: Colors.redAccent,
+          isExecuting: viewModel.deleteAllCollectionsCommand.isExecuting,
           onPressed: () => viewModel.deleteAllCollectionsCommand.execute(),
         ),
         const SizedBox(height: 8),
         _buildDangerButton(
-          context,
           title: 'Delete All Data',
           color: Colors.red,
+          isExecuting: viewModel.deleteAllDataCommand.isExecuting,
           onPressed: () => viewModel.deleteAllDataCommand.execute(),
         ),
       ],
     );
   }
 
-  Widget _buildDangerButton(BuildContext context,
-      {required String title,
-      required Color color,
-      required VoidCallback onPressed}) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+  Widget _buildDangerButton({
+    required String title,
+    required Color color,
+    required ValueListenable<bool> isExecuting,
+    required VoidCallback onPressed,
+  }) {
+    return LoadingBorderButton(
+      title: title,
+      color: color,
+      isExecuting: isExecuting,
       onPressed: onPressed,
-      child: Text(title),
     );
   }
 }

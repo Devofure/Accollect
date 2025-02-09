@@ -5,14 +5,18 @@ import 'package:flutter/material.dart';
 
 abstract class ICollectionRepository {
   Future<CollectionUIModel> fetchCollectionDetails(String collectionKey);
+
   Stream<List<CollectionUIModel>> fetchCollectionsStream();
 
   Stream<List<CollectionUIModel>> fetchSharedCollectionsStream();
+
   Future<void> createCollection(CollectionUIModel collection);
 
   Future<void> shareCollection(String collectionKey, String userId);
 
   void removeItemFromCollection(String itemKey, String collectionKey);
+
+  Future<void> deleteAllCollections();
 }
 
 class CollectionRepository implements ICollectionRepository {
@@ -117,6 +121,22 @@ class CollectionRepository implements ICollectionRepository {
       }
     } catch (e) {
       throw Exception('Failed to remove item from collection: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteAllCollections() async {
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      final querySnapshot = await _collectionRef.get();
+
+      for (var doc in querySnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Failed to delete all collections: $e');
     }
   }
 }
