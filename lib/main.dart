@@ -6,9 +6,9 @@ import 'package:accollect/ui/collection/create_collection_screen.dart';
 import 'package:accollect/ui/home/home_screen.dart';
 import 'package:accollect/ui/home/home_view_model.dart';
 import 'package:accollect/ui/item/add_new_item_screen.dart';
+import 'package:accollect/ui/item/add_new_item_viewmodel.dart';
 import 'package:accollect/ui/item/add_or_select_item_screen.dart';
 import 'package:accollect/ui/item/item_details_screen.dart';
-import 'package:accollect/ui/item/item_library_screen.dart';
 import 'package:accollect/ui/onboarding/onboarding_screen.dart';
 import 'package:accollect/ui/settings/settings_collections_screen.dart';
 import 'package:accollect/ui/settings/settings_collections_viewmodel.dart';
@@ -38,12 +38,6 @@ void main() async {
         Provider<ICategoryRepository>.value(value: categoryRepository),
         Provider<ICollectionRepository>.value(value: collectionRepository),
         Provider<IItemRepository>.value(value: itemRepository),
-        ChangeNotifierProvider(
-          create: (_) => HomeViewModel(
-            collectionRepository: collectionRepository,
-            itemRepository: itemRepository,
-          ),
-        ),
       ],
       child: const MyApp(),
     ),
@@ -106,7 +100,15 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: AppRouter.homeRoute,
-          builder: (context, state) => const HomeScreen(),
+          builder: (context, state) {
+            return ChangeNotifierProvider(
+              create: (_) => HomeViewModel(
+                collectionRepository: context.read(),
+                itemRepository: context.read(),
+              ),
+              child: const HomeScreen(),
+            );
+          },
         ),
         GoRoute(
           path: AppRouter.settingsRoute,
@@ -115,12 +117,10 @@ class MyApp extends StatelessWidget {
         GoRoute(
           path: AppRouter.settingsCollectionsRoute,
           builder: (context, state) {
-            final categoryRepo = context.read<ICategoryRepository>();
-            final collectionRepo = context.read<ICollectionRepository>();
             return ChangeNotifierProvider(
               create: (_) => CollectionManagementViewModel(
-                categoryRepository: categoryRepo,
-                collectionRepository: collectionRepo,
+                categoryRepository: context.read<ICategoryRepository>(),
+                collectionRepository: context.read<ICollectionRepository>(),
               ),
               child: const CollectionManagementScreen(),
             );
@@ -167,19 +167,17 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: AppRouter.addNewItemRoute,
-          builder: (context, state) => AddNewItemScreen(
-            onCreateItem: (item) => context.pop(item),
-          ),
+          builder: (context, state) => AddNewItemScreen(),
         ),
         GoRoute(
-          path: AppRouter.itemLibraryRoute,
+          path: AppRouter.addNewItemRoute,
           builder: (context, state) {
-            final itemRepo = context.read<IItemRepository>();
-            final categoryRepo = context.read<ICategoryRepository>();
-
-            return ItemLibraryScreen(
-              itemRepository: itemRepo,
-              categoryRepository: categoryRepo,
+            return ChangeNotifierProvider(
+              create: (_) => AddNewItemViewModel(
+                categoryRepository: context.read(),
+                itemRepository: context.read(),
+              ),
+              child: const AddNewItemScreen(),
             );
           },
         ),

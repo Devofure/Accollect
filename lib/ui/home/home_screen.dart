@@ -16,82 +16,130 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<HomeViewModel>();
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: Consumer<HomeViewModel>(
-          builder: (context, viewModel, _) {
-            if (viewModel.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (viewModel.errorMessage != null) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      viewModel.errorMessage!,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: viewModel.retryFetchingData,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            final collections = viewModel.collections;
-            final groupedItems = viewModel.groupedLatestItems;
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _buildHeader(context)),
-                  SliverToBoxAdapter(child: _buildTitleRow(context)),
-                  SliverToBoxAdapter(child: const SizedBox(height: 8)),
-                  if (collections.isEmpty)
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: EmptyStateWidget(
-                        title: 'No Collections Yet',
-                        description: 'Start adding your collections.',
-                      ),
-                    )
-                  else ...[
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final collection = collections[index];
-                          return CollectionTile(
-                            collection: collection,
-                            onTap: () {
-                              context.pushWithParams(
-                                AppRouter.collectionRoute,
-                                [collection.key],
-                              );
-                            },
-                          );
-                        },
-                        childCount: collections.length,
-                      ),
-                    ),
-                    SliverToBoxAdapter(child: const SizedBox(height: 24)),
-                    SliverToBoxAdapter(child: _buildLatestAddedTitle()),
-                    ..._buildLatestItemsList(groupedItems),
-                  ],
-                ],
-              ),
-            );
-          },
-        ),
+        child: viewModel.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : viewModel.errorMessage != null
+                ? _buildErrorState(viewModel)
+                : _buildContent(context, viewModel),
       ),
       floatingActionButton: _buildFloatingActionButton(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
+  }
+
+  Widget _buildErrorState(HomeViewModel viewModel) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(viewModel.errorMessage!,
+              style: const TextStyle(color: Colors.white)),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: viewModel.retryFetchingData,
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, HomeViewModel viewModel) {
+    final collections = viewModel.collections;
+    final groupedItems = viewModel.groupedLatestItems;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: _buildHeader(context, viewModel)),
+          SliverToBoxAdapter(child: _buildTitleRow(context)),
+          SliverToBoxAdapter(child: const SizedBox(height: 8)),
+          if (collections.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: EmptyStateWidget(
+                title: 'No Collections Yet',
+                description: 'Start adding your collections.',
+              ),
+            )
+          else ...[
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final collection = collections[index];
+                  return CollectionTile(
+                    collection: collection,
+                    onTap: () {
+                      context.pushWithParams(
+                        AppRouter.collectionRoute,
+                        [collection.key],
+                      );
+                    },
+                  );
+                },
+                childCount: collections.length,
+              ),
+            ),
+            SliverToBoxAdapter(child: const SizedBox(height: 24)),
+            SliverToBoxAdapter(child: _buildLatestAddedTitle()),
+            ..._buildLatestItemsList(groupedItems),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, HomeViewModel viewModel) {
+    final currentUser = viewModel.currentUser;
+    final photoUrl = currentUser?.photoURL;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: Colors.grey[700],
+                backgroundImage:
+                    photoUrl != null ? NetworkImage(photoUrl) : null,
+                child: photoUrl == null
+                    ? const Icon(Icons.person, color: Colors.white, size: 20)
+                    : null,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                currentUser?.displayName ?? 'User',
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () {
+              context.push(AppRouter.settingsRoute);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingActionButton(BuildContext context) {
+    return FloatingActionButton(
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      onPressed: () {
+        context.push(AppRouter.itemLibraryRoute);
+      },
+      child: const Icon(Icons.library_books),
     );
   }
 
@@ -139,60 +187,6 @@ class HomeScreen extends StatelessWidget {
     });
 
     return slivers;
-  }
-
-  Widget _buildFloatingActionButton(BuildContext context) {
-    return FloatingActionButton(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
-      onPressed: () {
-        context.push(AppRouter.itemLibraryRoute);
-      },
-      child: const Icon(Icons.library_books),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Consumer<HomeViewModel>(
-      builder: (context, viewModel, _) {
-        final currentUser = viewModel.currentUser;
-        final photoUrl = currentUser?.photoURL;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: Colors.grey[700],
-                    backgroundImage:
-                        photoUrl != null ? NetworkImage(photoUrl) : null,
-                    child: photoUrl == null
-                        ? const Icon(Icons.person,
-                            color: Colors.white, size: 20)
-                        : null,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    currentUser?.displayName ?? 'User',
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ],
-              ),
-              IconButton(
-                icon: const Icon(Icons.settings, color: Colors.white),
-                onPressed: () {
-                  context.push(AppRouter.settingsRoute);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   Widget _buildLatestAddedTitle() {

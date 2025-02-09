@@ -18,7 +18,6 @@ class _CollectionManagementScreenState
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<CollectionManagementViewModel>();
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -81,7 +80,7 @@ class _CollectionManagementScreenState
                 borderSide: BorderSide.none,
               ),
             ),
-            onChanged: (_) => setState(() {}), // Updates button state
+            onChanged: (_) => setState(() {}),
           ),
         ),
         const SizedBox(width: 8),
@@ -89,14 +88,10 @@ class _CollectionManagementScreenState
           valueListenable: viewModel.addCategoryCommand.isExecuting,
           builder: (context, isExecuting, child) {
             final isDisabled =
-                _categoryController.text
-                    .trim()
-                    .isEmpty || isExecuting;
+                _categoryController.text.trim().isEmpty || isExecuting;
             return LoadingBorderButton(
               title: 'Add',
-              color: isDisabled
-                  ? Colors.grey[600]! // Darker gray when disabled
-                  : Colors.blueGrey[700]!,
+              color: isDisabled ? Colors.grey[600]! : Colors.blueGrey[700]!,
               isExecuting: viewModel.addCategoryCommand.isExecuting,
               onPressed: isDisabled ? null : () => _addCategory(viewModel),
             );
@@ -180,11 +175,11 @@ class _CollectionManagementScreenState
     );
   }
 
-  void _confirmDeleteAll(BuildContext context,
-      CollectionManagementViewModel viewModel,
+  void _confirmDeleteAll(
+      BuildContext context, CollectionManagementViewModel viewModel,
       {required bool isDeleteAllData}) {
     final title =
-    isDeleteAllData ? 'Delete All Data' : 'Delete All Collections';
+        isDeleteAllData ? 'Delete All Data' : 'Delete All Collections';
     final content = isDeleteAllData
         ? 'Are you sure you want to delete ALL data (collections and items)? This action is irreversible.'
         : 'Are you sure you want to delete all collections? This action is irreversible.';
