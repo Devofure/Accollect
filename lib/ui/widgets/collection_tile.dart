@@ -21,11 +21,13 @@ class CollectionTile extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-        padding: const EdgeInsets.all(10),
-        // Reduced padding
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: Colors.grey[850],
-          borderRadius: BorderRadius.circular(14), // Softer corners
+          borderRadius: const BorderRadius.horizontal(
+            left: Radius.circular(45), // Rounded on the left
+            right: Radius.circular(14), // Squarer on the right
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.2),
@@ -41,13 +43,12 @@ class CollectionTile extends StatelessWidget {
   }
 
   Widget _buildListTile(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
+    double imageSize = 90;
 
     return Row(
       children: [
-        _buildImage(width: screenWidth * 0.24, height: screenWidth * 0.24),
-        // Bigger image
-        const SizedBox(width: 10),
+        _buildCircularImage(size: imageSize),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,15 +98,15 @@ class CollectionTile extends StatelessWidget {
   }
 
   Widget _buildSquareTile(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
+    double imageSize = 80;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Stack(
+          alignment: Alignment.topRight,
           children: [
-            _buildImage(width: screenWidth * 0.32, height: screenWidth * 0.32),
-            // Bigger image
+            _buildCircularImage(size: imageSize),
             if (collection.isFavorite)
               Positioned(
                 top: 6,
@@ -132,47 +133,28 @@ class CollectionTile extends StatelessWidget {
     );
   }
 
-  Widget _buildImage({double width = 70, double height = 70}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Stack(
-        children: [
-          collection.imageUrl != null
-              ? Image.network(
-                  collection.imageUrl!,
-                  width: width,
-                  height: height,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      _imagePlaceholder(width, height),
-                )
-              : _imagePlaceholder(width, height),
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withValues(alpha: 0.3),
-                    Colors.transparent
-                  ],
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+  Widget _buildCircularImage({double size = 120}) {
+    return ClipOval(
+      child: collection.imageUrl != null
+          ? Image.network(
+              collection.imageUrl!,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  _imagePlaceholder(size),
+            )
+          : _imagePlaceholder(size),
     );
   }
 
-  Widget _imagePlaceholder(double width, double height) {
+  Widget _imagePlaceholder(double size) {
     return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: Colors.grey[700],
-        borderRadius: BorderRadius.circular(10),
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(
+        color: Colors.grey,
+        shape: BoxShape.circle,
       ),
       child: const Icon(Icons.image, color: Colors.white, size: 32),
     );
@@ -181,11 +163,14 @@ class CollectionTile extends StatelessWidget {
   Widget _buildItemCountBadge() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Text(
         '${collection.itemCount}',
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 18,
+          fontSize: 16,
           fontWeight: FontWeight.bold,
         ),
       ),
