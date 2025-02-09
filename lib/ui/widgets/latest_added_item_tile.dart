@@ -1,4 +1,4 @@
-import 'package:accollect/core/models/item_ui_model.dart';
+import 'package:accollect/data/models/item_ui_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -22,7 +22,7 @@ class LatestAddedItemTile extends StatelessWidget {
     final theme = Theme.of(context);
     final borderColor = isSelected ? Colors.blue : Colors.transparent;
     double screenWidth = MediaQuery.of(context).size.width;
-    double imageSize = screenWidth * 0.22;
+    double imageSize = screenWidth * 0.18;
 
     return GestureDetector(
       onTap: onTap,

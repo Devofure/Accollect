@@ -1,9 +1,9 @@
-import 'package:accollect/core/data/item_repository.dart';
-import 'package:accollect/core/models/item_ui_model.dart';
-import 'package:accollect/core/navigation/app_router.dart';
-import 'package:accollect/core/widgets/empty_state.dart';
-import 'package:accollect/core/widgets/item_tile_portrait.dart';
-import 'package:accollect/features/item/add_or_select_item_view_model.dart';
+import 'package:accollect/core/app_router.dart';
+import 'package:accollect/data/item_repository.dart';
+import 'package:accollect/data/models/item_ui_model.dart';
+import 'package:accollect/ui/item/add_or_select_item_view_model.dart';
+import 'package:accollect/ui/widgets/empty_state.dart';
+import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';

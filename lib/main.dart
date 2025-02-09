@@ -1,10 +1,16 @@
-import 'package:accollect/core/data/category_repository.dart';
-import 'package:accollect/core/data/collection_repository.dart';
-import 'package:accollect/core/data/item_repository.dart';
-import 'package:accollect/features/home/home_view_model.dart';
-import 'package:accollect/features/item/add_new_item_screen.dart';
-import 'package:accollect/features/item/add_or_select_item_screen.dart';
-import 'package:accollect/features/item/item_library_screen.dart';
+import 'package:accollect/data/category_repository.dart';
+import 'package:accollect/data/collection_repository.dart';
+import 'package:accollect/data/item_repository.dart';
+import 'package:accollect/ui/collection/collection_screen.dart';
+import 'package:accollect/ui/collection/create_collection_screen.dart';
+import 'package:accollect/ui/home/home_screen.dart';
+import 'package:accollect/ui/home/home_view_model.dart';
+import 'package:accollect/ui/item/add_new_item_screen.dart';
+import 'package:accollect/ui/item/add_or_select_item_screen.dart';
+import 'package:accollect/ui/item/item_details_screen.dart';
+import 'package:accollect/ui/item/item_library_screen.dart';
+import 'package:accollect/ui/onboarding/onboarding_screen.dart';
+import 'package:accollect/ui/settings/settings_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider, EmailAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
@@ -14,13 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'core/navigation/app_router.dart';
-import 'features/collection/collection_screen.dart';
-import 'features/collection/create_collection_screen.dart';
-import 'features/home/home_screen.dart';
-import 'features/item/item_details_screen.dart';
-import 'features/onboarding/onboarding_screen.dart';
-import 'features/settings/settings_screen.dart';
+import 'core/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

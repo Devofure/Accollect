@@ -1,4 +1,4 @@
-import 'package:accollect/features/item/item_library_view_model.dart';
+import 'package:accollect/ui/item/item_library_view_model.dart';
 import 'package:flutter/material.dart';
 
 Widget buildCategorySelector({

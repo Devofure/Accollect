@@ -1,11 +1,11 @@
-import 'package:accollect/core/data/category_repository.dart';
-import 'package:accollect/core/data/item_repository.dart';
-import 'package:accollect/core/models/item_ui_model.dart';
-import 'package:accollect/core/navigation/app_router.dart';
+import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
-import 'package:accollect/core/widgets/categoy_selector_widget.dart';
-import 'package:accollect/core/widgets/item_tile_portrait.dart';
-import 'package:accollect/features/item/item_library_view_model.dart';
+import 'package:accollect/data/category_repository.dart';
+import 'package:accollect/data/item_repository.dart';
+import 'package:accollect/data/models/item_ui_model.dart';
+import 'package:accollect/ui/item/item_library_view_model.dart';
+import 'package:accollect/ui/widgets/categoy_selector_widget.dart';
+import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -90,12 +90,21 @@ class ItemLibraryScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: TextField(
         style: const TextStyle(color: Colors.white),
+        autofocus: false,
         decoration: InputDecoration(
           hintText: 'Search for items...',
           hintStyle: const TextStyle(color: Colors.grey),
           filled: true,
           fillColor: Colors.grey[800],
           prefixIcon: const Icon(Icons.search, color: Colors.white70),
+          suffixIcon: viewModel.searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.white70),
+                  onPressed: () {
+                    viewModel.clearSearch();
+                  },
+                )
+              : null,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -140,50 +149,63 @@ class ItemLibraryScreen extends StatelessWidget {
   }
 
   Widget _buildGridView(BuildContext context, List<ItemUIModel> items) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    int crossAxisCount = screenWidth > 600 ? 3 : 2;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double screenWidth = constraints.maxWidth;
+        int crossAxisCount = 2; // Always 2 columns
+        double spacing = 12;
 
-    return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.85,
-      ),
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      itemCount: items.length,
-      itemBuilder: (context, itemIndex) {
-        final item = items[itemIndex];
+        double itemWidth =
+            (screenWidth - (spacing * (crossAxisCount + 1))) / crossAxisCount;
 
-        return Dismissible(
-          key: Key(item.key),
-          background: Container(
-            color: Colors.red,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: const Icon(Icons.delete, color: Colors.white),
+        return GridView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: spacing,
+            childAspectRatio:
+                itemWidth / (itemWidth * 1.3), // Keeps consistent aspect ratio
           ),
-          secondaryBackground: Container(
-            color: Colors.blue,
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: const Icon(Icons.share, color: Colors.white),
-          ),
-          onDismissed: (direction) {
-            if (direction == DismissDirection.startToEnd) {
-              // Handle delete
-            } else {
-              // Handle share
-            }
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: items.length,
+          itemBuilder: (context, itemIndex) {
+            final item = items[itemIndex];
+
+            return Dismissible(
+              key: Key(item.key),
+              background: Container(
+                color: Colors.red,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: const Icon(Icons.delete, color: Colors.white),
+              ),
+              secondaryBackground: Container(
+                color: Colors.blue,
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: const Icon(Icons.share, color: Colors.white),
+              ),
+              onDismissed: (direction) {
+                if (direction == DismissDirection.startToEnd) {
+                  // Handle delete
+                } else {
+                  // Handle share
+                }
+              },
+              child: SizedBox(
+                width: itemWidth,
+                child: ItemPortraitTile(
+                  item: item,
+                  onTap: () {
+                    context
+                        .pushWithParams(AppRouter.itemDetailsRoute, [item.key]);
+                  },
+                ),
+              ),
+            );
           },
-          child: ItemPortraitTile(
-            item: item,
-            onTap: () {
-              context.pushWithParams(AppRouter.itemDetailsRoute, [item.key]);
-            },
-          ),
         );
       },
     );
@@ -194,19 +216,23 @@ class ItemLibraryScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.warning_amber_rounded,
-              color: Colors.redAccent, size: 48),
+          const Icon(Icons.sentiment_dissatisfied,
+              color: Colors.grey, size: 64), // Better neutral icon
           const SizedBox(height: 8),
           const Text(
             "No items found",
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.redAccent, fontSize: 16),
+            style: TextStyle(color: Colors.white70, fontSize: 18),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: () => _navigateToAddNewItemScreen(context, null),
             icon: const Icon(Icons.add),
             label: const Text("Create New Item"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueGrey[700], // Softer color
+              foregroundColor: Colors.white,
+            ),
           ),
         ],
       ),

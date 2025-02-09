@@ -1,7 +1,7 @@
+import 'package:accollect/core/app_router.dart';
+import 'package:accollect/ui/widgets/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/navigation/app_router.dart';
-import '../../core/widgets/custom_button.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});

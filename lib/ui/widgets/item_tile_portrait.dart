@@ -1,4 +1,4 @@
-import 'package:accollect/core/models/item_ui_model.dart';
+import 'package:accollect/data/models/item_ui_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -28,7 +28,7 @@ class ItemPortraitTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 6,
               offset: const Offset(2, 4),
             ),

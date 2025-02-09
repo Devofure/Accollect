@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:accollect/core/data/collection_repository.dart';
-import 'package:accollect/core/models/collection_ui_model.dart';
+import 'package:accollect/data/collection_repository.dart';
+import 'package:accollect/data/models/collection_ui_model.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 

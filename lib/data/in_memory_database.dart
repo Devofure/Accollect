@@ -1,5 +1,5 @@
-import 'package:accollect/core/models/collection_ui_model.dart';
-import 'package:accollect/core/models/item_ui_model.dart';
+import 'package:accollect/data/models/collection_ui_model.dart';
+import 'package:accollect/data/models/item_ui_model.dart';
 
 class InMemoryDatabase {
   static final InMemoryDatabase _instance = InMemoryDatabase._internal();

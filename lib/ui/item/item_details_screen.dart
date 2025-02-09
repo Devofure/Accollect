@@ -1,6 +1,6 @@
-import 'package:accollect/core/navigation/app_router.dart';
-import 'package:accollect/core/widgets/empty_state.dart';
-import 'package:accollect/features/item/item_details_view_model.dart';
+import 'package:accollect/core/app_router.dart';
+import 'package:accollect/ui/item/item_details_view_model.dart';
+import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';

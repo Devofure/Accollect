@@ -1,6 +1,6 @@
-import 'package:accollect/core/data/collection_repository.dart';
-import 'package:accollect/core/navigation/app_router.dart';
+import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
+import 'package:accollect/data/collection_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

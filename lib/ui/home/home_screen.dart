@@ -1,12 +1,12 @@
+import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
-import 'package:accollect/core/widgets/empty_state.dart';
-import 'package:accollect/core/widgets/latest_added_item_tile.dart';
+import 'package:accollect/ui/widgets/collection_tile.dart';
+import 'package:accollect/ui/widgets/empty_state.dart';
+import 'package:accollect/ui/widgets/latest_added_item_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/navigation/app_router.dart';
-import '../../core/widgets/collection_tile.dart';
 import 'home_view_model.dart';
 
 class HomeScreen extends StatelessWidget {

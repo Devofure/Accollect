@@ -1,13 +1,13 @@
-import 'package:accollect/core/data/collection_repository.dart';
-import 'package:accollect/core/data/item_repository.dart';
-import 'package:accollect/core/navigation/app_router.dart';
+import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
-import 'package:accollect/core/widgets/item_tile_portrait.dart';
+import 'package:accollect/data/collection_repository.dart';
+import 'package:accollect/data/item_repository.dart';
+import 'package:accollect/ui/widgets/empty_state.dart';
+import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/widgets/empty_state.dart';
 import 'collection_view_model.dart';
 
 class CollectionScreen extends StatelessWidget {
@@ -30,10 +30,10 @@ class CollectionScreen extends StatelessWidget {
         collectionRepository: collectionRepository,
         itemRepository: itemRepository,
       ),
-      child: WillPopScope(
-        onWillPop: () async {
-          context.go(AppRouter.homeRoute);
-          return false; // Prevent the default back navigation
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (!didPop) context.go(AppRouter.homeRoute);
         },
         child: Scaffold(
           backgroundColor: Colors.black,

@@ -1,7 +1,6 @@
+import 'package:accollect/data/models/collection_ui_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-import '../../core/models/collection_ui_model.dart';
 
 class CollectionTile extends StatelessWidget {
   final CollectionUIModel collection;
@@ -29,7 +28,7 @@ class CollectionTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14), // Softer corners
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 6,
               offset: const Offset(2, 4),
             ),
@@ -152,7 +151,10 @@ class CollectionTile extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.black.withOpacity(0.3), Colors.transparent],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.3),
+                    Colors.transparent
+                  ],
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                 ),
