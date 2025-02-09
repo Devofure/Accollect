@@ -5,7 +5,7 @@ class LoadingBorderButton extends StatefulWidget {
   final String title;
   final Color color;
   final ValueListenable<bool> isExecuting;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   const LoadingBorderButton({
     super.key,

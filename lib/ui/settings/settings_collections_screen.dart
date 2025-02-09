@@ -69,8 +69,10 @@ class _CollectionManagementScreenState
           child: TextField(
             controller: _categoryController,
             style: const TextStyle(color: Colors.white),
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _addCategory(viewModel),
             decoration: InputDecoration(
-              hintText: 'New category',
+              hintText: 'Enter category name...',
               hintStyle: const TextStyle(color: Colors.grey),
               filled: true,
               fillColor: Colors.grey[800],
@@ -79,23 +81,37 @@ class _CollectionManagementScreenState
                 borderSide: BorderSide.none,
               ),
             ),
+            onChanged: (_) => setState(() {}), // Updates button state
           ),
         ),
         const SizedBox(width: 8),
-        LoadingBorderButton(
-          title: 'Add Category',
-          color: Colors.blueGrey[700]!,
-          isExecuting: viewModel.addCategoryCommand.isExecuting,
-          onPressed: () {
-            final newCategory = _categoryController.text.trim();
-            if (newCategory.isNotEmpty) {
-              viewModel.addCategoryCommand.execute(newCategory);
-              _categoryController.clear();
-            }
+        ValueListenableBuilder<bool>(
+          valueListenable: viewModel.addCategoryCommand.isExecuting,
+          builder: (context, isExecuting, child) {
+            final isDisabled =
+                _categoryController.text
+                    .trim()
+                    .isEmpty || isExecuting;
+            return LoadingBorderButton(
+              title: 'Add',
+              color: isDisabled
+                  ? Colors.grey[600]! // Darker gray when disabled
+                  : Colors.blueGrey[700]!,
+              isExecuting: viewModel.addCategoryCommand.isExecuting,
+              onPressed: isDisabled ? null : () => _addCategory(viewModel),
+            );
           },
         ),
       ],
     );
+  }
+
+  void _addCategory(CollectionManagementViewModel viewModel) {
+    final newCategory = _categoryController.text.trim();
+    if (newCategory.isNotEmpty) {
+      viewModel.addCategoryCommand.execute(newCategory);
+      _categoryController.clear();
+    }
   }
 
   Widget _buildCategoryList(CollectionManagementViewModel viewModel) {
@@ -147,18 +163,58 @@ class _CollectionManagementScreenState
         const SizedBox(height: 8),
         LoadingBorderButton(
           title: 'Delete All Collections',
-          color: Colors.red,
+          color: Colors.redAccent,
           isExecuting: viewModel.deleteAllCollectionsCommand.isExecuting,
-          onPressed: () => viewModel.deleteAllCollectionsCommand.execute(),
+          onPressed: () =>
+              _confirmDeleteAll(context, viewModel, isDeleteAllData: false),
         ),
         const SizedBox(height: 8),
         LoadingBorderButton(
           title: 'Delete All Data',
           color: Colors.red,
           isExecuting: viewModel.deleteAllDataCommand.isExecuting,
-          onPressed: () => viewModel.deleteAllDataCommand.execute(),
+          onPressed: () =>
+              _confirmDeleteAll(context, viewModel, isDeleteAllData: true),
         ),
       ],
+    );
+  }
+
+  void _confirmDeleteAll(BuildContext context,
+      CollectionManagementViewModel viewModel,
+      {required bool isDeleteAllData}) {
+    final title =
+    isDeleteAllData ? 'Delete All Data' : 'Delete All Collections';
+    final content = isDeleteAllData
+        ? 'Are you sure you want to delete ALL data (collections and items)? This action is irreversible.'
+        : 'Are you sure you want to delete all collections? This action is irreversible.';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: Text(title, style: const TextStyle(color: Colors.white)),
+          content: Text(content, style: const TextStyle(color: Colors.grey)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (isDeleteAllData) {
+                  viewModel.deleteAllDataCommand.execute();
+                } else {
+                  viewModel.deleteAllCollectionsCommand.execute();
+                }
+              },
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
     );
   }
 }
