@@ -10,6 +10,7 @@ import 'package:accollect/ui/item/add_or_select_item_screen.dart';
 import 'package:accollect/ui/item/item_details_screen.dart';
 import 'package:accollect/ui/item/item_library_screen.dart';
 import 'package:accollect/ui/onboarding/onboarding_screen.dart';
+import 'package:accollect/ui/settings/collection_settings_screen.dart';
 import 'package:accollect/ui/settings/settings_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider, EmailAuthProvider;
@@ -44,9 +45,6 @@ class MyApp extends StatelessWidget {
     );
   }
 
-  // -------------------------------
-  // Authentication Providers
-  // -------------------------------
   List<AuthProvider<AuthListener, AuthCredential>> _authProviders() {
     return [
       EmailAuthProvider(),
@@ -57,30 +55,24 @@ class MyApp extends StatelessWidget {
     ];
   }
 
-  // -------------------------------
-  // Configure Routes
-  // -------------------------------
   GoRouter _configureRouter(
       List<AuthProvider<AuthListener, AuthCredential>> providers) {
     return GoRouter(
       initialLocation: FirebaseAuth.instance.currentUser != null
-          ? AppRouter.homeRoute // If already signed in, navigate to Home
-          : AppRouter.onboardingRoute, // Otherwise, go to Onboarding
+          ? AppRouter.homeRoute
+          : AppRouter.onboardingRoute,
       routes: [
-        // Onboarding
         GoRoute(
           path: AppRouter.onboardingRoute,
           builder: (_, __) => const OnboardingScreen(),
         ),
-
-        // Login (Firebase UI)
         GoRoute(
           path: AppRouter.signupRoute,
           builder: (_, __) => SignInScreen(
             providers: providers,
             actions: [
               AuthStateChangeAction<SignedIn>((context, state) {
-                context.go(AppRouter.homeRoute); // Navigate to home on sign-in
+                context.go(AppRouter.homeRoute);
               }),
             ],
             headerBuilder: (context, constraints, shrinkOffset) {
@@ -88,34 +80,32 @@ class MyApp extends StatelessWidget {
             },
           ),
         ),
-
-        // Home
         GoRoute(
           path: AppRouter.homeRoute,
           builder: (context, state) {
             return ChangeNotifierProvider(
               create: (_) => HomeViewModel(
-                  collectionRepository: CollectionRepository(),
-                  itemRepository: ItemRepository()),
+                collectionRepository: CollectionRepository(),
+                itemRepository: ItemRepository(),
+              ),
               child: const HomeScreen(),
             );
           },
         ),
-
-        // Settings
         GoRoute(
           path: AppRouter.settingsRoute,
           builder: (_, __) => const SettingsScreen(),
         ),
-
+        GoRoute(
+          path: AppRouter.settingsCollectionsRoute,
+          builder: (_, __) => const CollectionManagementScreen(),
+        ),
         GoRoute(
           path: AppRouter.createCollectionRoute,
           builder: (_, __) => CreateCollectionScreen(
             repository: CollectionRepository(),
           ),
         ),
-
-        // Collection Details
         GoRoute(
           path: AppRouter.collectionRoute,
           builder: (context, state) {
@@ -127,8 +117,6 @@ class MyApp extends StatelessWidget {
             );
           },
         ),
-
-        // Add New Item
         GoRoute(
           path: AppRouter.addOrSelectItemRoute,
           builder: (context, state) {
@@ -147,7 +135,6 @@ class MyApp extends StatelessWidget {
             onCreateItem: (item) => context.pop(item),
           ),
         ),
-        // Item Details
         GoRoute(
           path: AppRouter.itemLibraryRoute,
           builder: (context, state) => ItemLibraryScreen(
@@ -155,7 +142,6 @@ class MyApp extends StatelessWidget {
             categoryRepository: CategoryRepository(),
           ),
         ),
-        // Item Details
         GoRoute(
           path: AppRouter.itemDetailsRoute,
           builder: (context, state) {
@@ -168,9 +154,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// -------------------------------
-// Custom Sign-In Header Widget
-// -------------------------------
 class _SignInHeader extends StatelessWidget {
   const _SignInHeader();
 

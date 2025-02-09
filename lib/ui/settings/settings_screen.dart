@@ -17,170 +17,165 @@ class SettingsScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: () {
-              // Optional: Add functionality for the menu
-            },
-          ),
-        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Account Section
+          _buildProfileSection(),
+          const SizedBox(height: 16),
           _buildSettingsGroup(
-            context,
-            title: '',
+            title: 'Account',
             items: [
               _buildSettingsTile(
-                context,
-                title: 'Account',
+                title: 'Account Details',
                 icon: Icons.person,
-                onTap: () {
-                  // TODO: Navigate to Account screen
-                },
+                onTap: () {},
               ),
-              _buildSettingsTile(
-                context,
-                title: 'My subscription',
-                icon: Icons.card_membership,
-                onTap: () {
-                  // TODO: Navigate to Subscription screen
-                },
-              ),
+              // _buildSettingsTile(title: 'My Subscription', icon: Icons.card_membership, onTap: () {},),
             ],
           ),
           const SizedBox(height: 16),
-
-          // General Section
           _buildSettingsGroup(
-            context,
-            title: '',
+            title: 'Preferences',
             items: [
               _buildSettingsTile(
-                context,
-                title: 'General',
-                icon: Icons.tune,
-                onTap: () {
-                  // TODO: Navigate to General settings screen
-                },
-              ),
+                  title: 'Collection Management',
+                  icon: Icons.settings,
+                  onTap: () {}),
               _buildSettingsTile(
-                context,
-                title: 'Privacy',
-                icon: Icons.security,
-                onTap: () {
-                  // TODO: Navigate to Privacy screen
-                },
-              ),
+                  title: 'Notifications',
+                  icon: Icons.notifications,
+                  onTap: () {}),
               _buildSettingsTile(
-                context,
-                title: 'Notifications',
-                icon: Icons.notifications,
-                onTap: () {
-                  // TODO: Navigate to Notifications screen
-                },
-              ),
-              _buildSettingsTile(
-                context,
-                title: 'Appearance',
-                icon: Icons.nights_stay,
-                onTap: () {
-                  // TODO: Navigate to Appearance settings screen
-                },
-              ),
-              _buildSettingsTile(
-                context,
-                title: 'Collection Management',
-                icon: Icons.settings,
-                onTap: () {
-                  // TODO: Navigate to Collection Management screen
-                },
-              ),
+                  title: 'Appearance', icon: Icons.nights_stay, onTap: () {}),
             ],
           ),
           const SizedBox(height: 16),
+          _buildSignOutButton(context),
+        ],
+      ),
+    );
+  }
 
-          // Assistance Section
-          _buildSettingsGroup(
-            context,
-            title: '',
-            items: [
-              _buildSettingsTile(
-                context,
-                title: 'Collector Assistance',
-                icon: Icons.help_outline,
-                onTap: () {
-                  // TODO: Navigate to Assistance screen
-                },
-              ),
-              _buildSettingsTile(
-                context,
-                title: 'Sign out',
-                icon: Icons.logout,
-                onTap: () async {
-                  await FirebaseAuth.instance.signOut();
-                  context.go(AppRouter.onboardingRoute);
-                },
-              ),
-            ],
+  Widget _buildProfileSection() {
+    final user = FirebaseAuth.instance.currentUser;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[850],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 30,
+            backgroundColor: Colors.grey[700],
+            backgroundImage:
+                user?.photoURL != null ? NetworkImage(user!.photoURL!) : null,
+            child: user?.photoURL == null
+                ? const Icon(Icons.person, color: Colors.white, size: 30)
+                : null,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user?.displayName ?? 'User',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  user?.email ?? 'No email linked',
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  // Helper: Build Settings Group
-  Widget _buildSettingsGroup(BuildContext context,
+  Widget _buildSettingsGroup(
       {required String title, required List<Widget> items}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (title.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ...items.map(
-          (item) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: item,
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Text(
+            title,
+            style: const TextStyle(
+                color: Colors.grey, fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ),
+        ...items.map((item) =>
+            Padding(padding: const EdgeInsets.only(bottom: 8), child: item)),
       ],
     );
   }
 
-  // Helper: Build Settings Tile
-  Widget _buildSettingsTile(
-    BuildContext context, {
+  Widget _buildSettingsTile({
     required String title,
     required IconData icon,
     required VoidCallback onTap,
   }) {
+    return Material(
+      color: Colors.grey[850],
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        highlightColor: Colors.transparent,
+        splashColor: Colors.white.withValues(alpha: 0.1),
+        splashFactory: InkRipple.splashFactory,
+        child: SizedBox(
+          height: 60,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            // More height
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios,
+                    color: Colors.white, size: 16),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSignOutButton(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[850],
+        color: Colors.redAccent[700],
         borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(
-        leading: Icon(icon, color: Colors.white),
-        title: Text(
-          title,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+        leading: const Icon(Icons.logout, color: Colors.white),
+        title: const Text(
+          'Sign Out',
+          style: TextStyle(
+              color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
         ),
-        trailing:
-            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
-        onTap: onTap,
+        onTap: () async {
+          await FirebaseAuth.instance.signOut();
+          context.go(AppRouter.onboardingRoute);
+        },
       ),
     );
   }
