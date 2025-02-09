@@ -100,10 +100,27 @@ class CollectionManagementScreen extends StatelessWidget {
             ),
           ),
           onPressed: () {
-            if (categoryController.text.isNotEmpty) {
-              viewModel.addCategory(categoryController.text.trim());
-              categoryController.clear();
+            final newCategory = categoryController.text.trim();
+            if (newCategory.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Category name can't be empty"),
+                  backgroundColor: Colors.redAccent,
+                ),
+              );
+              return;
             }
+            if (viewModel.categories.contains(newCategory)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Category already exists"),
+                  backgroundColor: Colors.orangeAccent,
+                ),
+              );
+              return;
+            }
+            viewModel.addCategory(newCategory);
+            categoryController.clear();
           },
           child: const Text('Add'),
         ),
@@ -112,72 +129,88 @@ class CollectionManagementScreen extends StatelessWidget {
   }
 
   Widget _buildCategoryList(CollectionManagementViewModel viewModel) {
-    return Column(
-      children: viewModel.categories.map((category) {
-        return ListTile(
-          title: Text(category, style: const TextStyle(color: Colors.white)),
-          trailing: IconButton(
-            icon: const Icon(Icons.delete, color: Colors.redAccent),
-            onPressed: () {
-              viewModel.deleteCategory(category);
-            },
-          ),
-        );
-      }).toList(),
+    return SizedBox(
+      height: 200,
+      child: ListView.separated(
+        itemCount: viewModel.categories.length,
+        separatorBuilder: (context, index) =>
+            Divider(color: Colors.grey[700], thickness: 0.5),
+        itemBuilder: (context, index) {
+          final category = viewModel.categories[index];
+          return ListTile(
+            title: Text(category, style: const TextStyle(color: Colors.white)),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              onPressed: () => viewModel.deleteCategory(category),
+            ),
+          );
+        },
+      ),
     );
   }
 
   Widget _buildDangerZone(
       BuildContext context, CollectionManagementViewModel viewModel) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Danger Zone',
-          style: TextStyle(color: Colors.redAccent, fontSize: 18),
+    return Card(
+      //color: Colors.red[900],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Danger Zone',
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            const SizedBox(height: 8),
+            _buildDangerButton(
+              context,
+              title: 'Delete All Collections',
+              icon: Icons.delete_forever,
+              color: Colors.redAccent,
+              onPressed: () => _showConfirmationDialog(
+                context,
+                title: 'Delete All Collections',
+                content:
+                    'Are you sure you want to delete all collections? This action cannot be undone.',
+                onConfirm: () => viewModel.deleteAllCollections(),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _buildDangerButton(
+              context,
+              title: 'Delete All Data',
+              icon: Icons.warning_amber_rounded,
+              color: Colors.red,
+              onPressed: () => _showConfirmationDialog(
+                context,
+                title: 'Delete All Data',
+                content:
+                    'Are you sure you want to delete ALL data (collections and items)? This action cannot be undone.',
+                onConfirm: () => viewModel.deleteAllData(),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        _buildDangerButton(
-          context,
-          title: 'Delete All Collections',
-          color: Colors.redAccent,
-          onPressed: () => _showConfirmationDialog(
-            context,
-            title: 'Delete All Collections',
-            content:
-                'Are you sure you want to delete all collections? This action cannot be undone.',
-            onConfirm: () => viewModel.deleteAllCollections(),
-          ),
-        ),
-        const SizedBox(height: 8),
-        _buildDangerButton(
-          context,
-          title: 'Delete All Data',
-          color: Colors.red,
-          onPressed: () => _showConfirmationDialog(
-            context,
-            title: 'Delete All Data',
-            content:
-                'Are you sure you want to delete ALL data (collections and items)? This action cannot be undone.',
-            onConfirm: () => viewModel.deleteAllData(),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   Widget _buildDangerButton(BuildContext context,
       {required String title,
+      required IconData icon,
       required Color color,
       required VoidCallback onPressed}) {
-    return ElevatedButton(
+    return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       onPressed: onPressed,
-      child: Text(title),
+      icon: Icon(icon),
+      label: Text(title),
     );
   }
 
@@ -193,16 +226,24 @@ class CollectionManagementScreen extends StatelessWidget {
           title: Text(title, style: const TextStyle(color: Colors.white)),
           content: Text(content, style: const TextStyle(color: Colors.grey)),
           actions: [
-            TextButton(
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[700],
+              ),
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+              child:
+                  const Text('Cancel', style: TextStyle(color: Colors.white)),
             ),
-            TextButton(
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
               onPressed: () {
                 onConfirm();
                 Navigator.of(context).pop();
               },
-              child: const Text('Confirm', style: TextStyle(color: Colors.red)),
+              child:
+                  const Text('Confirm', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
