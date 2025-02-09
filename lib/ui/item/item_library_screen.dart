@@ -34,7 +34,7 @@ class ItemLibraryScreen extends StatelessWidget {
         child: FloatingActionButton.extended(
           backgroundColor: Colors.blueGrey[800],
           foregroundColor: Colors.white,
-          onPressed: () => _navigateToAddNewItemScreen(context, viewModel),
+          onPressed: () => _navigateToAddNewItemScreen(context),
           icon: const Icon(Icons.add),
           label: const Text('Create Item'),
         ),
@@ -185,22 +185,12 @@ class ItemLibraryScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => _navigateToAddNewItemScreen(context, null),
-            child: const Text("Try Again"),
-          ),
         ],
       ),
     );
   }
 
-  void _navigateToAddNewItemScreen(
-    BuildContext context,
-    ItemLibraryViewModel? viewModel,
-  ) async {
-    final newItem = await context.push<ItemUIModel>(AppRouter.addNewItemRoute);
-    if (newItem != null && viewModel != null) {
-      await viewModel.createItem(newItem);
-    }
+  void _navigateToAddNewItemScreen(BuildContext context) async {
+    await context.push(AppRouter.addNewItemRoute);
   }
 }

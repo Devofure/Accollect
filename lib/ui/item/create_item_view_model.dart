@@ -14,7 +14,7 @@ class AddNewItemViewModel extends ChangeNotifier {
   final ImagePicker _imagePicker = ImagePicker();
 
   late Command<void, List<String>> fetchCategoriesCommand;
-  late Command<void, String?> saveItemCommand;
+  late Command<void, void> saveItemCommand;
 
   String? title;
   String? description;
@@ -34,7 +34,7 @@ class AddNewItemViewModel extends ChangeNotifier {
       initialValue: [],
     );
 
-    saveItemCommand = Command.createAsyncNoParam<String?>(
+    saveItemCommand = Command.createAsyncNoParam<void>(
       () async {
         final currentState = formKey.currentState!;
         if (currentState.validate()) {
@@ -53,10 +53,8 @@ class AddNewItemViewModel extends ChangeNotifier {
             imageUrl: uploadedImage?.path,
             collectionKey: null,
           );
-          var createdItem = await itemRepository.createItem(newItem);
-          return createdItem.key;
+          await itemRepository.createItem(newItem);
         }
-        return null;
       },
       initialValue: null,
     );

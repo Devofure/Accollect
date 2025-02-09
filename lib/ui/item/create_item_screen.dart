@@ -1,6 +1,7 @@
-import 'package:accollect/ui/item/add_new_item_viewmodel.dart';
+import 'package:accollect/ui/item/create_item_view_model.dart';
 import 'package:accollect/ui/widgets/loading_border_button.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class AddNewItemScreen extends StatelessWidget {
@@ -40,14 +41,13 @@ class AddNewItemScreen extends StatelessWidget {
                   _buildCategoryDropdown(viewModel),
                   const SizedBox(height: 24),
                   _buildImageUpload(viewModel),
-                  const SizedBox(height: 24),
-                  _buildButtons(viewModel, context),
                 ],
               ),
             ),
           ),
         ),
       ),
+      bottomNavigationBar: _buildBottomButton(viewModel, context),
     );
   }
 
@@ -140,17 +140,25 @@ class AddNewItemScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildButtons(AddNewItemViewModel viewModel, BuildContext context) {
-    return LoadingBorderButton(
-      title: 'Save Item',
-      color: Colors.blue,
-      isExecuting: viewModel.saveItemCommand.isExecuting,
-      onPressed: () async {
-        final newItemKey = await viewModel.saveItemCommand.executeWithFuture();
-        if (newItemKey != null && context.mounted) {
-          Navigator.pop(context, newItemKey);
-        }
-      },
+  Widget _buildBottomButton(
+    AddNewItemViewModel viewModel,
+    BuildContext context,
+  ) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: LoadingBorderButton(
+          title: 'Save Item',
+          color: Colors.blue,
+          isExecuting: viewModel.saveItemCommand.isExecuting,
+          onPressed: () async {
+            await viewModel.saveItemCommand.executeWithFuture();
+            if (context.mounted) {
+              context.pop(true);
+            }
+          },
+        ),
+      ),
     );
   }
 }

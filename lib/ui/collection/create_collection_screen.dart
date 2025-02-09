@@ -54,8 +54,8 @@ class CreateCollectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomButton(
-      CreateCollectionViewModel viewModel, BuildContext context) {
+  Widget _buildBottomButton(CreateCollectionViewModel viewModel,
+      BuildContext context,) {
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -76,7 +76,7 @@ class CreateCollectionScreen extends StatelessWidget {
           onPressed: () async {
             await viewModel.saveCollectionCommand.executeWithFuture();
             if (context.mounted) {
-              context.pop(true); // Close the screen and return success
+              context.pop(true);
             }
           },
         ),

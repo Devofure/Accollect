@@ -57,7 +57,7 @@ class HomeScreen extends StatelessWidget {
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: _buildHeader(context, viewModel)),
-          SliverToBoxAdapter(child: _buildTitleRow(context)),
+          SliverToBoxAdapter(child: _buildTitleRow(context, viewModel)),
           SliverToBoxAdapter(child: const SizedBox(height: 8)),
           if (collections.isEmpty)
             SliverFillRemaining(
@@ -203,7 +203,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTitleRow(BuildContext context) {
+  Widget _buildTitleRow(BuildContext context, HomeViewModel viewModel) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -237,7 +237,5 @@ class HomeScreen extends StatelessWidget {
 
   Future<void> _navigateToCreateCollection(BuildContext context) async {
     await context.push(AppRouter.createCollectionRoute);
-    final viewModel = Provider.of<HomeViewModel>(context, listen: false);
-    viewModel.retryFetchingData();
   }
 }

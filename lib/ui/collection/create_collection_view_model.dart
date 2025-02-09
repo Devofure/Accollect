@@ -55,7 +55,6 @@ class CreateCollectionViewModel extends ChangeNotifier {
           );
           await collectionRepository.createCollection(newCollection);
         }
-        return;
       },
       initialValue: null,
     );
