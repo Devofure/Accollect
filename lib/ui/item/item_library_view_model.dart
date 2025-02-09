@@ -1,215 +1,85 @@
-import 'dart:async';
-
 import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/item_repository.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_command/flutter_command.dart';
 
 class ItemLibraryViewModel extends ChangeNotifier {
   final IItemRepository repository;
   final ICategoryRepository categoryRepository;
 
-  List<ItemUIModel> availableItems = [];
-  Map<String, List<ItemUIModel>> groupedItems = {};
-  Set<String> selectedItems = {};
-  bool isLoading = false;
-  String? errorMessage;
+  late final Command<void, List<ItemUIModel>> fetchLastAddedItemsCommand;
+  late final Command<void, List<String>> fetchCategoriesCommand;
+  late final Command<String, void> filterItemsCommand;
+  late final Command<ItemUIModel, void> createItemCommand;
+  late final Command<String, void> deleteItemCommand;
+  late final Command<void, void> refreshLibraryCommand;
+
+  List<ItemUIModel> get availableItems => fetchLastAddedItemsCommand.value;
+
+  List<String> get categories => fetchCategoriesCommand.value;
+
   String searchQuery = "";
-
-  List<String> categories = [];
-  String? selectedCategory; // `null` means show all categories
-  String sortOrder = 'Year';
+  String? selectedCategory;
   bool isSortingAscending = true;
-
+  String sortOrder = 'Year';
   bool isScrollingDown = false;
 
   ItemLibraryViewModel({
     required this.categoryRepository,
     required this.repository,
   }) {
-    _initialize();
-  }
+    fetchLastAddedItemsCommand = Command.createAsyncNoParam(
+      () async => await repository.fetchAvailableItems(),
+      initialValue: [],
+    );
 
-  Future<void> _initialize() async {
-    try {
-      isLoading = true;
-      errorMessage = null;
-      notifyListeners();
+    fetchCategoriesCommand = Command.createAsyncNoParam(
+      () async => await categoryRepository.fetchAllCategories(),
+      initialValue: [],
+    );
 
-      await _loadCategories();
-      await _loadAvailableItems();
-    } catch (e) {
-      errorMessage = 'Failed to initialize data';
-      debugPrint('Error: $e');
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
+    filterItemsCommand = Command.createSync((query) {
+      searchQuery = query;
+    }, initialValue: null);
 
-  Future<void> _loadAvailableItems() async {
-    try {
-      availableItems = await repository.fetchAvailableItems();
-      debugPrint('✅ Fetched ${availableItems.length} Available Items');
-      _applyFiltersAndGrouping();
-    } catch (e) {
-      errorMessage = 'Failed to load items';
-      debugPrint('❌ Error loading items: $e');
-    }
-  }
+    createItemCommand = Command.createAsync(
+      (item) async {
+        await repository.createItem(item);
+      },
+      initialValue: null,
+    );
 
-  Future<void> _loadCategories() async {
-    try {
-      categories = await categoryRepository.fetchAllCategories();
-      debugPrint('✅ Loaded ${categories.length} Categories');
-    } catch (e) {
-      errorMessage = 'Failed to load categories';
-      debugPrint('❌ Error loading categories: $e');
-    }
-  }
+    deleteItemCommand = Command.createAsync(
+      (itemKey) async {
+        await repository.deleteItem(itemKey);
+      },
+      initialValue: null,
+    );
 
-  void _applyFiltersAndGrouping() {
-    List<ItemUIModel> filteredItems = availableItems;
-
-    // Apply category filter
-    if (selectedCategory != null) {
-      filteredItems = filteredItems
-          .where((item) => item.category == selectedCategory)
-          .toList();
-    }
-
-    // Apply search filter
-    if (searchQuery.isNotEmpty) {
-      filteredItems = filteredItems
-          .where(
-            (item) =>
-                item.title.toLowerCase().contains(searchQuery.toLowerCase()),
-          )
-          .toList();
-    }
-
-    // Apply sorting
-    if (sortOrder == 'Year') {
-      filteredItems.sort((a, b) => isSortingAscending
-          ? a.addedOn.compareTo(b.addedOn)
-          : b.addedOn.compareTo(a.addedOn));
-    } else if (sortOrder == 'Name') {
-      filteredItems.sort((a, b) => isSortingAscending
-          ? a.title.compareTo(b.title)
-          : b.title.compareTo(a.title));
-    }
-
-    // Group by category
-    groupedItems.clear();
-    if (selectedCategory == null) {
-      for (final item in filteredItems) {
-        groupedItems.putIfAbsent(item.category, () => []).add(item);
-      }
-    } else {
-      groupedItems[selectedCategory!] = filteredItems;
-    }
-
-    notifyListeners();
-  }
-
-  Map<String, List<ItemUIModel>> getAvailableItemsGroupedByCategory() {
-    return groupedItems;
-  }
-
-  void toggleItemSelection(String itemKey, bool isSelected) {
-    if (isSelected) {
-      selectedItems.add(itemKey);
-    } else {
-      selectedItems.remove(itemKey);
-    }
-    notifyListeners();
-  }
-
-  bool isSelected(String itemKey) => selectedItems.contains(itemKey);
-
-  Future<void> createItem(ItemUIModel newItem) async {
-    try {
-      isLoading = true;
-      notifyListeners();
-      await repository.createItem(newItem);
-      await _loadAvailableItems();
-    } catch (e) {
-      errorMessage = 'Failed to create and add item';
-      debugPrint('❌ Error creating item: $e');
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  void filterItems(String query) {
-    searchQuery = query;
-    _applyFiltersAndGrouping();
-  }
-
-  void clearSearch() {
-    searchQuery = "";
-    _applyFiltersAndGrouping();
+    refreshLibraryCommand = Command.createAsyncNoParam(() async {
+      await repository.fetchAvailableItems();
+    }, initialValue: null);
   }
 
   void selectCategory(String? category) {
-    if (selectedCategory == category) {
-      selectedCategory = null; // Reset to show all categories
-    } else {
-      selectedCategory = category;
-    }
-    _applyFiltersAndGrouping();
-    notifyListeners();
+    selectedCategory = selectedCategory == category ? null : category;
+    filterItemsCommand.execute(selectedCategory ?? '');
   }
 
   void sortItems(String order) {
     if (sortOrder == order) {
-      isSortingAscending = !isSortingAscending; // Toggle sorting order
+      isSortingAscending = !isSortingAscending;
     } else {
       sortOrder = order;
-      isSortingAscending = true; // Reset to ascending when changing order type
+      isSortingAscending = true;
     }
-    _applyFiltersAndGrouping();
-  }
-
-  Future<void> addCategory(String newCategory) async {
-    try {
-      if (!categories.contains(newCategory)) {
-        await categoryRepository.addCategory(newCategory);
-        await _loadCategories();
-        notifyListeners();
-      }
-    } catch (e) {
-      errorMessage = 'Failed to add category';
-      debugPrint('❌ Error adding category: $e');
-    }
-  }
-
-  Future<void> removeItem(String itemKey) async {
-    try {
-      isLoading = true;
-      notifyListeners();
-      await repository
-          .deleteItem(itemKey); // 🔹 Ensure item is removed from Firestore
-      availableItems.removeWhere((item) => item.key == itemKey);
-      _applyFiltersAndGrouping();
-    } catch (e) {
-      errorMessage = 'Failed to remove item';
-      debugPrint('❌ Error removing item: $e');
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+    fetchLastAddedItemsCommand.execute();
   }
 
   void setScrollDirection(bool isScrollingDown) {
     if (this.isScrollingDown != isScrollingDown) {
       this.isScrollingDown = isScrollingDown;
-      notifyListeners();
     }
-  }
-
-  Future<void> refreshLibrary() async {
-    await _initialize();
   }
 }
