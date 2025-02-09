@@ -17,30 +17,66 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<HomeViewModel>();
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: viewModel.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : viewModel.errorMessage != null
-                ? _buildErrorState(viewModel)
-                : _buildContent(context, viewModel),
+        child: Column(
+          children: [
+            _buildHeader(context, viewModel),
+            _buildTitleRow(context),
+            Expanded(
+              child: StreamBuilder<List>(
+                stream: viewModel.collectionsStream,
+                builder: (context, collectionSnapshot) {
+                  if (!collectionSnapshot.hasData ||
+                      collectionSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (collectionSnapshot.hasError) {
+                    return _buildErrorState(
+                        collectionSnapshot.error.toString());
+                  }
+                  final collections = collectionSnapshot.data ?? [];
+
+                  return StreamBuilder<Map<String, List<ItemUIModel>>>(
+                    stream: viewModel.latestItemsStream,
+                    builder: (context, latestItemsSnapshot) {
+                      if (!latestItemsSnapshot.hasData ||
+                          latestItemsSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (latestItemsSnapshot.hasError) {
+                        return _buildErrorState(
+                            latestItemsSnapshot.error.toString());
+                      }
+                      final groupedItems = latestItemsSnapshot.data ?? {};
+
+                      return _buildContent(context, collections, groupedItems);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: _buildFloatingActionButton(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
-  Widget _buildErrorState(HomeViewModel viewModel) {
+  Widget _buildErrorState(String errorMessage) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(viewModel.errorMessage!,
-              style: const TextStyle(color: Colors.white)),
+          Text(errorMessage, style: const TextStyle(color: Colors.white)),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: viewModel.retryFetchingData,
+            onPressed: () {},
             child: const Text('Retry'),
           ),
         ],
@@ -48,16 +84,12 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, HomeViewModel viewModel) {
-    final collections = viewModel.collections;
-    final groupedItems = viewModel.groupedLatestItems;
-
+  Widget _buildContent(BuildContext context, List collections,
+      Map<String, List<ItemUIModel>> groupedItems) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(child: _buildHeader(context, viewModel)),
-          SliverToBoxAdapter(child: _buildTitleRow(context, viewModel)),
           SliverToBoxAdapter(child: const SizedBox(height: 8)),
           if (collections.isEmpty)
             SliverFillRemaining(
@@ -203,7 +235,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTitleRow(BuildContext context, HomeViewModel viewModel) {
+  Widget _buildTitleRow(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -220,7 +252,6 @@ class HomeScreen extends StatelessWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.purple[700],
-              // Different color for contrast
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
