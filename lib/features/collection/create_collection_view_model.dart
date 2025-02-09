@@ -60,6 +60,8 @@ class CreateCollectionViewModel extends ChangeNotifier {
         description: description ?? '',
         itemCount: 0,
         imageUrl: uploadedImage?.path,
+        lastUpdated: DateTime.now(),
+        category: category,
       );
 
       isLoading = true; // Set loading to true

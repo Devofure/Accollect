@@ -1,3 +1,4 @@
+import 'package:accollect/core/data/category_repository.dart';
 import 'package:accollect/core/data/collection_repository.dart';
 import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/features/home/home_view_model.dart';
@@ -150,7 +151,8 @@ class MyApp extends StatelessWidget {
         GoRoute(
           path: AppRouter.itemLibraryRoute,
           builder: (context, state) => ItemLibraryScreen(
-            repository: ItemRepository(),
+            itemRepository: ItemRepository(),
+            categoryRepository: CategoryRepository(),
           ),
         ),
         // Item Details
@@ -158,10 +160,7 @@ class MyApp extends StatelessWidget {
           path: AppRouter.itemDetailsRoute,
           builder: (context, state) {
             final itemKey = state.pathParameters['key'];
-
-            return ItemDetailsScreen(
-              itemId: itemKey!,
-            );
+            return ItemDetailScreen(itemKey: itemKey!);
           },
         ),
       ],

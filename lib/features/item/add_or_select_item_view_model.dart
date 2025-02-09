@@ -11,17 +11,24 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
   Set<String> selectedItems = {};
   bool isLoading = false;
   String? errorMessage;
+  bool _disposed = false; // Track disposal
 
   AddOrSelectItemViewModel(
       {required this.repository, required this.collectionKey}) {
     _loadAvailableItems();
   }
 
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   Future<void> _loadAvailableItems() async {
     try {
       isLoading = true;
       errorMessage = null;
-      notifyListeners();
+      _safeNotifyListeners();
 
       availableItems = await repository.fetchAvailableItems();
       debugPrint('Fetched Available Items: ${availableItems.length}');
@@ -33,7 +40,7 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
       errorMessage = 'Failed to load items';
     } finally {
       isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
@@ -56,7 +63,7 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
       selectedItems.remove(itemKey);
     }
     debugPrint("Selected Items: $selectedItems");
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   bool isSelected(String itemKey) => selectedItems.contains(itemKey);
@@ -64,16 +71,22 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
   Future<void> addSelectedItems() async {
     if (collectionKey == null) {
       errorMessage = 'Collection key is missing';
-      notifyListeners();
+      _safeNotifyListeners();
       return;
     }
+
     try {
       isLoading = true;
-      notifyListeners();
+      _safeNotifyListeners();
 
-      for (final itemKey in selectedItems) {
-        await repository.addItemToCollection(collectionKey!, itemKey);
-      }
+      // Process items in parallel to improve performance
+      await Future.wait(selectedItems.map((itemKey) async {
+        try {
+          await repository.addItemToCollection(collectionKey!, itemKey);
+        } catch (e) {
+          debugPrint("❌ Failed to add item $itemKey to collection: $e");
+        }
+      }));
 
       selectedItems.clear();
       await _loadAvailableItems();
@@ -81,21 +94,21 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
       errorMessage = 'Failed to add selected items to collection';
     } finally {
       isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
   Future<void> createItem(ItemUIModel newItem) async {
     try {
       isLoading = true;
-      notifyListeners();
+      _safeNotifyListeners();
       await repository.createItem(newItem);
       await _loadAvailableItems();
     } catch (e) {
       errorMessage = 'Failed to create and add item';
     } finally {
       isLoading = false;
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
@@ -104,6 +117,12 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
         .where((item) => item.title.toLowerCase().contains(query.toLowerCase()))
         .toList();
     _groupItemsByCategory();
-    notifyListeners();
+    _safeNotifyListeners();
+  }
+
+  void _safeNotifyListeners() {
+    if (!_disposed) {
+      notifyListeners();
+    }
   }
 }

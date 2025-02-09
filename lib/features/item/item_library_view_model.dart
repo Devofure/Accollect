@@ -1,9 +1,13 @@
+import 'dart:async';
+
+import 'package:accollect/core/data/category_repository.dart';
 import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/core/models/item_ui_model.dart';
 import 'package:flutter/foundation.dart';
 
 class ItemLibraryViewModel extends ChangeNotifier {
   final IItemRepository repository;
+  final ICategoryRepository categoryRepository;
 
   List<ItemUIModel> availableItems = [];
   Map<String, List<ItemUIModel>> groupedItems = {};
@@ -11,11 +15,16 @@ class ItemLibraryViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
-  List<String> categories = []; // Dynamically loaded categories
-  String? selectedCategory; // Default to the first category after loading
+  List<String> categories = [];
+  String? selectedCategory; // `null` means show all categories
   String sortOrder = 'Year';
 
-  ItemLibraryViewModel({required this.repository}) {
+  bool isScrollingDown = false;
+
+  ItemLibraryViewModel({
+    required this.categoryRepository,
+    required this.repository,
+  }) {
     _initialize();
   }
 
@@ -25,10 +34,7 @@ class ItemLibraryViewModel extends ChangeNotifier {
       errorMessage = null;
       notifyListeners();
 
-      // Load categories first
       await _loadCategories();
-
-      // Then load available items
       await _loadAvailableItems();
     } catch (e) {
       errorMessage = 'Failed to initialize data';
@@ -52,11 +58,6 @@ class ItemLibraryViewModel extends ChangeNotifier {
   Future<void> _loadCategories() async {
     try {
       categories = await repository.fetchCategories();
-      if (categories.isNotEmpty) {
-        selectedCategory ??= categories.first; // Default to the first category
-      } else {
-        selectedCategory = null;
-      }
     } catch (e) {
       errorMessage = 'Failed to load categories';
       debugPrint('Error loading categories: $e');
@@ -65,25 +66,29 @@ class ItemLibraryViewModel extends ChangeNotifier {
 
   void _applyFiltersAndGrouping() {
     List<ItemUIModel> filteredItems = availableItems;
+
     if (selectedCategory != null) {
       filteredItems = filteredItems
           .where((item) => item.category == selectedCategory)
           .toList();
     }
 
-    // Apply sorting
     if (sortOrder == 'Year') {
-      filteredItems
-          .sort((a, b) => b.addedOn.compareTo(a.addedOn)); // Descending
+      filteredItems.sort((a, b) => b.addedOn.compareTo(a.addedOn));
     } else if (sortOrder == 'Name') {
-      filteredItems.sort((a, b) => a.title.compareTo(b.title)); // Alphabetical
+      filteredItems.sort((a, b) => a.title.compareTo(b.title));
     }
 
-    // Group items by category
     groupedItems.clear();
-    for (final item in filteredItems) {
-      groupedItems.putIfAbsent(item.category, () => []).add(item);
+    if (selectedCategory == null) {
+      for (final item in filteredItems) {
+        groupedItems.putIfAbsent(item.category, () => []).add(item);
+      }
+    } else {
+      groupedItems[selectedCategory!] = filteredItems;
     }
+
+    notifyListeners();
   }
 
   Map<String, List<ItemUIModel>> getAvailableItemsGroupedByCategory() {
@@ -121,25 +126,27 @@ class ItemLibraryViewModel extends ChangeNotifier {
         .where((item) => item.title.toLowerCase().contains(query.toLowerCase()))
         .toList();
 
-    if (selectedCategory != null) {
-      groupedItems.clear();
+    groupedItems.clear();
+    if (selectedCategory == null) {
+      for (final item in filtered) {
+        groupedItems.putIfAbsent(item.category, () => []).add(item);
+      }
+    } else {
       for (final item in filtered) {
         if (item.category == selectedCategory) {
           groupedItems.putIfAbsent(item.category, () => []).add(item);
         }
       }
-    } else {
-      groupedItems.clear();
-      for (final item in filtered) {
-        groupedItems.putIfAbsent(item.category, () => []).add(item);
-      }
     }
-
     notifyListeners();
   }
 
-  void selectCategory(String category) {
-    selectedCategory = category;
+  void selectCategory(String? category) {
+    if (selectedCategory == category) {
+      selectedCategory = null;
+    } else {
+      selectedCategory = category;
+    }
     _applyFiltersAndGrouping();
     notifyListeners();
   }
@@ -147,20 +154,40 @@ class ItemLibraryViewModel extends ChangeNotifier {
   void sortItems(String order) {
     sortOrder = order;
     _applyFiltersAndGrouping();
-    notifyListeners();
   }
 
   Future<void> addCategory(String newCategory) async {
     try {
       if (!categories.contains(newCategory)) {
-        await repository.addCategory(newCategory); // Save in repository
-        await _loadCategories(); // Reload categories
-        selectedCategory = newCategory; // Automatically select the new category
+        await repository.addCategory(newCategory);
+        await _loadCategories();
         notifyListeners();
       }
     } catch (e) {
       errorMessage = 'Failed to add category';
       debugPrint('Error adding category: $e');
+    }
+  }
+
+  Future<void> removeItem(String itemKey) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+      availableItems.removeWhere((item) => item.key == itemKey);
+      _applyFiltersAndGrouping();
+    } catch (e) {
+      errorMessage = 'Failed to remove item';
+      debugPrint('Error removing item: $e');
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void setScrollDirection(bool isScrollingDown) {
+    if (this.isScrollingDown != isScrollingDown) {
+      this.isScrollingDown = isScrollingDown;
+      notifyListeners();
     }
   }
 }

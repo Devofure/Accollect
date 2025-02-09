@@ -2,12 +2,12 @@ import 'package:accollect/core/data/collection_repository.dart';
 import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/core/navigation/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
+import 'package:accollect/core/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/widgets/empty_state.dart';
-import '../../core/widgets/item_tile.dart';
 import 'collection_view_model.dart';
 
 class CollectionScreen extends StatelessWidget {
@@ -85,18 +85,37 @@ class CollectionScreen extends StatelessWidget {
                         )
                       else
                         Expanded(
-                          child: ListView.builder(
+                          child: GridView.builder(
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              // Adjust the number of items per row
+                              crossAxisSpacing: 8,
+                              mainAxisSpacing: 8,
+                              childAspectRatio:
+                                  0.75, // Adjust for image proportions
+                            ),
                             itemCount: items.length,
                             itemBuilder: (context, index) {
                               final item = items[index];
-                              return ItemTile(
+                              return ItemPortraitTile(
                                 item: item,
+                                isSelected: false,
+                                // Adjust based on selection logic
                                 onTap: () {
                                   context.pushWithParams(
-                                    AppRouter.itemDetailsRoute,
-                                    [item.key],
-                                  );
+                                      AppRouter.itemDetailsRoute, [item.key]);
                                 },
+                                menuOptions: [
+                                  PopupMenuItem(
+                                    value: 'remove',
+                                    child: const Text('Remove from collection'),
+                                    onTap: () {
+                                      viewModel.removeItemFromCollection(
+                                          item.key, item.collectionKey);
+                                    },
+                                  ),
+                                ],
                               );
                             },
                           ),

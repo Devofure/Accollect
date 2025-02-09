@@ -4,6 +4,10 @@ class CollectionUIModel {
   final String description;
   final int itemCount;
   final String? imageUrl;
+  final DateTime lastUpdated;
+  final String category;
+  final bool isFavorite;
+  final String visibility; // "public" or "private"
 
   CollectionUIModel({
     required this.key,
@@ -11,6 +15,10 @@ class CollectionUIModel {
     required this.description,
     required this.itemCount,
     this.imageUrl,
+    required this.lastUpdated,
+    required this.category,
+    this.isFavorite = false,
+    this.visibility = "private",
   });
 
   Map<String, dynamic> toJson() {
@@ -20,6 +28,10 @@ class CollectionUIModel {
       'description': description,
       'itemCount': itemCount,
       'imageUrl': imageUrl,
+      'lastUpdated': lastUpdated.toIso8601String(),
+      'category': category,
+      'isFavorite': isFavorite,
+      'visibility': visibility,
     };
   }
 
@@ -30,6 +42,11 @@ class CollectionUIModel {
       description: json['description'],
       itemCount: json['itemCount'],
       imageUrl: json['imageUrl'],
+      lastUpdated: DateTime.parse(
+          json['lastUpdated'] ?? DateTime.now().toIso8601String()),
+      category: json['category'] ?? "Other",
+      isFavorite: json['isFavorite'] ?? false,
+      visibility: json['visibility'] ?? "private",
     );
   }
 }

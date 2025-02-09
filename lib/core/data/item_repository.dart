@@ -17,6 +17,10 @@ abstract class IItemRepository {
   Future<List<String>> fetchCategories();
 
   Future<void> addCategory(String category);
+
+  Future<ItemUIModel> getItemByKey(String itemKey);
+
+  Future<void> deleteItem(String itemKey);
 }
 
 class ItemRepository implements IItemRepository {
@@ -64,15 +68,22 @@ class ItemRepository implements IItemRepository {
   Future<List<ItemUIModel>> fetchItems(String collectionKey) async {
     try {
       final snapshot = await _itemsRef
-          .where('collectionKey', isEqualTo: collectionKey)
+          .where('collectionKeys', arrayContains: collectionKey)
           .get();
 
       if (snapshot.docs.isEmpty) return [];
 
-      return snapshot.docs
-          .map(
-              (doc) => ItemUIModel.fromJson(doc.data() as Map<String, dynamic>))
-          .toList();
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+
+        // Ensure 'title' and other fields are not null
+        return ItemUIModel.fromJson({
+          'key': doc.id,
+          'title': data['title'] ?? 'Unknown Item',
+          'category': data['category'] ?? 'Other',
+          'collectionKeys': List<String>.from(data['collectionKeys'] ?? [])
+        });
+      }).toList();
     } catch (e) {
       throw Exception('Failed to fetch items for collection: $e');
     }
@@ -134,6 +145,34 @@ class ItemRepository implements IItemRepository {
       });
     } catch (e) {
       throw Exception('Failed to add category: $e');
+    }
+  }
+
+  @override
+  Future<ItemUIModel> getItemByKey(String itemKey) async {
+    try {
+      final doc = await _itemsRef.doc(itemKey).get();
+
+      if (!doc.exists) {
+        throw Exception('Item not found.');
+      }
+
+      final data = doc.data() as Map<String, dynamic>;
+      return ItemUIModel.fromJson(data);
+    } catch (e) {
+      debugPrint('❌ Error fetching item by key: $e');
+      throw Exception('Failed to fetch item: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteItem(String itemKey) async {
+    try {
+      await _itemsRef.doc(itemKey).delete();
+      debugPrint("✅ Item deleted: $itemKey");
+    } catch (e) {
+      debugPrint('❌ Error deleting item: $e');
+      throw Exception('Failed to delete item: $e');
     }
   }
 }

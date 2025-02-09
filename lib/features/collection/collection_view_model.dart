@@ -57,4 +57,11 @@ class CollectionViewModel extends ChangeNotifier {
     debugPrint('Refreshing collection data...');
     await _loadData();
   }
+
+  void removeItemFromCollection(String key, String? collectionKey) {
+    debugPrint('Removing item $key from collection $collectionKey');
+    collectionRepository.removeItemFromCollection(collectionKey!, key);
+    items.removeWhere((element) => element.key == key);
+    notifyListeners();
+  }
 }

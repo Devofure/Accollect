@@ -1,6 +1,6 @@
 import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/core/widgets/empty_state.dart';
-import 'package:accollect/core/widgets/item_tile.dart';
+import 'package:accollect/core/widgets/latest_added_item_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -84,14 +84,17 @@ class HomeScreen extends StatelessWidget {
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           final item = latestItems[index];
-                          return ItemTile(
-                            item: item,
-                            onTap: () {
-                              context.pushWithParams(
-                                AppRouter.itemDetailsRoute,
-                                [item.key],
-                              );
-                            },
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: LatestAddedItemTile(
+                              item: item,
+                              onTap: () {
+                                context.pushWithParams(
+                                  AppRouter.itemDetailsRoute,
+                                  [item.key],
+                                );
+                              },
+                            ),
                           );
                         },
                         childCount: latestItems.length,
@@ -168,7 +171,7 @@ class HomeScreen extends StatelessWidget {
     return const Padding(
       padding: EdgeInsets.symmetric(horizontal: 16),
       child: Text(
-        'Latest Added Items',
+        'New collected items',
         style: TextStyle(
           color: Colors.white,
           fontSize: 18,
@@ -194,7 +197,8 @@ class HomeScreen extends StatelessWidget {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[800],
+              backgroundColor: Colors.purple[700],
+              // Different color for contrast
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

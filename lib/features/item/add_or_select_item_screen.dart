@@ -2,7 +2,7 @@ import 'package:accollect/core/data/item_repository.dart';
 import 'package:accollect/core/models/item_ui_model.dart';
 import 'package:accollect/core/navigation/app_router.dart';
 import 'package:accollect/core/widgets/empty_state.dart';
-import 'package:accollect/core/widgets/item_tile.dart';
+import 'package:accollect/core/widgets/item_tile_portrait.dart';
 import 'package:accollect/features/item/add_or_select_item_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -125,8 +125,10 @@ class AddOrSelectItemScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemList(Map<String, List<ItemUIModel>> itemsByCategory,
-      AddOrSelectItemViewModel viewModel,) {
+  Widget _buildItemList(
+    Map<String, List<ItemUIModel>> itemsByCategory,
+    AddOrSelectItemViewModel viewModel,
+  ) {
     return Expanded(
       child: ListView.builder(
         itemCount: itemsByCategory.length,
@@ -151,22 +153,33 @@ class AddOrSelectItemScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ...items.map((item) {
-                  final isSelected = viewModel.isSelected(item.key);
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: ItemTile(
+                GridView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2, // Two columns per row
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 0.75,
+                  ),
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: items.length,
+                  itemBuilder: (context, itemIndex) {
+                    final item = items[itemIndex];
+                    final isSelected = viewModel.isSelected(item.key);
+
+                    return ItemPortraitTile(
                       item: item,
-                      isSelected: isSelected, // ✅ Pass selection state
+                      isSelected: isSelected,
                       onTap: () {
                         viewModel.toggleItemSelection(
                           item.key,
-                          !viewModel.isSelected(item.key),
+                          !isSelected,
                         );
                       },
-                    ),
-                  );
-                }),
+                    );
+                  },
+                ),
               ],
             ),
           );
