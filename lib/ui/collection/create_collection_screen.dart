@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:accollect/ui/widgets/loading_border_button.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'create_collection_view_model.dart';
@@ -72,7 +73,12 @@ class CreateCollectionScreen extends StatelessWidget {
           title: 'Save Collection',
           color: Colors.blue,
           isExecuting: viewModel.saveCollectionCommand.isExecuting,
-          onPressed: () => viewModel.saveCollectionCommand.execute(),
+          onPressed: () async {
+            await viewModel.saveCollectionCommand.executeWithFuture();
+            if (context.mounted) {
+              context.pop(true); // Close the screen and return success
+            }
+          },
         ),
       ),
     );
