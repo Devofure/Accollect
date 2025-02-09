@@ -1,7 +1,5 @@
 import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
-import 'package:accollect/data/collection_repository.dart';
-import 'package:accollect/data/item_repository.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
@@ -11,146 +9,121 @@ import 'package:provider/provider.dart';
 import 'collection_view_model.dart';
 
 class CollectionScreen extends StatelessWidget {
-  final ICollectionRepository collectionRepository;
-  final IItemRepository itemRepository;
   final String collectionKey;
 
-  const CollectionScreen({
-    super.key,
-    required this.collectionKey,
-    required this.collectionRepository,
-    required this.itemRepository,
-  });
+  const CollectionScreen({super.key, required this.collectionKey});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CollectionViewModel(
-        collectionKey: collectionKey,
-        collectionRepository: collectionRepository,
-        itemRepository: itemRepository,
-      ),
-      child: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
-          if (!didPop) context.go(AppRouter.homeRoute);
-        },
-        child: Scaffold(
-          backgroundColor: Colors.black,
-          appBar: _buildAppBar(context),
-          body: SafeArea(
-            child: Consumer<CollectionViewModel>(
-              builder: (context, viewModel, _) {
-                if (viewModel.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+    final viewModel = context.watch<CollectionViewModel>();
 
-                if (viewModel.errorMessage != null) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          viewModel.errorMessage!,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: viewModel.retryFetchingData,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                final items = viewModel.items;
-                final isCollectionEmpty = items.isEmpty;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      _buildCollectionHeader(viewModel),
-                      const SizedBox(height: 16),
-                      if (isCollectionEmpty)
-                        Expanded(
-                          child: Center(
-                            child: EmptyStateWidget(
-                              title: 'No items in your collection.',
-                              description: 'Add a new item to get started.',
-                            ),
-                          ),
-                        )
-                      else
-                        Expanded(
-                          child: GridView.builder(
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              // Adjust the number of items per row
-                              crossAxisSpacing: 8,
-                              mainAxisSpacing: 8,
-                              childAspectRatio:
-                                  0.75, // Adjust for image proportions
-                            ),
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              final item = items[index];
-                              return ItemPortraitTile(
-                                item: item,
-                                isSelected: false,
-                                // Adjust based on selection logic
-                                onTap: () {
-                                  context.pushWithParams(
-                                      AppRouter.itemDetailsRoute, [item.key]);
-                                },
-                                menuOptions: [
-                                  PopupMenuItem(
-                                    value: 'remove',
-                                    child: const Text('Remove from collection'),
-                                    onTap: () {
-                                      viewModel.removeItemFromCollection(
-                                          item.key, item.collectionKey);
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-          floatingActionButton: Consumer<CollectionViewModel>(
-            builder: (context, viewModel, _) {
-              return FloatingActionButton(
-                backgroundColor: Colors.white,
-                onPressed: () {
-                  _navigateToAddOrSelectItemScreen(context, viewModel);
-                },
-                child: const Icon(Icons.add, color: Colors.black),
-              );
-            },
-          ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) context.go(AppRouter.homeRoute);
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: _buildAppBar(context),
+        body: SafeArea(
+          child: viewModel.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : viewModel.errorMessage != null
+                  ? _buildErrorState(viewModel)
+                  : _buildContent(context, viewModel),
         ),
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: Colors.white,
+          onPressed: () => _navigateToAddOrSelectItemScreen(context, viewModel),
+          child: const Icon(Icons.add, color: Colors.black),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(CollectionViewModel viewModel) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(viewModel.errorMessage!,
+              style: const TextStyle(color: Colors.white)),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: viewModel.retryFetchingData,
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, CollectionViewModel viewModel) {
+    final items = viewModel.items;
+    final isCollectionEmpty = items.isEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _buildCollectionHeader(viewModel),
+          const SizedBox(height: 16),
+          if (isCollectionEmpty)
+            Expanded(
+              child: Center(
+                child: EmptyStateWidget(
+                  title: 'No items in your collection.',
+                  description: 'Add a new item to get started.',
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return ItemPortraitTile(
+                    item: item,
+                    isSelected: false,
+                    onTap: () {
+                      context.pushWithParams(
+                          AppRouter.itemDetailsRoute, [item.key]);
+                    },
+                    menuOptions: [
+                      PopupMenuItem(
+                        value: 'remove',
+                        child: const Text('Remove from collection'),
+                        onTap: () {
+                          viewModel.removeItemFromCollection(
+                              item.key, item.collectionKey);
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+        ],
       ),
     );
   }
 
   void _navigateToAddOrSelectItemScreen(
       BuildContext context, CollectionViewModel viewModel) async {
-    // Wait for navigation to complete
     final result = await context.pushWithParams(
       AppRouter.addOrSelectItemRoute,
       [collectionKey, viewModel.collectionName],
     );
     if (result == true) {
-      viewModel.refreshData(); // Trigger data reload
+      viewModel.refreshData();
     }
   }
 

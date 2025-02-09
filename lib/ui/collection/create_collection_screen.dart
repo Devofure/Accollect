@@ -1,7 +1,5 @@
 import 'dart:io';
 
-import 'package:accollect/data/category_repository.dart';
-import 'package:accollect/data/collection_repository.dart';
 import 'package:accollect/ui/widgets/loading_border_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,61 +7,72 @@ import 'package:provider/provider.dart';
 import 'create_collection_view_model.dart';
 
 class CreateCollectionScreen extends StatelessWidget {
-  final ICollectionRepository collectionRepository;
-  final ICategoryRepository categoryRepository;
-
-  const CreateCollectionScreen({
-    super.key,
-    required this.collectionRepository,
-    required this.categoryRepository,
-  });
+  const CreateCollectionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CreateCollectionViewModel(
-        collectionRepository: collectionRepository,
-        categoryRepository: categoryRepository,
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        appBar: _buildAppBar(context),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Consumer<CreateCollectionViewModel>(
-              builder: (context, viewModel, _) => Form(
-                key: viewModel.formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(),
-                      const SizedBox(height: 24),
-                      _buildTextInput(
-                        label: 'Collection Name',
-                        hint: 'Enter collection name',
-                        onSaved: viewModel.setCollectionName,
-                        validator: viewModel.validateCollectionName,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextInput(
-                        label: 'Description',
-                        hint: 'Enter collection description',
-                        onSaved: viewModel.setDescription,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDropdownInput(viewModel),
-                      const SizedBox(height: 24),
-                      _buildImageUpload(viewModel),
-                      const SizedBox(height: 24),
-                      _buildButtons(viewModel, context),
-                    ],
+    final viewModel = context.watch<CreateCollectionViewModel>();
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: _buildAppBar(context),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: viewModel.formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 24),
+                  _buildTextInput(
+                    label: 'Collection Name',
+                    hint: 'Enter collection name',
+                    onSaved: viewModel.setCollectionName,
+                    validator: viewModel.validateCollectionName,
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  _buildTextInput(
+                    label: 'Description',
+                    hint: 'Enter collection description',
+                    onSaved: viewModel.setDescription,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDropdownInput(viewModel),
+                  const SizedBox(height: 24),
+                  _buildImageUpload(viewModel),
+                ],
               ),
             ),
           ),
+        ),
+      ),
+      bottomNavigationBar: _buildBottomButton(viewModel, context),
+    );
+  }
+
+  Widget _buildBottomButton(
+      CreateCollectionViewModel viewModel, BuildContext context) {
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.black,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 10,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: LoadingBorderButton(
+          title: 'Save Collection',
+          color: Colors.blue,
+          isExecuting: viewModel.saveCollectionCommand.isExecuting,
+          onPressed: () => viewModel.saveCollectionCommand.execute(),
         ),
       ),
     );
@@ -85,9 +94,9 @@ class CreateCollectionScreen extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
           'Create a Collection',
           style: TextStyle(
@@ -203,16 +212,6 @@ class CreateCollectionScreen extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildButtons(CreateCollectionViewModel viewModel,
-      BuildContext context,) {
-    return LoadingBorderButton(
-      title: 'Save Collection',
-      color: Colors.blue,
-      isExecuting: viewModel.saveCollectionCommand.isExecuting,
-      onPressed: () => viewModel.saveCollectionCommand.execute(),
     );
   }
 }

@@ -10,7 +10,7 @@ abstract class IItemRepository {
 
   Future<List<ItemUIModel>> fetchItems(String collectionKey);
 
-  Future<void> createItem(ItemUIModel item);
+  Future<ItemUIModel> createItem(ItemUIModel item);
 
   Future<void> addItemToCollection(String collectionKey, String itemKey);
 
@@ -21,6 +21,8 @@ abstract class IItemRepository {
   Future<ItemUIModel> getItemByKey(String itemKey);
 
   Future<void> deleteItem(String itemKey);
+
+  Future<void> deleteAllItems();
 }
 
 class ItemRepository implements IItemRepository {
@@ -90,13 +92,14 @@ class ItemRepository implements IItemRepository {
   }
 
   @override
-  Future<void> createItem(ItemUIModel item) async {
+  Future<ItemUIModel> createItem(ItemUIModel item) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         throw Exception("User is not authenticated.");
       }
       await _itemsRef.doc(item.key).set(item.toJson());
+      return item; // TODO Return the created item
     } catch (e, stackTrace) {
       debugPrint('Failed to create item: $e');
       debugPrint('Stack trace: $stackTrace');
@@ -173,6 +176,28 @@ class ItemRepository implements IItemRepository {
     } catch (e) {
       debugPrint('❌ Error deleting item: $e');
       throw Exception('Failed to delete item: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteAllItems() async {
+    try {
+      const int batchSize = 500;
+      QuerySnapshot snapshot;
+      do {
+        snapshot = await _itemsRef.limit(batchSize).get();
+        if (snapshot.docs.isEmpty) {
+          return;
+        }
+        WriteBatch batch = FirebaseFirestore.instance.batch();
+        for (var doc in snapshot.docs) {
+          batch.delete(doc.reference);
+        }
+        await batch.commit();
+      } while (snapshot.docs.length == batchSize);
+    } catch (e) {
+      debugPrint("❌ Error deleting all items: $e");
+      throw Exception('Failed to delete all items: $e');
     }
   }
 }

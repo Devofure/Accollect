@@ -8,56 +8,41 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class ItemDetailScreen extends StatelessWidget {
-  final String itemKey;
-
-  const ItemDetailScreen({super.key, required this.itemKey});
+  const ItemDetailScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ItemDetailViewModel(itemKey: itemKey),
-      child: Scaffold(
+    final viewModel = context.watch<ItemDetailViewModel>();
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
         backgroundColor: Colors.black,
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          title:
-              const Text('Item Details', style: TextStyle(color: Colors.white)),
-        ),
-        body: SafeArea(
-          child: Consumer<ItemDetailViewModel>(
-            builder: (context, viewModel, _) {
-              if (viewModel.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (viewModel.errorMessage != null) {
-                return _buildErrorState(context, viewModel.errorMessage!);
-              }
-
-              if (viewModel.item == null) {
-                return const EmptyStateWidget(
-                  title: 'Item Not Found',
-                  description: 'This item might have been deleted or moved.',
-                );
-              }
-
-              return _buildItemDetails(viewModel);
-            },
-          ),
-        ),
-        floatingActionButton: Consumer<ItemDetailViewModel>(
-          builder: (context, viewModel, _) {
-            if (viewModel.item == null) return const SizedBox.shrink();
-            return FloatingActionButton.extended(
+        title:
+            const Text('Item Details', style: TextStyle(color: Colors.white)),
+      ),
+      body: SafeArea(
+        child: viewModel.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : viewModel.errorMessage != null
+                ? _buildErrorState(context, viewModel.errorMessage!)
+                : viewModel.item == null
+                    ? const EmptyStateWidget(
+                        title: 'Item Not Found',
+                        description:
+                            'This item might have been deleted or moved.',
+                      )
+                    : _buildItemDetails(viewModel),
+      ),
+      floatingActionButton: viewModel.item == null
+          ? null
+          : FloatingActionButton.extended(
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
               onPressed: () => _deleteItem(context, viewModel),
               icon: const Icon(Icons.delete),
               label: const Text('Delete Item'),
-            );
-          },
-        ),
-      ),
+            ),
     );
   }
 
@@ -138,9 +123,7 @@ class ItemDetailScreen extends StatelessWidget {
               style: const TextStyle(color: Colors.redAccent, fontSize: 16)),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () =>
-                Provider.of<ItemDetailViewModel>(context, listen: false)
-                    .fetchItem(),
+            onPressed: () => context.read<ItemDetailViewModel>().fetchItem(),
             child: const Text("Try Again"),
           ),
         ],

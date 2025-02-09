@@ -2,13 +2,19 @@ import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/collection_repository.dart';
 import 'package:accollect/data/item_repository.dart';
 import 'package:accollect/ui/collection/collection_screen.dart';
+import 'package:accollect/ui/collection/collection_view_model.dart';
 import 'package:accollect/ui/collection/create_collection_screen.dart';
+import 'package:accollect/ui/collection/create_collection_view_model.dart';
 import 'package:accollect/ui/home/home_screen.dart';
 import 'package:accollect/ui/home/home_view_model.dart';
 import 'package:accollect/ui/item/add_new_item_screen.dart';
 import 'package:accollect/ui/item/add_new_item_viewmodel.dart';
 import 'package:accollect/ui/item/add_or_select_item_screen.dart';
+import 'package:accollect/ui/item/add_or_select_item_view_model.dart';
 import 'package:accollect/ui/item/item_details_screen.dart';
+import 'package:accollect/ui/item/item_details_view_model.dart';
+import 'package:accollect/ui/item/item_library_screen.dart';
+import 'package:accollect/ui/item/item_library_view_model.dart';
 import 'package:accollect/ui/onboarding/onboarding_screen.dart';
 import 'package:accollect/ui/settings/settings_collections_screen.dart';
 import 'package:accollect/ui/settings/settings_collections_viewmodel.dart';
@@ -121,6 +127,7 @@ class MyApp extends StatelessWidget {
               create: (_) => CollectionManagementViewModel(
                 categoryRepository: context.read<ICategoryRepository>(),
                 collectionRepository: context.read<ICollectionRepository>(),
+                itemRepository: context.read<IItemRepository>(),
               ),
               child: const CollectionManagementScreen(),
             );
@@ -129,25 +136,26 @@ class MyApp extends StatelessWidget {
         GoRoute(
           path: AppRouter.createCollectionRoute,
           builder: (context, state) {
-            final collectionRepo = context.read<ICollectionRepository>();
-            final categoryRepo = context.read<ICategoryRepository>();
-            return CreateCollectionScreen(
-              collectionRepository: collectionRepo,
-              categoryRepository: categoryRepo,
+            return ChangeNotifierProvider(
+              create: (_) => CreateCollectionViewModel(
+                collectionRepository: context.read<ICollectionRepository>(),
+                categoryRepository: context.read<ICategoryRepository>(),
+              ),
+              child: const CreateCollectionScreen(),
             );
           },
         ),
         GoRoute(
           path: AppRouter.collectionRoute,
           builder: (context, state) {
-            final collectionKey = state.pathParameters['key'];
-            final collectionRepo = context.read<ICollectionRepository>();
-            final itemRepo = context.read<IItemRepository>();
-
-            return CollectionScreen(
-              collectionKey: collectionKey!,
-              collectionRepository: collectionRepo,
-              itemRepository: itemRepo,
+            final collectionKey = state.pathParameters['key']!;
+            return ChangeNotifierProvider(
+              create: (context) => CollectionViewModel(
+                collectionKey: collectionKey,
+                collectionRepository: context.read<ICollectionRepository>(),
+                itemRepository: context.read<IItemRepository>(),
+              ),
+              child: CollectionScreen(collectionKey: collectionKey),
             );
           },
         ),
@@ -158,16 +166,29 @@ class MyApp extends StatelessWidget {
             final collectionName = state.pathParameters['name'];
             final itemRepo = context.read<IItemRepository>();
 
-            return AddOrSelectItemScreen(
-              collectionName: collectionName!,
-              collectionKey: collectionKey!,
-              repository: itemRepo,
+            return ChangeNotifierProvider(
+              create: (_) => AddOrSelectItemViewModel(
+                repository: itemRepo,
+                collectionKey: collectionKey,
+              ),
+              child: AddOrSelectItemScreen(
+                collectionKey: collectionKey,
+                collectionName: collectionName,
+              ),
             );
           },
         ),
         GoRoute(
-          path: AppRouter.addNewItemRoute,
-          builder: (context, state) => AddNewItemScreen(),
+          path: AppRouter.itemLibraryRoute,
+          builder: (context, state) {
+            return ChangeNotifierProvider(
+              create: (_) => ItemLibraryViewModel(
+                repository: context.read<IItemRepository>(),
+                categoryRepository: context.read<ICategoryRepository>(),
+              ),
+              child: const ItemLibraryScreen(),
+            );
+          },
         ),
         GoRoute(
           path: AppRouter.addNewItemRoute,
@@ -185,7 +206,22 @@ class MyApp extends StatelessWidget {
           path: AppRouter.itemDetailsRoute,
           builder: (context, state) {
             final itemKey = state.pathParameters['key'];
-            return ItemDetailScreen(itemKey: itemKey!);
+            if (itemKey == null) {
+              return const Scaffold(
+                backgroundColor: Colors.black,
+                body: Center(
+                  child: Text(
+                    'Invalid item key',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              );
+            }
+
+            return ChangeNotifierProvider(
+              create: (_) => ItemDetailViewModel(itemKey: itemKey),
+              child: const ItemDetailScreen(),
+            );
           },
         ),
       ],

@@ -8,10 +8,12 @@ abstract class ICategoryRepository {
   Future<void> addCategory(String category);
 
   Future<void> deleteCategory(String category);
+
+  Future<void> deleteAllCategory();
 }
 
 class CategoryRepository implements ICategoryRepository {
-  final DocumentReference _dynamicCategoriesDoc =
+  final DocumentReference _dynamicCategoriesRef =
       FirebaseFirestore.instance.collection('meta').doc('categories');
 
   static const List<String> _staticCategories = [
@@ -34,7 +36,7 @@ class CategoryRepository implements ICategoryRepository {
   @override
   Future<List<String>> fetchEditableCategories() async {
     try {
-      final doc = await _dynamicCategoriesDoc.get();
+      final doc = await _dynamicCategoriesRef.get();
       if (!doc.exists) return [];
 
       final data = doc.data() as Map<String, dynamic>?;
@@ -51,14 +53,14 @@ class CategoryRepository implements ICategoryRepository {
     }
 
     try {
-      final doc = await _dynamicCategoriesDoc.get();
+      final doc = await _dynamicCategoriesRef.get();
       final data = doc.data() as Map<String, dynamic>? ?? {};
       final List<String> currentCategories =
           List<String>.from(data['categories'] ?? []);
 
       if (!currentCategories.contains(category)) {
         currentCategories.add(category);
-        await _dynamicCategoriesDoc.set({'categories': currentCategories});
+        await _dynamicCategoriesRef.set({'categories': currentCategories});
       }
     } catch (e) {
       throw Exception('Failed to add category: $e');
@@ -72,17 +74,26 @@ class CategoryRepository implements ICategoryRepository {
     }
 
     try {
-      final doc = await _dynamicCategoriesDoc.get();
+      final doc = await _dynamicCategoriesRef.get();
       final data = doc.data() as Map<String, dynamic>? ?? {};
       final List<String> currentCategories =
           List<String>.from(data['categories'] ?? []);
 
       if (currentCategories.contains(category)) {
         currentCategories.remove(category);
-        await _dynamicCategoriesDoc.set({'categories': currentCategories});
+        await _dynamicCategoriesRef.set({'categories': currentCategories});
       }
     } catch (e) {
       throw Exception('Failed to delete category: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteAllCategory() async {
+    try {
+      await _dynamicCategoriesRef.delete();
+    } catch (e) {
+      throw Exception('Failed to delete item: $e');
     }
   }
 }

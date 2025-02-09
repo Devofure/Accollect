@@ -14,7 +14,7 @@ class AddNewItemViewModel extends ChangeNotifier {
   final ImagePicker _imagePicker = ImagePicker();
 
   late Command<void, List<String>> fetchCategoriesCommand;
-  late Command<void, void> saveItemCommand;
+  late Command<void, String?> saveItemCommand;
 
   String? title;
   String? description;
@@ -34,11 +34,16 @@ class AddNewItemViewModel extends ChangeNotifier {
       initialValue: [],
     );
 
-    saveItemCommand = Command.createAsyncNoParam<void>(
+    saveItemCommand = Command.createAsyncNoParam<String?>(
       () async {
-        var currentState = formKey.currentState!;
+        final currentState = formKey.currentState!;
         if (currentState.validate()) {
           currentState.save();
+
+          if (title == null || title!.isEmpty) {
+            throw Exception('Item title cannot be empty');
+          }
+
           final newItem = ItemUIModel(
             key: DateTime.now().millisecondsSinceEpoch.toString(),
             title: title!,
@@ -48,8 +53,10 @@ class AddNewItemViewModel extends ChangeNotifier {
             imageUrl: uploadedImage?.path,
             collectionKey: null,
           );
-          await itemRepository.createItem(newItem);
+          var createdItem = await itemRepository.createItem(newItem);
+          return createdItem.key;
         }
+        return null;
       },
       initialValue: null,
     );

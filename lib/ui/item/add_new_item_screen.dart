@@ -9,6 +9,7 @@ class AddNewItemScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<AddNewItemViewModel>();
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: _buildAppBar(context),
@@ -64,7 +65,10 @@ class AddNewItemScreen extends StatelessWidget {
     return const Text(
       'Add New Item',
       style: TextStyle(
-          color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+        color: Colors.white,
+        fontSize: 28,
+        fontWeight: FontWeight.bold,
+      ),
     );
   }
 
@@ -86,7 +90,9 @@ class AddNewItemScreen extends StatelessWidget {
             hintStyle: const TextStyle(color: Colors.grey),
             filled: true,
             fillColor: Colors.grey[800],
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           validator: validator,
           onSaved: onSaved,
@@ -100,13 +106,15 @@ class AddNewItemScreen extends StatelessWidget {
       valueListenable: viewModel.fetchCategoriesCommand,
       builder: (context, categories, _) {
         return DropdownButtonFormField<String>(
-          value: viewModel.selectedCategory,
+          value: categories.isNotEmpty ? viewModel.selectedCategory : null,
           dropdownColor: Colors.grey[900],
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.grey[800],
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           items: categories.map((category) {
             return DropdownMenuItem(value: category, child: Text(category));
@@ -137,9 +145,11 @@ class AddNewItemScreen extends StatelessWidget {
       title: 'Save Item',
       color: Colors.blue,
       isExecuting: viewModel.saveItemCommand.isExecuting,
-      onPressed: () {
-        viewModel.saveItemCommand.execute();
-        Navigator.pop(context);
+      onPressed: () async {
+        final newItemKey = await viewModel.saveItemCommand.executeWithFuture();
+        if (newItemKey != null && context.mounted) {
+          Navigator.pop(context, newItemKey);
+        }
       },
     );
   }

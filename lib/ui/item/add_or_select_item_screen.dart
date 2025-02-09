@@ -1,5 +1,4 @@
 import 'package:accollect/core/app_router.dart';
-import 'package:accollect/data/item_repository.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/item/add_or_select_item_view_model.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
@@ -11,62 +10,42 @@ import 'package:provider/provider.dart';
 class AddOrSelectItemScreen extends StatelessWidget {
   final String? collectionKey; // Optional for library mode
   final String? collectionName; // Optional for library mode
-  final IItemRepository repository;
 
   const AddOrSelectItemScreen({
     super.key,
     this.collectionKey,
     this.collectionName,
-    required this.repository,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AddOrSelectItemViewModel(
-        repository: repository,
-        collectionKey: collectionKey,
-      ),
-      child: Scaffold(
+    final viewModel = context.watch<AddOrSelectItemViewModel>();
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
         backgroundColor: Colors.black,
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          title: Text(
-            'Add to Collection',
-            style: const TextStyle(color: Colors.white),
-          ),
+        title: const Text(
+          'Add to Collection',
+          style: TextStyle(color: Colors.white),
         ),
-        body: SafeArea(
-          child: Consumer<AddOrSelectItemViewModel>(
-            builder: (context, viewModel, _) {
-              if (viewModel.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (viewModel.errorMessage != null) {
-                return _buildErrorState(viewModel.errorMessage!);
-              }
-
-              final availableItemsByCategory =
-                  viewModel.getAvailableItemsGroupedByCategory();
-
-              return Column(
-                children: [
-                  _buildHeader(context, viewModel),
-                  if (availableItemsByCategory.isEmpty)
-                    const Expanded(
-                      child: EmptyStateWidget(
-                        title: 'No available items',
-                        description: 'Create a new item to get started.',
-                      ),
-                    )
-                  else
-                    _buildItemList(availableItemsByCategory, viewModel),
-                  _buildActionButtons(context, viewModel),
-                ],
-              );
-            },
-          ),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(context, viewModel),
+            if (viewModel.isLoading)
+              const Expanded(
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (viewModel.errorMessage != null)
+              _buildErrorState(viewModel.errorMessage!)
+            else
+              _buildItemList(viewModel),
+            _buildActionButtons(context, viewModel),
+          ],
         ),
       ),
     );
@@ -125,16 +104,25 @@ class AddOrSelectItemScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemList(
-    Map<String, List<ItemUIModel>> itemsByCategory,
-    AddOrSelectItemViewModel viewModel,
-  ) {
+  Widget _buildItemList(AddOrSelectItemViewModel viewModel) {
+    final availableItemsByCategory =
+        viewModel.getAvailableItemsGroupedByCategory();
+
+    if (availableItemsByCategory.isEmpty) {
+      return const Expanded(
+        child: EmptyStateWidget(
+          title: 'No available items',
+          description: 'Create a new item to get started.',
+        ),
+      );
+    }
+
     return Expanded(
       child: ListView.builder(
-        itemCount: itemsByCategory.length,
+        itemCount: availableItemsByCategory.length,
         itemBuilder: (context, index) {
-          final category = itemsByCategory.keys.elementAt(index);
-          final items = itemsByCategory[category]!;
+          final category = availableItemsByCategory.keys.elementAt(index);
+          final items = availableItemsByCategory[category]!;
 
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -156,7 +144,7 @@ class AddOrSelectItemScreen extends StatelessWidget {
                 GridView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, // Two columns per row
+                    crossAxisCount: 2,
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
                     childAspectRatio: 0.75,
@@ -171,12 +159,8 @@ class AddOrSelectItemScreen extends StatelessWidget {
                     return ItemPortraitTile(
                       item: item,
                       isSelected: isSelected,
-                      onTap: () {
-                        viewModel.toggleItemSelection(
-                          item.key,
-                          !isSelected,
-                        );
-                      },
+                      onTap: () =>
+                          viewModel.toggleItemSelection(item.key, !isSelected),
                     );
                   },
                 ),
@@ -204,13 +188,7 @@ class AddOrSelectItemScreen extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              onPressed: () {
-                if (Navigator.of(context).canPop()) {
-                  Navigator.of(context).pop();
-                } else {
-                  context.go(AppRouter.homeRoute);
-                }
-              },
+              onPressed: () => Navigator.pop(context),
               child: const Text('Cancel'),
             ),
           ),
@@ -227,7 +205,7 @@ class AddOrSelectItemScreen extends StatelessWidget {
               ),
               onPressed: () {
                 viewModel.addSelectedItems();
-                Navigator.of(context).pop(true);
+                Navigator.pop(context, true);
               },
               child: const Text('Add Items'),
             ),
@@ -238,18 +216,18 @@ class AddOrSelectItemScreen extends StatelessWidget {
   }
 
   Widget _buildErrorState(String errorMessage) {
-    return Center(
-      child: Text(
-        errorMessage,
-        style: const TextStyle(color: Colors.white),
+    return Expanded(
+      child: Center(
+        child: Text(
+          errorMessage,
+          style: const TextStyle(color: Colors.white),
+        ),
       ),
     );
   }
 
   void _navigateToAddNewItemScreen(
-    BuildContext context,
-    AddOrSelectItemViewModel viewModel,
-  ) async {
+      BuildContext context, AddOrSelectItemViewModel viewModel) async {
     final newItem = await context.push<ItemUIModel>(AppRouter.addNewItemRoute);
     if (newItem != null) {
       await viewModel.createItem(newItem);
