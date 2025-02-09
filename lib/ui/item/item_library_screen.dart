@@ -224,16 +224,6 @@ class ItemLibraryScreen extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white70, fontSize: 18),
           ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () => _navigateToAddNewItemScreen(context, null),
-            icon: const Icon(Icons.add),
-            label: const Text("Create New Item"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blueGrey[700], // Softer color
-              foregroundColor: Colors.white,
-            ),
-          ),
         ],
       ),
     );
