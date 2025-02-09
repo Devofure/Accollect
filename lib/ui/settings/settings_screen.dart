@@ -41,7 +41,9 @@ class SettingsScreen extends StatelessWidget {
               _buildSettingsTile(
                   title: 'Collection Management',
                   icon: Icons.settings,
-                  onTap: () {}),
+                  onTap: () {
+                    context.push(AppRouter.settingsCollectionsRoute);
+                  }),
               _buildSettingsTile(
                   title: 'Notifications',
                   icon: Icons.notifications,

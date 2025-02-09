@@ -1,4 +1,4 @@
-import 'package:accollect/ui/settings/collection_settings_viewmodel.dart';
+import 'package:accollect/ui/settings/settings_collections_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

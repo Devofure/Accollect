@@ -10,7 +10,7 @@ import 'package:accollect/ui/item/add_or_select_item_screen.dart';
 import 'package:accollect/ui/item/item_details_screen.dart';
 import 'package:accollect/ui/item/item_library_screen.dart';
 import 'package:accollect/ui/onboarding/onboarding_screen.dart';
-import 'package:accollect/ui/settings/collection_settings_screen.dart';
+import 'package:accollect/ui/settings/settings_collections_screen.dart';
 import 'package:accollect/ui/settings/settings_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider, EmailAuthProvider;
