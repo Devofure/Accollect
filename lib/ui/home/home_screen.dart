@@ -1,10 +1,12 @@
 import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
+import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/widgets/collection_tile.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:accollect/ui/widgets/latest_added_item_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'home_view_model.dart';
@@ -43,7 +45,7 @@ class HomeScreen extends StatelessWidget {
             }
 
             final collections = viewModel.collections;
-            final latestItems = viewModel.latestItems;
+            final groupedItems = viewModel.groupedLatestItems;
 
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -80,26 +82,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     SliverToBoxAdapter(child: const SizedBox(height: 24)),
                     SliverToBoxAdapter(child: _buildLatestAddedTitle()),
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final item = latestItems[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: LatestAddedItemTile(
-                              item: item,
-                              onTap: () {
-                                context.pushWithParams(
-                                  AppRouter.itemDetailsRoute,
-                                  [item.key],
-                                );
-                              },
-                            ),
-                          );
-                        },
-                        childCount: latestItems.length,
-                      ),
-                    ),
+                    ..._buildLatestItemsList(groupedItems),
                   ],
                 ],
               ),
@@ -112,13 +95,58 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  static List<Widget> _buildLatestItemsList(
+      Map<String, List<ItemUIModel>> groupedItems) {
+    List<Widget> slivers = [];
+
+    groupedItems.forEach((date, items) {
+      slivers.add(
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: Text(
+              DateFormat('MMMM dd, yyyy').format(DateTime.parse(date)),
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      slivers.add(
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final item = items[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: LatestAddedItemTile(
+                  item: item,
+                  onTap: () {
+                    context
+                        .pushWithParams(AppRouter.itemDetailsRoute, [item.key]);
+                  },
+                ),
+              );
+            },
+            childCount: items.length,
+          ),
+        ),
+      );
+    });
+
+    return slivers;
+  }
+
   Widget _buildFloatingActionButton(BuildContext context) {
     return FloatingActionButton(
       backgroundColor: Colors.white,
       foregroundColor: Colors.black,
       onPressed: () {
-        context
-            .push(AppRouter.itemLibraryRoute); // Replace with the actual route
+        context.push(AppRouter.itemLibraryRoute);
       },
       child: const Icon(Icons.library_books),
     );
@@ -174,7 +202,7 @@ class HomeScreen extends StatelessWidget {
         'New collected items',
         style: TextStyle(
           color: Colors.white,
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
       ),

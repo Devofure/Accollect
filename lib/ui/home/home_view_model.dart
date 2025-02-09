@@ -4,13 +4,14 @@ import 'package:accollect/domain/models/collection_ui_model.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final IItemRepository itemRepository;
   final ICollectionRepository collectionRepository;
 
   List<CollectionUIModel> collections = [];
-  List<ItemUIModel> latestItems = [];
+  Map<String, List<ItemUIModel>> groupedLatestItems = {};
   bool isLoading = true;
   String? errorMessage;
 
@@ -31,7 +32,6 @@ class HomeViewModel extends ChangeNotifier {
       isLoading = true;
       notifyListeners();
 
-      // 🔄 Listen to Firestore collections stream
       collectionRepository.fetchCollectionsStream().listen(
         (fetchedCollections) {
           collections = fetchedCollections;
@@ -45,10 +45,9 @@ class HomeViewModel extends ChangeNotifier {
         },
       );
 
-      // 🔄 Listen to Firestore latest items stream
       itemRepository.fetchLatestItemsStream().listen(
         (fetchedItems) {
-          latestItems = fetchedItems;
+          _processLatestItems(fetchedItems);
           _hasFetchedItems = true;
           _updateLoadingState();
         },
@@ -65,8 +64,25 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
+  void _processLatestItems(List<ItemUIModel> items) {
+    final latestLimitedItems = items.take(10).toList(); // Only last 5 items
+    groupedLatestItems = _groupItemsByDate(latestLimitedItems);
+    notifyListeners();
+  }
+
+  Map<String, List<ItemUIModel>> _groupItemsByDate(List<ItemUIModel> items) {
+    final Map<String, List<ItemUIModel>> groupedItems = {};
+    for (var item in items) {
+      String dateKey = DateFormat('yyyy-MM-dd').format(item.addedOn);
+      if (!groupedItems.containsKey(dateKey)) {
+        groupedItems[dateKey] = [];
+      }
+      groupedItems[dateKey]!.add(item);
+    }
+    return groupedItems;
+  }
+
   void _updateLoadingState() {
-    // 🛑 Stop loading after both streams have fetched at least once
     if (_hasFetchedCollections && _hasFetchedItems) {
       isLoading = false;
     }
