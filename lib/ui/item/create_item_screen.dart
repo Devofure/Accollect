@@ -154,7 +154,7 @@ class AddNewItemScreen extends StatelessWidget {
           onPressed: () async {
             await viewModel.saveItemCommand.executeWithFuture();
             if (context.mounted) {
-              context.pop(true);
+              context.pop();
             }
           },
         ),

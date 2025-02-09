@@ -1,12 +1,13 @@
 import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
-import 'package:accollect/ui/item/item_library_view_model.dart';
-import 'package:accollect/ui/widgets/categoy_selector_widget.dart';
 import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
+import 'item_library_view_model.dart';
 
 class ItemLibraryScreen extends StatelessWidget {
   const ItemLibraryScreen({super.key});
@@ -22,17 +23,32 @@ class ItemLibraryScreen extends StatelessWidget {
         title: const Text('Library', style: TextStyle(color: Colors.white)),
       ),
       body: SafeArea(
-        child: ValueListenableBuilder<List<ItemUIModel>>(
-          valueListenable: viewModel.fetchLastAddedItemsCommand,
-          builder: (context, items, _) {
-            if (viewModel.fetchLastAddedItemsCommand.isExecuting.value) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (viewModel.fetchLastAddedItemsCommand.value.isEmpty) {
-              return _buildEmptyState(context);
-            }
-            return _buildContent(context, viewModel, items);
-          },
+        child: Column(
+          children: [
+            buildCategorySelector(
+              context: context,
+              viewModel: viewModel,
+              onCategorySelected: viewModel.selectCategory,
+            ),
+            _buildSearchAndFilterRow(viewModel),
+            Expanded(
+              child: StreamBuilder<List<ItemUIModel>>(
+                stream: viewModel.itemsStream,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return _buildErrorState(snapshot.error.toString());
+                  }
+                  final items = snapshot.data ?? [];
+                  return items.isEmpty
+                      ? _buildEmptyState()
+                      : _buildItemGrid(context, items);
+                },
+              ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: AnimatedSlide(
@@ -41,27 +57,11 @@ class ItemLibraryScreen extends StatelessWidget {
         child: FloatingActionButton.extended(
           backgroundColor: Colors.blueGrey[800],
           foregroundColor: Colors.white,
-          onPressed: () => _navigateToAddNewItemScreen(context, viewModel),
+          onPressed: () => _navigateToAddNewItemScreen(context),
           icon: const Icon(Icons.add),
           label: const Text('Create Item'),
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-    );
-  }
-
-  Widget _buildContent(BuildContext context, ItemLibraryViewModel viewModel,
-      List<ItemUIModel> items) {
-    return Column(
-      children: [
-        buildCategorySelector(
-          context: context,
-          viewModel: viewModel,
-          onCategorySelected: viewModel.selectCategory,
-        ),
-        _buildSearchAndFilterRow(viewModel),
-        Expanded(child: _buildItemList(items)),
-      ],
     );
   }
 
@@ -92,26 +92,38 @@ class ItemLibraryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemList(List<ItemUIModel> items) {
-    return ListView.builder(
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: ItemPortraitTile(
-            item: item,
-            onTap: () {
-              context.pushWithParams(AppRouter.itemDetailsRoute, [item.key]);
-            },
-          ),
-        );
+  Widget _buildItemGrid(BuildContext context, List<ItemUIModel> items) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (scrollInfo) {
+        final viewModel = context.read<ItemLibraryViewModel>();
+        if (scrollInfo is UserScrollNotification) {
+          viewModel.setScrollDirection(
+              scrollInfo.direction == ScrollDirection.reverse);
+        }
+        return false;
       },
+      child: GridView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 0.75,
+        ),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          return ItemPortraitTile(
+            item: item,
+            onTap: () =>
+                context.pushWithParams(AppRouter.itemDetailsRoute, [item.key]),
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState() {
     return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -128,10 +140,110 @@ class ItemLibraryScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToAddNewItemScreen(
-    BuildContext context,
-    ItemLibraryViewModel viewModel,
-  ) async {
+  Widget _buildErrorState(String errorMessage) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error, color: Colors.red, size: 48),
+            const SizedBox(height: 8),
+            Text(
+              errorMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToAddNewItemScreen(BuildContext context) {
     context.push<ItemUIModel>(AppRouter.addNewItemRoute);
+  }
+}
+
+Widget buildCategorySelector({
+  required BuildContext context,
+  required ItemLibraryViewModel viewModel,
+  required Function(String?) onCategorySelected,
+}) {
+  return ValueListenableBuilder<List<String>>(
+    valueListenable: viewModel.fetchCategoriesCommand,
+    builder: (context, categories, _) {
+      final List<Widget> categoryButtons = [
+        CategoryButton(
+          label: "All",
+          isSelected: viewModel.selectedCategory == null,
+          onTap: () => onCategorySelected(null),
+        ),
+      ];
+
+      if (viewModel.fetchCategoriesCommand.isExecuting.value) {
+        categoryButtons.add(
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        );
+      } else {
+        categoryButtons.addAll(
+          categories.map(
+            (category) => CategoryButton(
+              label: category,
+              isSelected: viewModel.selectedCategory == category,
+              onTap: () => onCategorySelected(category),
+            ),
+          ),
+        );
+      }
+
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(children: categoryButtons),
+      );
+    },
+  );
+}
+
+class CategoryButton extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const CategoryButton({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        margin: const EdgeInsets.only(right: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue : Colors.grey[800],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -6,6 +6,8 @@ import 'package:flutter/widgets.dart';
 abstract class IItemRepository {
   Future<List<ItemUIModel>> fetchAvailableItems({int limit});
 
+  Stream<List<ItemUIModel>> fetchItemsStream();
+
   Stream<List<ItemUIModel>> fetchLatestItemsStream();
 
   Future<List<ItemUIModel>> fetchItems(String collectionKey);
@@ -54,11 +56,18 @@ class ItemRepository implements IItemRepository {
   }
 
   @override
+  Stream<List<ItemUIModel>> fetchItemsStream() {
+    return _itemsRef.snapshots().map((snapshot) => snapshot.docs
+        .map((doc) => ItemUIModel.fromJson(doc.data() as Map<String, dynamic>))
+        .toList());
+  }
+
+  @override
   Stream<List<ItemUIModel>> fetchLatestItemsStream() {
     return _itemsRef
         .where('collectionKey', isNotEqualTo: null)
         .orderBy('addedOn', descending: true)
-        .limit(5)
+        .limit(10)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) =>

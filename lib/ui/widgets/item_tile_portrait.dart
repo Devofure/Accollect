@@ -21,7 +21,7 @@ class ItemPortraitTile extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 140,
+        // Remove any fixed width—GridView will size it based on crossAxisCount / childAspectRatio.
         margin: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Colors.grey[850],
@@ -35,27 +35,23 @@ class ItemPortraitTile extends StatelessWidget {
           ],
         ),
         child: Column(
+          // Let the grid define the overall size; fill it vertically.
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Use Expanded to let the image take the available height
-            // but still leave room for the text below
+            // Expanded ensures the image portion takes all available vertical space in the grid cell.
             Expanded(
               child: ClipRRect(
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(12)),
-                child: AspectRatio(
-                  aspectRatio: 3 / 4,
-                  child: CachedNetworkImage(
-                    imageUrl: item.imageUrl ?? '',
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => _imagePlaceholder(),
-                    errorWidget: (context, url, error) => _imagePlaceholder(),
-                  ),
+                child: CachedNetworkImage(
+                  imageUrl: item.imageUrl ?? '',
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => _imagePlaceholder(),
+                  errorWidget: (context, url, error) => _imagePlaceholder(),
                 ),
               ),
             ),
-            // Give the text a fixed (or minimum) height or just a padded area
+            // Title area
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               child: Text(
@@ -78,7 +74,6 @@ class ItemPortraitTile extends StatelessWidget {
 
   Widget _imagePlaceholder() {
     return Container(
-      width: double.infinity,
       color: Colors.grey[700],
       child: const Icon(Icons.image, color: Colors.white, size: 40),
     );

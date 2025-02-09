@@ -1,85 +1,77 @@
-import 'package:accollect/data/category_repository.dart';
-import 'package:accollect/data/item_repository.dart';
-import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_command/flutter_command.dart';
+
+import '../../data/category_repository.dart';
+import '../../data/item_repository.dart';
+import '../../domain/models/item_ui_model.dart';
 
 class ItemLibraryViewModel extends ChangeNotifier {
   final IItemRepository repository;
   final ICategoryRepository categoryRepository;
 
-  late final Command<void, List<ItemUIModel>> fetchLastAddedItemsCommand;
+  late final Stream<List<ItemUIModel>> itemsStream;
   late final Command<void, List<String>> fetchCategoriesCommand;
   late final Command<String, void> filterItemsCommand;
   late final Command<ItemUIModel, void> createItemCommand;
   late final Command<String, void> deleteItemCommand;
-  late final Command<void, void> refreshLibraryCommand;
-
-  List<ItemUIModel> get availableItems => fetchLastAddedItemsCommand.value;
-
-  List<String> get categories => fetchCategoriesCommand.value;
 
   String searchQuery = "";
   String? selectedCategory;
   bool isSortingAscending = true;
-  String sortOrder = 'Year';
   bool isScrollingDown = false;
+  List<ItemUIModel> availableItems = [];
 
   ItemLibraryViewModel({
     required this.categoryRepository,
     required this.repository,
   }) {
-    fetchLastAddedItemsCommand = Command.createAsyncNoParam(
-      () async => await repository.fetchAvailableItems(),
+    itemsStream = repository.fetchItemsStream().map((allItems) {
+      availableItems = allItems;
+      return _filterAndSearch(allItems);
+    });
+
+    fetchCategoriesCommand = Command.createAsyncNoParam<List<String>>(
+      categoryRepository.fetchAllCategories,
       initialValue: [],
     );
+    fetchCategoriesCommand.execute();
 
-    fetchCategoriesCommand = Command.createAsyncNoParam(
-      () async => await categoryRepository.fetchAllCategories(),
-      initialValue: [],
-    );
-
-    filterItemsCommand = Command.createSync((query) {
-      searchQuery = query;
-    }, initialValue: null);
-
-    createItemCommand = Command.createAsync(
-      (item) async {
-        await repository.createItem(item);
+    filterItemsCommand = Command.createSync(
+      (query) {
+        searchQuery = query;
+        notifyListeners();
       },
       initialValue: null,
     );
 
-    deleteItemCommand = Command.createAsync(
-      (itemKey) async {
-        await repository.deleteItem(itemKey);
-      },
-      initialValue: null,
-    );
-
-    refreshLibraryCommand = Command.createAsyncNoParam(() async {
-      await repository.fetchAvailableItems();
+    createItemCommand = Command.createAsync((item) async {
+      await repository.createItem(item);
     }, initialValue: null);
   }
 
   void selectCategory(String? category) {
-    selectedCategory = selectedCategory == category ? null : category;
-    filterItemsCommand.execute(selectedCategory ?? '');
+    selectedCategory = (selectedCategory == category) ? null : category;
+    notifyListeners();
   }
 
-  void sortItems(String order) {
-    if (sortOrder == order) {
-      isSortingAscending = !isSortingAscending;
-    } else {
-      sortOrder = order;
-      isSortingAscending = true;
+  void setScrollDirection(bool scrollingDown) {
+    if (isScrollingDown != scrollingDown) {
+      isScrollingDown = scrollingDown;
+      notifyListeners();
     }
-    fetchLastAddedItemsCommand.execute();
   }
 
-  void setScrollDirection(bool isScrollingDown) {
-    if (this.isScrollingDown != isScrollingDown) {
-      this.isScrollingDown = isScrollingDown;
-    }
+  /// Helper method to do local filtering + searching
+  List<ItemUIModel> _filterAndSearch(List<ItemUIModel> items) {
+    return items.where((item) {
+      if (selectedCategory != null && item.category != selectedCategory) {
+        return false;
+      }
+      if (searchQuery.isNotEmpty &&
+          !item.title.toLowerCase().contains(searchQuery.toLowerCase())) {
+        return false;
+      }
+      return true;
+    }).toList();
   }
 }
