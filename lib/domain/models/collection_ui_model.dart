@@ -1,11 +1,11 @@
 class CollectionUIModel {
   final String key;
   final String name;
-  final String description;
+  final String? description;
   final int itemCount;
   final String? imageUrl;
   final DateTime lastUpdated;
-  final String category;
+  final String? category;
   final bool isFavorite;
   final String visibility; // "public" or "private"
 

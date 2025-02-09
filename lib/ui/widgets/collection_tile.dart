@@ -72,8 +72,8 @@ class CollectionTile extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                collection.description.isNotEmpty
-                    ? collection.description
+                collection.description?.isNotEmpty == true
+                    ? collection.description!
                     : 'No description',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

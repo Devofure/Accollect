@@ -1,20 +1,30 @@
-import 'package:accollect/core/app_router.dart';
-import 'package:accollect/core/utils/extensions.dart';
+import 'dart:io';
+
+import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/collection_repository.dart';
+import 'package:accollect/ui/widgets/loading_border_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'create_collection_view_model.dart';
 
 class CreateCollectionScreen extends StatelessWidget {
-  final ICollectionRepository repository;
+  final ICollectionRepository collectionRepository;
+  final ICategoryRepository categoryRepository;
 
-  const CreateCollectionScreen({super.key, required this.repository});
+  const CreateCollectionScreen({
+    super.key,
+    required this.collectionRepository,
+    required this.categoryRepository,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => CreateCollectionViewModel(repository: repository),
+      create: (_) => CreateCollectionViewModel(
+        collectionRepository: collectionRepository,
+        categoryRepository: categoryRepository,
+      ),
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: _buildAppBar(context),
@@ -130,112 +140,79 @@ class CreateCollectionScreen extends StatelessWidget {
   }
 
   Widget _buildDropdownInput(CreateCollectionViewModel viewModel) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Category',
-            style: TextStyle(color: Colors.grey, fontSize: 14)),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: viewModel.category,
-          dropdownColor: Colors.grey[900],
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.grey[800],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+    return ValueListenableBuilder<List<String>>(
+      valueListenable: viewModel.fetchCategoriesCommand,
+      builder: (context, categories, child) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Category',
+                style: TextStyle(color: Colors.grey, fontSize: 14)),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: categories.isNotEmpty ? categories.first : null,
+              dropdownColor: Colors.grey[900],
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.grey[800],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              items: categories
+                  .map((category) => DropdownMenuItem<String>(
+                        value: category,
+                        child: Text(category),
+                      ))
+                  .toList(),
+              onChanged: viewModel.setCategory,
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.blue, width: 2),
-            ),
-          ),
-          items: viewModel.categories
-              .map((category) => DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  ))
-              .toList(),
-          onChanged: viewModel.setCategory,
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
   Widget _buildImageUpload(CreateCollectionViewModel viewModel) {
-    return Center(
-      child: GestureDetector(
-        onTap: viewModel.uploadImage,
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundImage: viewModel.uploadedImage != null
-                  ? FileImage(viewModel.uploadedImage!) as ImageProvider
-                  : null,
-              child: viewModel.uploadedImage == null
-                  ? const Icon(Icons.photo_camera,
-                      color: Colors.white, size: 36)
-                  : null,
+    return ValueListenableBuilder<File?>(
+      valueListenable: viewModel.uploadImageCommand,
+      builder: (context, image, child) {
+        return Center(
+          child: GestureDetector(
+            onTap: viewModel.uploadImageCommand.execute,
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage:
+                      image != null ? FileImage(image) as ImageProvider : null,
+                  child: image == null
+                      ? const Icon(Icons.photo_camera,
+                          color: Colors.white, size: 36)
+                      : null,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Upload Collection Image',
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Upload Collection Image',
-              style: TextStyle(color: Colors.grey, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildButtons(
-      CreateCollectionViewModel viewModel, BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[800],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            onPressed: () {
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Cancel', style: TextStyle(color: Colors.white)),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () async {
-              if (viewModel.isLoading) return;
-              final newCollectionKey = await viewModel.saveCollection();
-              if (newCollectionKey != null && context.mounted) {
-                context.goWithParams(
-                    AppRouter.collectionRoute, [newCollectionKey]);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: viewModel.isLoading
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Text('Save Collection',
-                    style: TextStyle(color: Colors.white)),
-          ),
-        ),
-      ],
+  Widget _buildButtons(CreateCollectionViewModel viewModel,
+      BuildContext context,) {
+    return LoadingBorderButton(
+      title: 'Save Collection',
+      color: Colors.blue,
+      isExecuting: viewModel.saveCollectionCommand.isExecuting,
+      onPressed: () => viewModel.saveCollectionCommand.execute(),
     );
   }
 }

@@ -25,7 +25,7 @@ class CategoryRepository implements ICategoryRepository {
   Future<List<String>> fetchAllCategories() async {
     try {
       final dynamicCategories = await fetchEditableCategories();
-      return [..._staticCategories, ...dynamicCategories];
+      return [...dynamicCategories, ..._staticCategories];
     } catch (e) {
       throw Exception('Failed to fetch categories: $e');
     }

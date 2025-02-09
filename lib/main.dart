@@ -130,7 +130,11 @@ class MyApp extends StatelessWidget {
           path: AppRouter.createCollectionRoute,
           builder: (context, state) {
             final collectionRepo = context.read<ICollectionRepository>();
-            return CreateCollectionScreen(repository: collectionRepo);
+            final categoryRepo = context.read<ICategoryRepository>();
+            return CreateCollectionScreen(
+              collectionRepository: collectionRepo,
+              categoryRepository: categoryRepo,
+            );
           },
         ),
         GoRoute(
