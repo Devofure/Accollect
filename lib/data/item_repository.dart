@@ -113,7 +113,7 @@ class ItemRepository implements IItemRepository {
     try {
       await FirebaseFirestore.instance.runTransaction((transaction) async {
         final doc = await transaction.get(_categoriesDoc);
-        final data = doc.data() as Map<String, dynamic>?; // 🔥 Null-safe cast
+        final data = doc.data() as Map<String, dynamic>?;
 
         final List<String> currentCategories =
             List<String>.from(data?['categories'] ?? []);
