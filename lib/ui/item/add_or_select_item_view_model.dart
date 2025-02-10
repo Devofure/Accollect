@@ -30,7 +30,7 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
       errorMessage = null;
       _safeNotifyListeners();
 
-      availableItems = await repository.fetchAvailableItems();
+      availableItems = await repository.fetchItemsStream(null).first;
       debugPrint('Fetched Available Items: ${availableItems.length}');
       _groupItemsByCategory();
 

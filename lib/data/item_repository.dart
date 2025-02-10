@@ -4,13 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 
 abstract class IItemRepository {
-  Future<List<ItemUIModel>> fetchAvailableItems({int limit});
-
-  Stream<List<ItemUIModel>> fetchItemsStream();
+  Stream<List<ItemUIModel>> fetchItemsStream(String? categoryFilter);
 
   Stream<List<ItemUIModel>> fetchLatestItemsStream();
 
-  Future<List<ItemUIModel>> fetchItems(String collectionKey);
+  Future<List<ItemUIModel>> fetchItemsFromCollection(String collectionKey);
 
   Future<ItemUIModel> createItem(ItemUIModel item);
 
@@ -34,32 +32,18 @@ class ItemRepository implements IItemRepository {
       FirebaseFirestore.instance.collection('meta').doc('categories');
 
   @override
-  Future<List<ItemUIModel>> fetchAvailableItems({int limit = 20}) async {
-    try {
-      final snapshot = await _itemsRef.limit(limit).get();
-      debugPrint("Fetched ${snapshot.docs.length} items from Firestore.");
-      if (snapshot.docs.isEmpty) {
-        return [];
-      }
-
-      return snapshot.docs.map(
-        (doc) {
-          final item = ItemUIModel.fromJson(doc.data() as Map<String, dynamic>);
-          debugPrint("📦 Item: ${item.title}, Category: ${item.category}");
-          return item;
-        },
-      ).toList();
-    } catch (e) {
-      debugPrint("❌ Error fetching available items: $e");
-      throw Exception('Failed to fetch available items: $e');
+  Stream<List<ItemUIModel>> fetchItemsStream(String? categoryFilter) {
+    Query query = _itemsRef;
+    if (categoryFilter != null && categoryFilter != 'All') {
+      query = query.where('category', isEqualTo: categoryFilter);
     }
-  }
 
-  @override
-  Stream<List<ItemUIModel>> fetchItemsStream() {
-    return _itemsRef.snapshots().map((snapshot) => snapshot.docs
-        .map((doc) => ItemUIModel.fromJson(doc.data() as Map<String, dynamic>))
-        .toList());
+    return query.snapshots().map(
+          (snapshot) => snapshot.docs
+              .map((doc) =>
+                  ItemUIModel.fromJson(doc.data() as Map<String, dynamic>))
+              .toList(),
+        );
   }
 
   @override
@@ -76,7 +60,8 @@ class ItemRepository implements IItemRepository {
   }
 
   @override
-  Future<List<ItemUIModel>> fetchItems(String collectionKey) async {
+  Future<List<ItemUIModel>> fetchItemsFromCollection(
+      String collectionKey) async {
     try {
       final snapshot = await _itemsRef
           .where('collectionKeys', arrayContains: collectionKey)

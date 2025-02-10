@@ -35,7 +35,7 @@ class CollectionViewModel extends ChangeNotifier {
       collectionImageUrl = collection.imageUrl;
 
       debugPrint('Collection details loaded: $collectionName');
-      items = await itemRepository.fetchItems(collectionKey);
+      items = await itemRepository.fetchItemsFromCollection(collectionKey);
 
       debugPrint('Items loaded: ${items.map((e) => e.title).toList()}');
       isLoading = false;

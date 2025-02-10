@@ -25,12 +25,7 @@ class ItemLibraryScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            buildCategorySelector(
-              context: context,
-              viewModel: viewModel,
-              onCategorySelected: viewModel.selectCategory,
-            ),
-            _buildSearchAndFilterRow(viewModel),
+            _buildCategorySelector(context, viewModel),
             Expanded(
               child: StreamBuilder<List<ItemUIModel>>(
                 stream: viewModel.itemsStream,
@@ -65,30 +60,48 @@ class ItemLibraryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSearchAndFilterRow(ItemLibraryViewModel viewModel) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: TextField(
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: 'Search for items...',
-          hintStyle: const TextStyle(color: Colors.grey),
-          filled: true,
-          fillColor: Colors.grey[800],
-          prefixIcon: const Icon(Icons.search, color: Colors.white70),
-          suffixIcon: viewModel.searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, color: Colors.white70),
-                  onPressed: () => viewModel.filterItemsCommand.execute(""),
-                )
-              : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
+  Widget _buildCategorySelector(
+      BuildContext context, ItemLibraryViewModel viewModel) {
+    return ValueListenableBuilder<List<String>>(
+      valueListenable: viewModel.fetchCategoriesCommand,
+      builder: (context, categories, _) {
+        final List<Widget> categoryButtons = [
+          _CategoryButton(
+            label: "All",
+            isSelected: viewModel.categoryFilter == null,
+            onTap: () => viewModel.selectCategoryCommand.execute(null),
           ),
-        ),
-        onChanged: viewModel.filterItemsCommand.execute,
-      ),
+        ];
+
+        if (viewModel.fetchCategoriesCommand.isExecuting.value) {
+          categoryButtons.add(
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        } else {
+          categoryButtons.addAll(
+            categories.map(
+              (category) => _CategoryButton(
+                label: category,
+                isSelected: viewModel.categoryFilter == category,
+                onTap: () => viewModel.selectCategoryCommand.execute(category),
+              ),
+            ),
+          );
+        }
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(children: categoryButtons),
+        );
+      },
     );
   }
 
@@ -165,64 +178,15 @@ class ItemLibraryScreen extends StatelessWidget {
   }
 }
 
-Widget buildCategorySelector({
-  required BuildContext context,
-  required ItemLibraryViewModel viewModel,
-  required Function(String?) onCategorySelected,
-}) {
-  return ValueListenableBuilder<List<String>>(
-    valueListenable: viewModel.fetchCategoriesCommand,
-    builder: (context, categories, _) {
-      final List<Widget> categoryButtons = [
-        CategoryButton(
-          label: "All",
-          isSelected: viewModel.selectedCategory == null,
-          onTap: () => onCategorySelected(null),
-        ),
-      ];
-
-      if (viewModel.fetchCategoriesCommand.isExecuting.value) {
-        categoryButtons.add(
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ),
-        );
-      } else {
-        categoryButtons.addAll(
-          categories.map(
-            (category) => CategoryButton(
-              label: category,
-              isSelected: viewModel.selectedCategory == category,
-              onTap: () => onCategorySelected(category),
-            ),
-          ),
-        );
-      }
-
-      return SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(children: categoryButtons),
-      );
-    },
-  );
-}
-
-class CategoryButton extends StatelessWidget {
+class _CategoryButton extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const CategoryButton({
+  const _CategoryButton({
     required this.label,
     required this.isSelected,
     required this.onTap,
-    super.key,
   });
 
   @override
