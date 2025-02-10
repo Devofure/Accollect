@@ -3,7 +3,6 @@ import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -107,14 +106,6 @@ class ItemLibraryScreen extends StatelessWidget {
 
   Widget _buildItemGrid(BuildContext context, List<ItemUIModel> items) {
     return NotificationListener<ScrollNotification>(
-      onNotification: (scrollInfo) {
-        final viewModel = context.read<ItemLibraryViewModel>();
-        if (scrollInfo is UserScrollNotification) {
-          viewModel.setScrollDirection(
-              scrollInfo.direction == ScrollDirection.reverse);
-        }
-        return false;
-      },
       child: GridView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

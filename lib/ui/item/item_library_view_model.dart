@@ -5,46 +5,49 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_command/flutter_command.dart';
 
 class ItemLibraryViewModel extends ChangeNotifier {
-  final IItemRepository repository;
+  final IItemRepository itemRepository;
   final ICategoryRepository categoryRepository;
 
   late final Command<void, List<String>> fetchCategoriesCommand;
   late final Command<ItemUIModel, void> createItemCommand;
-  late final Command<String?, void> selectCategoryCommand;
-  late final Command<String?, void> searchQueryCommand;
-
-  late final Stream<List<ItemUIModel>> itemsStream =
-      repository.fetchItemsStream(categoryFilter);
+  late final Command<String, void> selectCategoryCommand;
 
   bool isScrollingDown = false;
-  String? categoryFilter;
+  String? _categoryFilter;
+
+  String? get categoryFilter => _categoryFilter;
+  Stream<List<ItemUIModel>>? _itemsStream;
+
+  Stream<List<ItemUIModel>> get itemsStream => _itemsStream!;
 
   ItemLibraryViewModel({
     required this.categoryRepository,
-    required this.repository,
+    required this.itemRepository,
   }) {
     fetchCategoriesCommand = Command.createAsyncNoParam<List<String>>(
       categoryRepository.fetchAllCategories,
       initialValue: [],
     );
     fetchCategoriesCommand.execute();
-    selectCategoryCommand = Command.createAsyncNoResult(
-      (category) async {
-        if (categoryFilter == category) {
-          categoryFilter = null;
-        } else {
-          categoryFilter = category;
-        }
+
+    selectCategoryCommand = Command.createSyncNoResult((category) {
+      final newFilter = (category == _categoryFilter) ? null : category;
+
+      if (_categoryFilter != newFilter) {
+        _categoryFilter = newFilter;
+        _itemsStream = itemRepository.fetchItemsStream(_categoryFilter);
         notifyListeners();
-      },
-    );
+      }
+    });
 
     createItemCommand = Command.createAsync(
       (item) async {
-        await repository.createItem(item);
+        await itemRepository.createItem(item);
       },
       initialValue: null,
     );
+
+    _itemsStream = itemRepository.fetchItemsStream(_categoryFilter);
   }
 
   void setScrollDirection(bool scrollingDown) {

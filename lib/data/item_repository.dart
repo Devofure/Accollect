@@ -14,8 +14,6 @@ abstract class IItemRepository {
 
   Future<void> addItemToCollection(String collectionKey, String itemKey);
 
-  Future<List<String>> fetchCategories();
-
   Future<void> addCategory(String category);
 
   Future<ItemUIModel> getItemByKey(String itemKey);
@@ -34,7 +32,7 @@ class ItemRepository implements IItemRepository {
   @override
   Stream<List<ItemUIModel>> fetchItemsStream(String? categoryFilter) {
     Query query = _itemsRef;
-    if (categoryFilter != null && categoryFilter != 'All') {
+    if (categoryFilter != null) {
       query = query.where('category', isEqualTo: categoryFilter);
     }
 
@@ -107,21 +105,6 @@ class ItemRepository implements IItemRepository {
       await _itemsRef.doc(itemKey).update({'collectionKey': collectionKey});
     } catch (e) {
       throw Exception('Failed to add item to collection: $e');
-    }
-  }
-
-  @override
-  Future<List<String>> fetchCategories() async {
-    try {
-      final doc = await _categoriesDoc.get();
-
-      if (!doc.exists)
-        return ['Funko Pop', 'LEGO', 'Wine', 'Other']; // Default categories
-
-      final data = doc.data() as Map<String, dynamic>?; // 🔥 Null-safe cast
-      return List<String>.from(data?['categories'] ?? []);
-    } catch (e) {
-      throw Exception('Failed to fetch categories: $e');
     }
   }
 

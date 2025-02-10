@@ -183,7 +183,7 @@ class MyApp extends StatelessWidget {
           builder: (context, state) {
             return ChangeNotifierProvider(
               create: (_) => ItemLibraryViewModel(
-                repository: context.read<IItemRepository>(),
+                itemRepository: context.read<IItemRepository>(),
                 categoryRepository: context.read<ICategoryRepository>(),
               ),
               child: const ItemLibraryScreen(),
