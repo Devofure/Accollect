@@ -18,6 +18,7 @@ class _CollectionManagementScreenState
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<CollectionManagementViewModel>();
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -32,20 +33,33 @@ class _CollectionManagementScreenState
         ),
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _buildCategoryManagementSection(viewModel),
-            const SizedBox(height: 24),
-            _buildDangerZone(viewModel),
-          ],
+        child: StreamBuilder<List<String>>(
+          stream: viewModel.editableCategoriesStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return _buildErrorState(snapshot.error.toString());
+            }
+            final userCategories = snapshot.data ?? [];
+
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _buildCategoryManagementSection(viewModel, userCategories),
+                const SizedBox(height: 24),
+                _buildDangerZone(viewModel),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
   Widget _buildCategoryManagementSection(
-      CollectionManagementViewModel viewModel) {
+      CollectionManagementViewModel viewModel, List<String> userCategories) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -56,7 +70,7 @@ class _CollectionManagementScreenState
         const SizedBox(height: 8),
         _buildAddCategoryField(viewModel),
         const SizedBox(height: 8),
-        _buildCategoryList(viewModel),
+        _buildCategoryList(viewModel, userCategories),
       ],
     );
   }
@@ -109,37 +123,32 @@ class _CollectionManagementScreenState
     }
   }
 
-  Widget _buildCategoryList(CollectionManagementViewModel viewModel) {
-    return ValueListenableBuilder<List<String>>(
-      valueListenable: viewModel.fetchEditableCategoriesCommand,
-      builder: (context, categories, child) {
-        return ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            final category = categories[index];
+  Widget _buildCategoryList(
+      CollectionManagementViewModel viewModel, List<String> userCategories) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: userCategories.length,
+      itemBuilder: (context, index) {
+        final category = userCategories[index];
 
-            return ValueListenableBuilder<bool>(
-              valueListenable: viewModel.deleteCategoryCommand.isExecuting,
-              builder: (context, isExecuting, child) {
-                return ListTile(
-                  title: Text(category,
-                      style: const TextStyle(color: Colors.white)),
-                  trailing: isExecuting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : IconButton(
-                          icon:
-                              const Icon(Icons.delete, color: Colors.redAccent),
-                          onPressed: () =>
-                              viewModel.deleteCategoryCommand.execute(category),
-                        ),
-                );
-              },
+        return ValueListenableBuilder<bool>(
+          valueListenable: viewModel.deleteCategoriesCommand.isExecuting,
+          builder: (context, isExecuting, child) {
+            return ListTile(
+              title:
+                  Text(category, style: const TextStyle(color: Colors.white)),
+              trailing: isExecuting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.redAccent),
+                      onPressed: () =>
+                          viewModel.deleteCategoriesCommand.execute(category),
+                    ),
             );
           },
         );
@@ -157,40 +166,27 @@ class _CollectionManagementScreenState
         ),
         const SizedBox(height: 8),
         LoadingBorderButton(
-          title: 'Delete All Collections',
-          color: Colors.redAccent,
-          isExecuting: viewModel.deleteAllCollectionsCommand.isExecuting,
-          onPressed: () =>
-              _confirmDeleteAll(context, viewModel, isDeleteAllData: false),
-        ),
-        const SizedBox(height: 8),
-        LoadingBorderButton(
-          title: 'Delete All Data',
+          title: 'Delete All Categories',
           color: Colors.red,
-          isExecuting: viewModel.deleteAllDataCommand.isExecuting,
-          onPressed: () =>
-              _confirmDeleteAll(context, viewModel, isDeleteAllData: true),
+          isExecuting: viewModel.deleteCategoriesCommand.isExecuting,
+          onPressed: () => _confirmDeleteAll(context, viewModel),
         ),
       ],
     );
   }
 
-  void _confirmDeleteAll(
-      BuildContext context, CollectionManagementViewModel viewModel,
-      {required bool isDeleteAllData}) {
-    final title =
-        isDeleteAllData ? 'Delete All Data' : 'Delete All Collections';
-    final content = isDeleteAllData
-        ? 'Are you sure you want to delete ALL data (collections and items)? This action is irreversible.'
-        : 'Are you sure you want to delete all collections? This action is irreversible.';
-
+  void _confirmDeleteAll(BuildContext context,
+      CollectionManagementViewModel viewModel) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.grey[900],
-          title: Text(title, style: const TextStyle(color: Colors.white)),
-          content: Text(content, style: const TextStyle(color: Colors.grey)),
+          title: const Text('Delete All Categories',
+              style: TextStyle(color: Colors.white)),
+          content: const Text(
+              'Are you sure you want to delete all user-defined categories? This action is irreversible.',
+              style: TextStyle(color: Colors.grey)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -199,17 +195,29 @@ class _CollectionManagementScreenState
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                if (isDeleteAllData) {
-                  viewModel.deleteAllDataCommand.execute();
-                } else {
-                  viewModel.deleteAllCollectionsCommand.execute();
-                }
+                viewModel.deleteAllCollectionsCommand.execute();
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildErrorState(String errorMessage) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(errorMessage, style: const TextStyle(color: Colors.redAccent)),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {},
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
     );
   }
 }

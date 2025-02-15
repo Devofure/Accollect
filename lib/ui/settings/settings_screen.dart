@@ -31,7 +31,6 @@ class SettingsScreen extends StatelessWidget {
                 icon: Icons.person,
                 onTap: () {},
               ),
-              // _buildSettingsTile(title: 'My Subscription', icon: Icons.card_membership, onTap: () {},),
             ],
           ),
           const SizedBox(height: 16),
@@ -39,17 +38,20 @@ class SettingsScreen extends StatelessWidget {
             title: 'Preferences',
             items: [
               _buildSettingsTile(
-                  title: 'Collection Management',
-                  icon: Icons.settings,
-                  onTap: () {
-                    context.push(AppRouter.settingsCollectionsRoute);
-                  }),
+                title: 'Collection Management',
+                icon: Icons.settings,
+                onTap: () => context.push(AppRouter.settingsCollectionsRoute),
+              ),
               _buildSettingsTile(
-                  title: 'Notifications',
-                  icon: Icons.notifications,
-                  onTap: () {}),
+                title: 'Notifications',
+                icon: Icons.notifications,
+                onTap: () {},
+              ),
               _buildSettingsTile(
-                  title: 'Appearance', icon: Icons.nights_stay, onTap: () {}),
+                title: 'Appearance',
+                icon: Icons.nights_stay,
+                onTap: () {},
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -87,9 +89,10 @@ class SettingsScreen extends StatelessWidget {
                 Text(
                   user?.displayName ?? 'User',
                   style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   user?.email ?? 'No email linked',
@@ -113,11 +116,16 @@ class SettingsScreen extends StatelessWidget {
           child: Text(
             title,
             style: const TextStyle(
-                color: Colors.grey, fontSize: 14, fontWeight: FontWeight.bold),
+              color: Colors.grey,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        ...items.map((item) =>
-            Padding(padding: const EdgeInsets.only(bottom: 8), child: item)),
+        ...items.map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: item,
+            )),
       ],
     );
   }
@@ -140,7 +148,6 @@ class SettingsScreen extends StatelessWidget {
           height: 60,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-            // More height
             child: Row(
               children: [
                 Icon(icon, color: Colors.white),

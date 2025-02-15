@@ -9,11 +9,13 @@ class CollectionManagementViewModel extends ChangeNotifier {
   final ICollectionRepository collectionRepository;
   final IItemRepository itemRepository;
 
-  late Command<void, List<String>> fetchEditableCategoriesCommand;
   late Command<String, void> addCategoryCommand;
-  late Command<String, void> deleteCategoryCommand;
+  late Command<String, void> deleteCategoriesCommand;
   late Command<void, void> deleteAllCollectionsCommand;
   late Command<void, void> deleteAllDataCommand;
+
+  Stream<List<String>> get editableCategoriesStream =>
+      categoryRepository.fetchUserCategoriesStream();
 
   CollectionManagementViewModel({
     required this.categoryRepository,
@@ -24,23 +26,16 @@ class CollectionManagementViewModel extends ChangeNotifier {
   }
 
   void _setupCommands() {
-    fetchEditableCategoriesCommand = Command.createAsyncNoParam<List<String>>(
-      categoryRepository.fetchEditableCategories,
-      initialValue: [],
-    );
-
     addCategoryCommand = Command.createAsync<String, void>(
       (category) async {
         await categoryRepository.addCategory(category);
-        fetchEditableCategoriesCommand.execute();
       },
       initialValue: null,
     );
 
-    deleteCategoryCommand = Command.createAsync<String, void>(
+    deleteCategoriesCommand = Command.createAsync<String, void>(
       (category) async {
         await categoryRepository.deleteCategory(category);
-        fetchEditableCategoriesCommand.execute();
       },
       initialValue: null,
     );
@@ -56,11 +51,9 @@ class CollectionManagementViewModel extends ChangeNotifier {
       () async {
         await collectionRepository.deleteAllCollections();
         await itemRepository.deleteAllItems();
-        await categoryRepository.deleteAllCategory();
+        await categoryRepository.deleteAllCategories();
       },
       initialValue: null,
     );
-
-    fetchEditableCategoriesCommand.execute();
   }
 }
