@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 class EmptyStateWidget extends StatelessWidget {
   final String title;
   final String? description;
+  final VoidCallback? onActionPressed;
+  final String? actionLabel;
 
   const EmptyStateWidget({
     super.key,
     required this.title,
     this.description,
+    this.onActionPressed,
+    this.actionLabel,
   });
 
   @override
@@ -32,9 +36,25 @@ class EmptyStateWidget extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           if (description != null) ...[
+            const SizedBox(height: 8),
             Text(
               description!,
               style: const TextStyle(color: Colors.grey, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          ],
+          if (onActionPressed != null && actionLabel != null) ...[
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: onActionPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueGrey[700],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(actionLabel!),
             ),
           ],
         ],

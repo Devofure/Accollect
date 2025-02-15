@@ -4,29 +4,15 @@ import 'package:flutter/foundation.dart';
 
 class ItemDetailViewModel extends ChangeNotifier {
   final String itemKey;
-  final IItemRepository repository = ItemRepository(); // Inject repository
+  final IItemRepository repository;
+  late final Stream<ItemUIModel?> itemStream;
 
   ItemUIModel? item;
   bool isLoading = true;
   String? errorMessage;
 
-  ItemDetailViewModel({required this.itemKey}) {
-    fetchItem();
-  }
-
-  Future<void> fetchItem() async {
-    try {
-      isLoading = true;
-      errorMessage = null;
-      notifyListeners();
-
-      item = await repository.getItemByKey(itemKey);
-    } catch (e) {
-      errorMessage = 'Item not found';
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+  ItemDetailViewModel({required this.itemKey, required this.repository}) {
+    itemStream = repository.fetchItemStream(itemKey);
   }
 
   Future<void> deleteItem() async {

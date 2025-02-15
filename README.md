@@ -110,3 +110,24 @@ flutter test
 
 ---
 
+```plaintext
+Firestore Root
+├── collections/               # Collections created by users
+│   ├── {collectionId}         # Collection Document
+│       ├── name: string
+│       ├── imageUrl: string
+│       ├── ownerId: string (User ID)
+│       ├── sharedWith: [userId, userId]  (Array of shared user IDs)
+│       ├── itemsCount: number (Cached count for quick lookup)
+├── items/                     # All items stored separately
+│   ├── {itemId}               # Individual Item Document
+│       ├── title: string
+│       ├── category: string
+│       ├── imageUrl: string
+│       ├── collectionIds: [collectionId, collectionId] (Array of collections it's in)
+│       ├── addedOn: timestamp
+├── categories/                 # Editable categories
+│   ├── meta                    # Stores static & dynamic categories
+│       ├── staticCategories: ["Funko Pop", "LEGO", "Wine"]
+│       ├── dynamicCategories: ["Custom Category 1", "Custom Category 2"]
+```

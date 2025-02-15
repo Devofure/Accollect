@@ -195,8 +195,8 @@ class MyApp extends StatelessWidget {
           builder: (context, state) {
             return ChangeNotifierProvider(
               create: (_) => AddNewItemViewModel(
-                categoryRepository: context.read(),
-                itemRepository: context.read(),
+                categoryRepository: context.read<ICategoryRepository>(),
+                itemRepository: context.read<IItemRepository>(),
               ),
               child: const AddNewItemScreen(),
             );
@@ -219,7 +219,10 @@ class MyApp extends StatelessWidget {
             }
 
             return ChangeNotifierProvider(
-              create: (_) => ItemDetailViewModel(itemKey: itemKey),
+              create: (_) => ItemDetailViewModel(
+                itemKey: itemKey,
+                repository: context.read<IItemRepository>(),
+              ),
               child: const ItemDetailScreen(),
             );
           },

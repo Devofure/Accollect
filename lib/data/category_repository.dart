@@ -13,7 +13,7 @@ abstract class ICategoryRepository {
 }
 
 class CategoryRepository implements ICategoryRepository {
-  final DocumentReference _dynamicCategoriesRef =
+  final DocumentReference _categoriesRef =
       FirebaseFirestore.instance.collection('meta').doc('categories');
 
   static const List<String> _staticCategories = [
@@ -26,21 +26,11 @@ class CategoryRepository implements ICategoryRepository {
   @override
   Future<List<String>> fetchAllCategories() async {
     try {
-      final dynamicCategories = await fetchEditableCategories();
-      return [...dynamicCategories, ..._staticCategories].toList();
-    } catch (e) {
-      throw Exception('Failed to fetch categories: $e');
-    }
-  }
-
-  @override
-  Future<List<String>> fetchEditableCategories() async {
-    try {
-      final doc = await _dynamicCategoriesRef.get();
-      if (!doc.exists) return [];
-
-      final data = doc.data() as Map<String, dynamic>?;
-      return List<String>.from(data?['categories'] ?? []);
+      final doc = await _categoriesRef.get();
+      final data = doc.data() as Map<String, dynamic>? ?? {};
+      final dynamicCategories =
+          List<String>.from(data['dynamicCategories'] ?? []);
+      return [..._staticCategories, ...dynamicCategories];
     } catch (e) {
       throw Exception('Failed to fetch categories: $e');
     }
@@ -48,52 +38,27 @@ class CategoryRepository implements ICategoryRepository {
 
   @override
   Future<void> addCategory(String category) async {
-    if (_staticCategories.contains(category)) {
-      throw Exception('Cannot add a static category: $category');
-    }
-
-    try {
-      final doc = await _dynamicCategoriesRef.get();
-      final data = doc.data() as Map<String, dynamic>? ?? {};
-      final List<String> currentCategories =
-          List<String>.from(data['categories'] ?? []);
-
-      if (!currentCategories.contains(category)) {
-        currentCategories.add(category);
-        await _dynamicCategoriesRef.set({'categories': currentCategories});
-      }
-    } catch (e) {
-      throw Exception('Failed to add category: $e');
-    }
+    await _categoriesRef.update({
+      'dynamicCategories': FieldValue.arrayUnion([category])
+    });
   }
 
   @override
   Future<void> deleteCategory(String category) async {
-    if (_staticCategories.contains(category)) {
-      throw Exception('Cannot delete a static category: $category');
-    }
-
-    try {
-      final doc = await _dynamicCategoriesRef.get();
-      final data = doc.data() as Map<String, dynamic>? ?? {};
-      final List<String> currentCategories =
-          List<String>.from(data['categories'] ?? []);
-
-      if (currentCategories.contains(category)) {
-        currentCategories.remove(category);
-        await _dynamicCategoriesRef.set({'categories': currentCategories});
-      }
-    } catch (e) {
-      throw Exception('Failed to delete category: $e');
-    }
+    await _categoriesRef.update({
+      'dynamicCategories': FieldValue.arrayRemove([category])
+    });
   }
 
   @override
   Future<void> deleteAllCategory() async {
-    try {
-      await _dynamicCategoriesRef.delete();
-    } catch (e) {
-      throw Exception('Failed to delete item: $e');
-    }
+    await _categoriesRef.update({'dynamicCategories': []});
+  }
+
+  @override
+  Future<List<String>> fetchEditableCategories() async {
+    final doc = await _categoriesRef.get();
+    final data = doc.data() as Map<String, dynamic>? ?? {};
+    return List<String>.from(data['dynamicCategories'] ?? []);
   }
 }

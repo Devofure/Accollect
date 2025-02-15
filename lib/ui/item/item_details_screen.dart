@@ -1,4 +1,5 @@
 import 'package:accollect/core/app_router.dart';
+import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/item/item_details_view_model.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -22,32 +23,46 @@ class ItemDetailScreen extends StatelessWidget {
             const Text('Item Details', style: TextStyle(color: Colors.white)),
       ),
       body: SafeArea(
-        child: viewModel.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : viewModel.errorMessage != null
-                ? _buildErrorState(context, viewModel.errorMessage!)
-                : viewModel.item == null
-                    ? const EmptyStateWidget(
-                        title: 'Item Not Found',
-                        description:
-                            'This item might have been deleted or moved.',
-                      )
-                    : _buildItemDetails(viewModel),
+        child: StreamBuilder<ItemUIModel?>(
+          stream: viewModel.itemStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return _buildErrorState(context, "Failed to load item.");
+            }
+            final item = snapshot.data;
+            if (item == null) {
+              return const EmptyStateWidget(
+                title: 'Item Not Found',
+                description: 'This item might have been deleted or moved.',
+              );
+            }
+            return _buildItemDetails(item);
+          },
+        ),
       ),
-      floatingActionButton: viewModel.item == null
-          ? null
-          : FloatingActionButton.extended(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-              onPressed: () => _deleteItem(context, viewModel),
-              icon: const Icon(Icons.delete),
-              label: const Text('Delete Item'),
-            ),
+      floatingActionButton: StreamBuilder<ItemUIModel?>(
+        stream: viewModel.itemStream,
+        builder: (context, snapshot) {
+          final item = snapshot.data;
+          if (item == null) {
+            return const SizedBox.shrink();
+          }
+          return FloatingActionButton.extended(
+            backgroundColor: Colors.redAccent,
+            foregroundColor: Colors.white,
+            onPressed: () => _deleteItem(context, viewModel),
+            icon: const Icon(Icons.delete),
+            label: const Text('Delete Item'),
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildItemDetails(ItemDetailViewModel viewModel) {
-    final item = viewModel.item!;
+  Widget _buildItemDetails(ItemUIModel item) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -122,10 +137,6 @@ class ItemDetailScreen extends StatelessWidget {
           Text(errorMessage,
               style: const TextStyle(color: Colors.redAccent, fontSize: 16)),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => context.read<ItemDetailViewModel>().fetchItem(),
-            child: const Text("Try Again"),
-          ),
         ],
       ),
     );

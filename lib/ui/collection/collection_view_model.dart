@@ -10,58 +10,52 @@ class CollectionViewModel extends ChangeNotifier {
 
   String collectionName = '';
   String? collectionImageUrl;
-  List<ItemUIModel> items = [];
-  bool isLoading = true;
   String? errorMessage;
+  late Stream<List<ItemUIModel>> itemsStream;
 
   CollectionViewModel({
     required this.collectionKey,
     required this.collectionRepository,
     required this.itemRepository,
   }) {
-    _loadData();
+    _initializeStreams();
+    _loadCollectionDetails();
   }
 
-  Future<void> _loadData() async {
-    debugPrint('Loading data for collection: $collectionKey');
-    try {
-      isLoading = true;
-      errorMessage = null;
+  void _initializeStreams() {
+    itemsStream = itemRepository
+        .fetchItemsFromCollectionStream(collectionKey)
+        .handleError((error) {
+      errorMessage = 'Failed to load items';
+      debugPrint('Error loading items stream: $error');
       notifyListeners();
+    });
+  }
 
+  Future<void> _loadCollectionDetails() async {
+    try {
       final collection =
           await collectionRepository.fetchCollectionDetails(collectionKey);
       collectionName = collection.name;
       collectionImageUrl = collection.imageUrl;
-
-      debugPrint('Collection details loaded: $collectionName');
-      items = await itemRepository.fetchItemsFromCollection(collectionKey);
-
-      debugPrint('Items loaded: ${items.map((e) => e.title).toList()}');
-      isLoading = false;
+      errorMessage = null;
+      notifyListeners();
     } catch (e) {
-      errorMessage = 'Failed to load collection data';
-      debugPrint('Error while loading data: $e');
-      isLoading = false;
-    } finally {
+      errorMessage = 'Failed to load collection details';
+      debugPrint('Error fetching collection: $e');
       notifyListeners();
     }
   }
 
-  void retryFetchingData() {
-    debugPrint('Retrying data fetch...');
-    _loadData();
+  void removeItemFromCollection(String key) {
+    itemRepository.removeItemFromCollection(collectionKey, key);
   }
 
+  /// 🔄 **Refreshes the collection details & restarts the item stream.**
   Future<void> refreshData() async {
-    debugPrint('Refreshing collection data...');
-    await _loadData();
-  }
-
-  void removeItemFromCollection(String key, String? collectionKey) {
-    debugPrint('Removing item $key from collection $collectionKey');
-    collectionRepository.removeItemFromCollection(collectionKey!, key);
-    items.removeWhere((element) => element.key == key);
+    debugPrint("🔄 Refreshing collection data...");
+    await _loadCollectionDetails();
+    _initializeStreams();
     notifyListeners();
   }
 }
