@@ -1,4 +1,4 @@
-import 'package:accollect/ui/settings/settings_collections_viewmodel.dart';
+import 'package:accollect/ui/settings/settings_collection_management_viewmodel.dart';
 import 'package:accollect/ui/widgets/loading_border_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -76,50 +76,55 @@ class _CollectionManagementScreenState
   }
 
   Widget _buildAddCategoryField(CollectionManagementViewModel viewModel) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _categoryController,
-            style: const TextStyle(color: Colors.white),
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _addCategory(viewModel),
-            decoration: InputDecoration(
-              hintText: 'Enter category name...',
-              hintStyle: const TextStyle(color: Colors.grey),
-              filled: true,
-              fillColor: Colors.grey[800],
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+    return StatefulBuilder(
+      builder: (context, setStateLocal) {
+        return Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _categoryController,
+                style: const TextStyle(color: Colors.white),
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _addCategory(viewModel),
+                decoration: InputDecoration(
+                  hintText: 'Enter category name...',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.grey[800],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                onChanged: (_) => setStateLocal(() {}),
               ),
             ),
-            onChanged: (_) => setState(() {}),
-          ),
-        ),
-        const SizedBox(width: 8),
-        ValueListenableBuilder<bool>(
-          valueListenable: viewModel.addCategoryCommand.isExecuting,
-          builder: (context, isExecuting, child) {
-            final isDisabled =
-                _categoryController.text.trim().isEmpty || isExecuting;
-            return LoadingBorderButton(
-              title: 'Add',
-              color: isDisabled ? Colors.grey[600]! : Colors.blueGrey[700]!,
-              isExecuting: viewModel.addCategoryCommand.isExecuting,
-              onPressed: isDisabled ? null : () => _addCategory(viewModel),
-            );
-          },
-        ),
-      ],
+            const SizedBox(width: 8),
+            ValueListenableBuilder<bool>(
+              valueListenable: viewModel.addCategoryCommand.isExecuting,
+              builder: (context, isExecuting, child) {
+                final isDisabled =
+                    _categoryController.text.trim().isEmpty || isExecuting;
+                return LoadingBorderButton(
+                  title: 'Add',
+                  color: isDisabled ? Colors.grey[600]! : Colors.blueGrey[700]!,
+                  isExecuting: viewModel.addCategoryCommand.isExecuting,
+                  onPressed: isDisabled ? null : () => _addCategory(viewModel),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
   void _addCategory(CollectionManagementViewModel viewModel) {
     final newCategory = _categoryController.text.trim();
     if (newCategory.isNotEmpty) {
-      viewModel.addCategoryCommand.execute(newCategory);
+      viewModel.addCategoryCommand.execute(newCategory); // ✅ Uses Command
       _categoryController.clear();
+      setState(() {}); // 🔄 Ensure UI updates
     }
   }
 
@@ -175,8 +180,8 @@ class _CollectionManagementScreenState
     );
   }
 
-  void _confirmDeleteAll(BuildContext context,
-      CollectionManagementViewModel viewModel) {
+  void _confirmDeleteAll(
+      BuildContext context, CollectionManagementViewModel viewModel) {
     showDialog(
       context: context,
       builder: (context) {
@@ -195,7 +200,7 @@ class _CollectionManagementScreenState
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                viewModel.deleteAllCollectionsCommand.execute();
+                viewModel.deleteAllDataCommand.execute(); // ✅ Uses Command
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
             ),
