@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../widgets/sign_out_tile.dart';
+
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -55,7 +57,7 @@ class SettingsScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _buildSignOutButton(context),
+          const SignOutTile(),
         ],
       ),
     );
@@ -164,27 +166,6 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildSignOutButton(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.redAccent[700],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        leading: const Icon(Icons.logout, color: Colors.white),
-        title: const Text(
-          'Sign Out',
-          style: TextStyle(
-              color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        onTap: () async {
-          await FirebaseAuth.instance.signOut();
-          context.go(AppRouter.onboardingRoute);
-        },
       ),
     );
   }
