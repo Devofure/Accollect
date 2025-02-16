@@ -1,6 +1,7 @@
 import 'package:accollect/ui/settings/settings_collection_management_viewmodel.dart';
 import 'package:accollect/ui/widgets/loading_border_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_command/flutter_command.dart';
 import 'package:provider/provider.dart';
 
 class CollectionManagementScreen extends StatefulWidget {
@@ -54,6 +55,22 @@ class _CollectionManagementScreenState
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String errorMessage) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(errorMessage, style: const TextStyle(color: Colors.white)),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {},
+            child: const Text('Retry'),
+          ),
+        ],
       ),
     );
   }
@@ -122,9 +139,9 @@ class _CollectionManagementScreenState
   void _addCategory(CollectionManagementViewModel viewModel) {
     final newCategory = _categoryController.text.trim();
     if (newCategory.isNotEmpty) {
-      viewModel.addCategoryCommand.execute(newCategory); // ✅ Uses Command
+      viewModel.addCategoryCommand.execute(newCategory);
       _categoryController.clear();
-      setState(() {}); // 🔄 Ensure UI updates
+      setState(() {});
     }
   }
 
@@ -170,27 +187,33 @@ class _CollectionManagementScreenState
           style: TextStyle(color: Colors.redAccent, fontSize: 18),
         ),
         const SizedBox(height: 8),
-        LoadingBorderButton(
-          title: 'Delete All Categories',
-          color: Colors.red,
-          isExecuting: viewModel.deleteCategoriesCommand.isExecuting,
-          onPressed: () => _confirmDeleteAll(context, viewModel),
-        ),
+        _buildDangerButton(
+            'Delete All Categories', viewModel.deleteAllCategoriesCommand),
+        _buildDangerButton(
+            'Delete All Collections', viewModel.deleteAllCollectionsCommand),
+        _buildDangerButton('Delete All Items', viewModel.deleteAllItemsCommand),
       ],
     );
   }
 
-  void _confirmDeleteAll(
-      BuildContext context, CollectionManagementViewModel viewModel) {
+  Widget _buildDangerButton(String title, Command<void, void> command) {
+    return LoadingBorderButton(
+      title: title,
+      color: Colors.red,
+      isExecuting: command.isExecuting,
+      onPressed: () => _confirmDeleteAction(context, title, command),
+    );
+  }
+
+  void _confirmDeleteAction(
+      BuildContext context, String title, Command<void, void> command) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.grey[900],
-          title: const Text('Delete All Categories',
-              style: TextStyle(color: Colors.white)),
-          content: const Text(
-              'Are you sure you want to delete all user-defined categories? This action is irreversible.',
+          title: Text(title, style: const TextStyle(color: Colors.white)),
+          content: const Text('Are you sure? This action is irreversible.',
               style: TextStyle(color: Colors.grey)),
           actions: [
             TextButton(
@@ -200,29 +223,13 @@ class _CollectionManagementScreenState
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                viewModel.deleteAllDataCommand.execute(); // ✅ Uses Command
+                command.execute();
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
       },
-    );
-  }
-
-  Widget _buildErrorState(String errorMessage) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(errorMessage, style: const TextStyle(color: Colors.redAccent)),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {},
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
     );
   }
 }

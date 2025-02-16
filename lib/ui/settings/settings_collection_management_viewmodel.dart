@@ -12,6 +12,8 @@ class CollectionManagementViewModel extends ChangeNotifier {
   late Command<String, void> addCategoryCommand;
   late Command<String, void> deleteCategoriesCommand;
   late Command<void, void> deleteAllCollectionsCommand;
+  late Command<void, void> deleteAllCategoriesCommand;
+  late Command<void, void> deleteAllItemsCommand;
   late Command<void, void> deleteAllDataCommand;
 
   Stream<List<String>> get editableCategoriesStream =>
@@ -43,6 +45,20 @@ class CollectionManagementViewModel extends ChangeNotifier {
     deleteAllCollectionsCommand = Command.createAsyncNoParam<void>(
       () async {
         await collectionRepository.deleteAllCollections();
+      },
+      initialValue: null,
+    );
+
+    deleteAllCategoriesCommand = Command.createAsyncNoParam<void>(
+      () async {
+        await categoryRepository.deleteAllCategories();
+      },
+      initialValue: null,
+    );
+
+    deleteAllItemsCommand = Command.createAsyncNoParam<void>(
+      () async {
+        await itemRepository.deleteAllItems();
       },
       initialValue: null,
     );
