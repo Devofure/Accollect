@@ -179,7 +179,7 @@ class _CollectionManagementScreenState
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Text(
-                "No categories available",
+                "No custom categories available",
                 style: TextStyle(color: Colors.white70, fontSize: 16),
               ),
             ),

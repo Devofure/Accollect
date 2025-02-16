@@ -18,33 +18,50 @@ class CollectionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: Colors.grey[850],
-          borderRadius: const BorderRadius.horizontal(
-            left: Radius.circular(45), // Rounded on the left
-            right: Radius.circular(14), // Squarer on the right
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 6,
-              offset: const Offset(2, 4),
+      child: Stack(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.grey[850],
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(45), // Rounded on the left
+                right: Radius.circular(14), // Squarer on the right
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 6,
+                  offset: const Offset(2, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child:
-            isSquareTile ? _buildSquareTile(context) : _buildListTile(context),
+            child: isSquareTile
+                ? _buildSquareTile(context)
+                : _buildListTile(context),
+          ),
+          if (collection.category != null && collection.category!.isNotEmpty)
+            Positioned(
+              top: 4,
+              right: 4,
+              child: Chip(
+                label: Text(
+                  collection.category!,
+                  style: const TextStyle(fontSize: 12, color: Colors.white),
+                ),
+                backgroundColor: Colors.grey[700],
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+              ),
+            ),
+        ],
       ),
     );
   }
 
   Widget _buildListTile(BuildContext context) {
     double imageSize = 90;
-
     return Row(
       children: [
         _buildCircularImage(size: imageSize),
@@ -99,7 +116,6 @@ class CollectionTile extends StatelessWidget {
 
   Widget _buildSquareTile(BuildContext context) {
     double imageSize = 80;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
