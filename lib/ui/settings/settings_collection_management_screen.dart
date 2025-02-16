@@ -17,6 +17,7 @@ class _CollectionManagementScreenState
   final TextEditingController _categoryController = TextEditingController();
   final FocusNode _categoryFocusNode = FocusNode();
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  final ValueNotifier<bool> _isInputNotEmpty = ValueNotifier<bool>(false);
   List<String> _categories = [];
 
   @override
@@ -50,7 +51,7 @@ class _CollectionManagementScreenState
 
             // Avoid unnecessary rebuilds when list is the same
             if (_categories.length != userCategories.length) {
-              _categories = userCategories;
+              _categories = List.from(userCategories);
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _listKey.currentState?.setState(() {});
               });
@@ -74,11 +75,13 @@ class _CollectionManagementScreenState
 
   Widget _buildErrorState(String errorMessage) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(errorMessage, style: const TextStyle(color: Colors.white)),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          errorMessage,
+          style: const TextStyle(color: Colors.redAccent),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -108,6 +111,8 @@ class _CollectionManagementScreenState
             style: const TextStyle(color: Colors.white),
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _addCategory(viewModel),
+            onChanged: (text) =>
+                _isInputNotEmpty.value = text.trim().isNotEmpty,
             decoration: InputDecoration(
               hintText: 'Enter category name...',
               hintStyle: const TextStyle(color: Colors.grey),
@@ -122,20 +127,20 @@ class _CollectionManagementScreenState
         ),
         const SizedBox(width: 8),
         ValueListenableBuilder<bool>(
-          valueListenable: viewModel.addCategoryCommand.isExecuting,
-          builder: (context, isExecuting, child) {
-            return StatefulBuilder(
-              builder: (context, setStateLocal) {
+          valueListenable: _isInputNotEmpty,
+          builder: (context, isNotEmpty, _) {
+            return ValueListenableBuilder<bool>(
+              valueListenable: viewModel.addCategoryCommand.isExecuting,
+              builder: (context, isExecuting, child) {
                 return LoadingBorderButton(
                   title: 'Add',
-                  color: _categoryController.text.trim().isEmpty || isExecuting
+                  color: !isNotEmpty || isExecuting
                       ? Colors.grey[600]!
                       : Colors.blueGrey[700]!,
                   isExecuting: viewModel.addCategoryCommand.isExecuting,
-                  onPressed:
-                      _categoryController.text.trim().isEmpty || isExecuting
-                          ? null
-                          : () => _addCategory(viewModel),
+                  onPressed: !isNotEmpty || isExecuting
+                      ? null
+                      : () => _addCategory(viewModel),
                 );
               },
             );
@@ -163,37 +168,54 @@ class _CollectionManagementScreenState
           backgroundColor: Colors.green,
         ),
       );
+
+      _isInputNotEmpty.value = false; // Reset button state
     }
   }
 
   Widget _buildCategoryList(CollectionManagementViewModel viewModel) {
-    return AnimatedList(
-      key: _listKey,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      initialItemCount: _categories.isNotEmpty ? _categories.length : 0,
-      itemBuilder: (context, index, animation) {
-        if (_categories.isEmpty) {
-          return const SizedBox.shrink(); // Prevents RangeError when empty
-        }
-        final category = _categories[index];
-        return SizeTransition(
-          sizeFactor: animation,
-          child: ListTile(
-            title: Text(category, style: const TextStyle(color: Colors.white)),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete, color: Colors.redAccent),
-              onPressed: () => _removeCategory(viewModel, category, index),
+    return _categories.isEmpty
+        ? const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                "No categories available",
+                style: TextStyle(color: Colors.white70, fontSize: 16),
+              ),
             ),
-          ),
-        );
-      },
-    );
+          )
+        : AnimatedList(
+            key: _listKey,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            initialItemCount: _categories.length,
+            itemBuilder: (context, index, animation) {
+              if (index < 0 || index >= _categories.length) {
+                return const SizedBox.shrink();
+              }
+              final category = _categories[index];
+              return SizeTransition(
+                sizeFactor: animation,
+                child: ListTile(
+                  title: Text(category,
+                      style: const TextStyle(color: Colors.white)),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.redAccent),
+                    onPressed: () =>
+                        _removeCategory(viewModel, category, index),
+                  ),
+                ),
+              );
+            },
+          );
   }
 
   void _removeCategory(
       CollectionManagementViewModel viewModel, String category, int index) {
+    if (index < 0 || index >= _categories.length) return;
+
     viewModel.deleteCategoriesCommand.execute(category);
+
     _listKey.currentState?.removeItem(
       index,
       (context, animation) => SizeTransition(
@@ -202,9 +224,14 @@ class _CollectionManagementScreenState
           title: Text(category, style: const TextStyle(color: Colors.white)),
         ),
       ),
+      duration: const Duration(milliseconds: 300),
     );
 
     _categories.removeAt(index);
+
+    if (_categories.isEmpty) {
+      setState(() {}); // Ensure UI updates when list is empty
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -247,22 +274,47 @@ class _CollectionManagementScreenState
     showDialog(
       context: context,
       builder: (context) {
+        final TextEditingController _confirmController =
+            TextEditingController();
+
         return AlertDialog(
           backgroundColor: Colors.grey[900],
           title: Text(title, style: const TextStyle(color: Colors.white)),
-          content: const Text('Are you sure? This action is irreversible.',
-              style: TextStyle(color: Colors.grey)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Type "DELETE" to confirm.',
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _confirmController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.grey[800],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel')),
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
             TextButton(
-                onPressed: () {
+              onPressed: () {
+                if (_confirmController.text.trim().toUpperCase() == "DELETE") {
                   Navigator.of(context).pop();
                   command.execute();
-                },
-                child:
-                    const Text('Delete', style: TextStyle(color: Colors.red))),
+                }
+              },
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
           ],
         );
       },
