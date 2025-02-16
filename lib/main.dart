@@ -198,7 +198,7 @@ class MyApp extends StatelessWidget {
                 categoryRepository: context.read<ICategoryRepository>(),
                 itemRepository: context.read<IItemRepository>(),
               ),
-              child: const AddNewItemScreen(),
+              child: const CreateItemScreen(),
             );
           },
         ),
