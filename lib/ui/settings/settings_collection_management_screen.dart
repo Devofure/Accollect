@@ -242,30 +242,91 @@ class _CollectionManagementScreenState
   }
 
   Widget _buildDangerZone(CollectionManagementViewModel viewModel) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Divider(color: Colors.white24, height: 24),
-        const Text(
-          'Danger Zone',
-          style: TextStyle(color: Colors.redAccent, fontSize: 18),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Card(
+        color: Colors.red[900], // Dark red to indicate danger zone
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: const [
+                  Icon(Icons.warning_amber_rounded,
+                      color: Colors.yellow, size: 24),
+                  SizedBox(width: 8),
+                  Text(
+                    'Danger Zone',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _buildDangerButton(
+                'Delete All Categories',
+                'Removes all user-defined categories. Items remain intact.',
+                Icons.category,
+                viewModel.deleteAllCategoriesCommand,
+              ),
+              const SizedBox(height: 8),
+              _buildDangerButton(
+                'Delete All Collections',
+                'Removes all collections, but keeps individual items.',
+                Icons.folder_open,
+                viewModel.deleteAllCollectionsCommand,
+              ),
+              const SizedBox(height: 8),
+              _buildDangerButton(
+                'Delete All Items',
+                'Permanently deletes all items from your collections.',
+                Icons.delete_forever,
+                viewModel.deleteAllItemsCommand,
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 8),
-        _buildDangerButton(
-            'Delete All Categories', viewModel.deleteAllCategoriesCommand),
-        _buildDangerButton(
-            'Delete All Collections', viewModel.deleteAllCollectionsCommand),
-        _buildDangerButton('Delete All Items', viewModel.deleteAllItemsCommand),
-      ],
+      ),
     );
   }
 
-  Widget _buildDangerButton(String title, Command<void, void> command) {
-    return LoadingBorderButton(
-      title: title,
-      color: Colors.red,
-      isExecuting: command.isExecuting,
-      onPressed: () => _confirmDeleteAction(context, title, command),
+  Widget _buildDangerButton(String title, String description, IconData icon,
+      Command<void, void> command) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        Text(description,
+            style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        const SizedBox(height: 6),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+            ),
+            icon: Icon(icon, color: Colors.white),
+            label: const Text(
+              'Delete',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            onPressed: () => _confirmDeleteAction(context, title, command),
+          ),
+        ),
+      ],
     );
   }
 
