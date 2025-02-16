@@ -55,17 +55,12 @@ class ItemLibraryScreen extends StatelessWidget {
     return ValueListenableBuilder<List<String>>(
       valueListenable: viewModel.fetchCategoriesCommand,
       builder: (context, categories, _) {
-        final uniqueCategories = ['All Items', ...categories.toSet().toList()];
-
-        if (viewModel.categoryFilter != null &&
-            !uniqueCategories.contains(viewModel.categoryFilter)) {
-          viewModel.selectCategoryCommand.execute('All Items');
-        }
+        final uniqueCategories = ['All Items', ...categories.toSet()];
 
         return Padding(
           padding: const EdgeInsets.all(12),
           child: DropdownButtonFormField<String>(
-            value: viewModel.categoryFilter ?? 'All Items',
+            value: viewModel.categoryFilter ?? "All Items",
             items: uniqueCategories.map((category) {
               return DropdownMenuItem<String>(
                 value: category,
@@ -75,7 +70,7 @@ class ItemLibraryScreen extends StatelessWidget {
             }).toList(),
             onChanged: (newCategory) {
               viewModel.selectCategoryCommand
-                  .execute(newCategory == 'All Items' ? null : newCategory);
+                  .execute(newCategory == "All Items" ? null : newCategory);
             },
             decoration: InputDecoration(
               filled: true,
