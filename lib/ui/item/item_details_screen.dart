@@ -53,7 +53,7 @@ class ItemDetailScreen extends StatelessWidget {
           return FloatingActionButton.extended(
             backgroundColor: Colors.redAccent,
             foregroundColor: Colors.white,
-            onPressed: () => _deleteItem(context, viewModel),
+            onPressed: () => _confirmDelete(context, viewModel),
             icon: const Icon(Icons.delete),
             label: const Text('Delete Item'),
           );
@@ -68,14 +68,16 @@ class ItemDetailScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildItemImage(item.imageUrl),
+          Hero(
+            tag: 'item-${item.key}',
+            child: _buildItemImage(item.imageUrl),
+          ),
           const SizedBox(height: 16),
           _buildDetailRow('Name', item.title),
           _buildDetailRow('Category', item.category ?? 'No category'),
           _buildDetailRow('Added On', _formatDate(item.addedOn)),
           if (item.description?.isNotEmpty == true)
-            _buildDetailRow(
-                'Description', item.description ?? 'No description'),
+            _buildDetailRow('Description', item.description!),
         ],
       ),
     );
@@ -127,6 +129,38 @@ class ItemDetailScreen extends StatelessWidget {
     await viewModel.deleteItem();
     if (!context.mounted) return;
     context.go(AppRouter.homeRoute);
+  }
+
+  void _confirmDelete(BuildContext context, ItemDetailViewModel viewModel) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[850],
+          title: const Text('Confirm Delete',
+              style: TextStyle(color: Colors.white)),
+          content: const Text('Are you sure you want to delete this item?',
+              style: TextStyle(color: Colors.white)),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child:
+                  const Text('Cancel', style: TextStyle(color: Colors.white)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                _deleteItem(context, viewModel);
+              },
+              child: const Text('Delete',
+                  style: TextStyle(color: Colors.redAccent)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildErrorState(BuildContext context, String errorMessage) {

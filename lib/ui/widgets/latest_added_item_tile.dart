@@ -38,7 +38,7 @@ class LatestAddedItemTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Hero(
-              tag: item.key,
+              tag: 'item-${item.key}',
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: _buildItemImage(imageSize),
