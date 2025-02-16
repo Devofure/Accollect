@@ -17,7 +17,7 @@ import 'package:accollect/ui/item/item_library_screen.dart';
 import 'package:accollect/ui/item/item_library_view_model.dart';
 import 'package:accollect/ui/onboarding/onboarding_screen.dart';
 import 'package:accollect/ui/settings/settings_collection_management_screen.dart';
-import 'package:accollect/ui/settings/settings_collection_management_viewmodel.dart';
+import 'package:accollect/ui/settings/settings_collection_management_view_model.dart';
 import 'package:accollect/ui/settings/settings_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider, EmailAuthProvider;

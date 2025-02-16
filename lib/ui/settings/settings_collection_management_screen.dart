@@ -1,4 +1,4 @@
-import 'package:accollect/ui/settings/settings_collection_management_viewmodel.dart';
+import 'package:accollect/ui/settings/settings_collection_management_view_model.dart';
 import 'package:accollect/ui/widgets/loading_border_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
