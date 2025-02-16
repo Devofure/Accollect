@@ -84,9 +84,11 @@ class AddNewItemViewModel extends ChangeNotifier {
   }
 
   void setCategory(String? value) {
-    if (value != null) {
+    if (value != null && value != selectedCategory) {
       selectedCategory = value;
-      notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
     }
   }
 

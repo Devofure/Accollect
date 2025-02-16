@@ -79,7 +79,16 @@ class ItemRepository implements IItemRepository {
 
   @override
   Future<ItemUIModel> createItem(ItemUIModel item) async {
-    await _itemsRef.doc(item.key).set(item.toJson());
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception("User not authenticated.");
+
+    final itemData = item.toJson();
+    itemData['ownerId'] = user.uid;
+
+    await FirebaseFirestore.instance
+        .collection("items")
+        .doc(item.key)
+        .set(itemData);
     return item;
   }
 

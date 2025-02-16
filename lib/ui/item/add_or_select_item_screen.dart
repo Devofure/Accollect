@@ -8,8 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class AddOrSelectItemScreen extends StatelessWidget {
-  final String? collectionKey; // Optional for library mode
-  final String? collectionName; // Optional for library mode
+  final String? collectionKey;
+  final String? collectionName;
 
   const AddOrSelectItemScreen({
     super.key,
@@ -34,16 +34,31 @@ class AddOrSelectItemScreen extends StatelessWidget {
         child: Column(
           children: [
             _buildHeader(context, viewModel),
-            if (viewModel.isLoading)
-              const Expanded(
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            else if (viewModel.errorMessage != null)
-              _buildErrorState(viewModel.errorMessage!)
-            else
-              _buildItemList(viewModel),
+            Expanded(
+              child: StreamBuilder<List<ItemUIModel>>(
+                stream: viewModel.itemsStream,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return _buildErrorState(snapshot.error.toString());
+                  }
+
+                  final availableItems = snapshot.data ?? [];
+
+                  if (availableItems.isEmpty) {
+                    return const EmptyStateWidget(
+                      title: 'No available items',
+                      description: 'Create a new item to get started.',
+                    );
+                  }
+
+                  return _buildItemList(viewModel, availableItems);
+                },
+              ),
+            ),
             _buildActionButtons(context, viewModel),
           ],
         ),
@@ -104,71 +119,60 @@ class AddOrSelectItemScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemList(AddOrSelectItemViewModel viewModel) {
-    final availableItemsByCategory =
-        viewModel.getAvailableItemsGroupedByCategory();
+  Widget _buildItemList(
+      AddOrSelectItemViewModel viewModel, List<ItemUIModel> items) {
+    final availableItemsByCategory = _groupItemsByCategory(items);
 
-    if (availableItemsByCategory.isEmpty) {
-      return const Expanded(
-        child: EmptyStateWidget(
-          title: 'No available items',
-          description: 'Create a new item to get started.',
-        ),
-      );
-    }
+    return ListView.builder(
+      itemCount: availableItemsByCategory.length,
+      itemBuilder: (context, index) {
+        final category = availableItemsByCategory.keys.elementAt(index);
+        final categoryItems = availableItemsByCategory[category]!;
 
-    return Expanded(
-      child: ListView.builder(
-        itemCount: availableItemsByCategory.length,
-        itemBuilder: (context, index) {
-          final category = availableItemsByCategory.keys.elementAt(index);
-          final items = availableItemsByCategory[category]!;
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    category,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  category,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
-                GridView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                    childAspectRatio: 0.75,
-                  ),
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: items.length,
-                  itemBuilder: (context, itemIndex) {
-                    final item = items[itemIndex];
-                    final isSelected = viewModel.isSelected(item.key);
-
-                    return ItemPortraitTile(
-                      item: item,
-                      isSelected: isSelected,
-                      onTap: () =>
-                          viewModel.toggleItemSelection(item.key, !isSelected),
-                    );
-                  },
+              ),
+              const SizedBox(height: 8),
+              GridView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.75,
                 ),
-              ],
-            ),
-          );
-        },
-      ),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: categoryItems.length,
+                itemBuilder: (context, itemIndex) {
+                  final item = categoryItems[itemIndex];
+                  final isSelected = viewModel.isSelected(item.key);
+
+                  return ItemPortraitTile(
+                    item: item,
+                    isSelected: isSelected,
+                    onTap: () =>
+                        viewModel.toggleItemSelection(item.key, !isSelected),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -216,11 +220,13 @@ class AddOrSelectItemScreen extends StatelessWidget {
   }
 
   Widget _buildErrorState(String errorMessage) {
-    return Expanded(
-      child: Center(
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Text(
           errorMessage,
           style: const TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
         ),
       ),
     );
@@ -232,5 +238,15 @@ class AddOrSelectItemScreen extends StatelessWidget {
     if (newItem != null) {
       await viewModel.createItem(newItem);
     }
+  }
+
+  Map<String, List<ItemUIModel>> _groupItemsByCategory(
+      List<ItemUIModel> items) {
+    final Map<String, List<ItemUIModel>> groupedItems = {};
+    for (final item in items) {
+      final category = item.category;
+      groupedItems.putIfAbsent(category, () => []).add(item);
+    }
+    return groupedItems;
   }
 }

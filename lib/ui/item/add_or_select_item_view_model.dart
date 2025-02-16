@@ -6,54 +6,20 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
   final IItemRepository repository;
   final String? collectionKey;
 
-  List<ItemUIModel> availableItems = [];
-  Map<String, List<ItemUIModel>> groupedItems = {};
   Set<String> selectedItems = {};
   bool isLoading = false;
   String? errorMessage;
-  bool _disposed = false; // Track disposal
+  String? _categoryFilter;
 
-  AddOrSelectItemViewModel(
-      {required this.repository, required this.collectionKey}) {
-    _loadAvailableItems();
-  }
+  Stream<List<ItemUIModel>>? _itemsStream;
 
-  @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
-  }
+  Stream<List<ItemUIModel>> get itemsStream => _itemsStream!;
 
-  Future<void> _loadAvailableItems() async {
-    try {
-      isLoading = true;
-      errorMessage = null;
-      _safeNotifyListeners();
-
-      availableItems = await repository.fetchItemsStream(null).first;
-      debugPrint('Fetched Available Items: ${availableItems.length}');
-      _groupItemsByCategory();
-
-      debugPrint(
-          'Available Items: ${availableItems.map((e) => e.title).toList()}');
-    } catch (e) {
-      errorMessage = 'Failed to load items';
-    } finally {
-      isLoading = false;
-      _safeNotifyListeners();
-    }
-  }
-
-  void _groupItemsByCategory() {
-    groupedItems.clear();
-    for (final item in availableItems) {
-      final category = item.category;
-      groupedItems.putIfAbsent(category, () => []).add(item);
-    }
-  }
-
-  Map<String, List<ItemUIModel>> getAvailableItemsGroupedByCategory() {
-    return groupedItems;
+  AddOrSelectItemViewModel({
+    required this.repository,
+    required this.collectionKey,
+  }) {
+    _itemsStream = repository.fetchItemsStream(_categoryFilter);
   }
 
   void toggleItemSelection(String itemKey, bool isSelected) {
@@ -62,8 +28,7 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
     } else {
       selectedItems.remove(itemKey);
     }
-    debugPrint("Selected Items: $selectedItems");
-    _safeNotifyListeners();
+    notifyListeners();
   }
 
   bool isSelected(String itemKey) => selectedItems.contains(itemKey);
@@ -71,15 +36,14 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
   Future<void> addSelectedItems() async {
     if (collectionKey == null) {
       errorMessage = 'Collection key is missing';
-      _safeNotifyListeners();
+      notifyListeners();
       return;
     }
 
     try {
       isLoading = true;
-      _safeNotifyListeners();
+      notifyListeners();
 
-      // Process items in parallel to improve performance
       await Future.wait(selectedItems.map((itemKey) async {
         try {
           await repository.addItemToCollection(collectionKey!, itemKey);
@@ -89,40 +53,30 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
       }));
 
       selectedItems.clear();
-      await _loadAvailableItems();
     } catch (e) {
       errorMessage = 'Failed to add selected items to collection';
     } finally {
       isLoading = false;
-      _safeNotifyListeners();
+      notifyListeners();
     }
   }
 
   Future<void> createItem(ItemUIModel newItem) async {
     try {
       isLoading = true;
-      _safeNotifyListeners();
+      notifyListeners();
       await repository.createItem(newItem);
-      await _loadAvailableItems();
     } catch (e) {
       errorMessage = 'Failed to create and add item';
     } finally {
       isLoading = false;
-      _safeNotifyListeners();
+      notifyListeners();
     }
   }
 
   void filterItems(String query) {
-    availableItems = availableItems
-        .where((item) => item.title.toLowerCase().contains(query.toLowerCase()))
-        .toList();
-    _groupItemsByCategory();
-    _safeNotifyListeners();
-  }
-
-  void _safeNotifyListeners() {
-    if (!_disposed) {
-      notifyListeners();
-    }
+    _categoryFilter = query.isEmpty ? null : query;
+    _itemsStream = repository.fetchItemsStream(_categoryFilter);
+    notifyListeners();
   }
 }
