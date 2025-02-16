@@ -20,46 +20,73 @@ class AddOrSelectItemScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<AddOrSelectItemViewModel>();
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text(
-          'Add to Collection',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Add to Collection',
+            style: TextStyle(color: Colors.white)),
       ),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            _buildHeader(context, viewModel),
-            Expanded(
-              child: StreamBuilder<List<ItemUIModel>>(
-                stream: viewModel.itemsStream,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (snapshot.hasError) {
-                    return _buildErrorState(snapshot.error.toString());
-                  }
-
-                  final availableItems = snapshot.data ?? [];
-
-                  if (availableItems.isEmpty) {
-                    return const EmptyStateWidget(
-                      title: 'No available items',
-                      description: 'Create a new item to get started.',
-                    );
-                  }
-
-                  return _buildItemList(viewModel, availableItems);
-                },
-              ),
+            Column(
+              children: [
+                _buildHeader(context, viewModel),
+                Expanded(
+                  child: StreamBuilder<List<ItemUIModel>>(
+                    stream: viewModel.itemsStream,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return _buildErrorState(snapshot.error.toString());
+                      }
+                      final availableItems = snapshot.data ?? [];
+                      if (availableItems.isEmpty) {
+                        return const EmptyStateWidget(
+                          title: 'No available items',
+                          description: 'Create a new item to get started.',
+                        );
+                      }
+                      return _buildItemList(viewModel, availableItems);
+                    },
+                  ),
+                ),
+                _buildActionButtons(context, viewModel),
+              ],
             ),
-            _buildActionButtons(context, viewModel),
+            StreamBuilder<bool>(
+              stream: viewModel.loadingStream,
+              initialData: false,
+              builder: (context, snapshot) {
+                if (snapshot.data == true) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+            StreamBuilder<String?>(
+              stream: viewModel.errorStream,
+              initialData: null,
+              builder: (context, snapshot) {
+                if (snapshot.data != null) {
+                  return Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      color: Colors.red,
+                      padding: const EdgeInsets.all(8),
+                      child: Text(snapshot.data!,
+                          style: const TextStyle(color: Colors.white)),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
           ],
         ),
       ),
@@ -73,14 +100,11 @@ class AddOrSelectItemScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            collectionName ?? '',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(collectionName ?? '',
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -97,7 +121,7 @@ class AddOrSelectItemScreen extends StatelessWidget {
                       borderSide: BorderSide.none,
                     ),
                   ),
-                  onChanged: viewModel.filterItems,
+                  onChanged: viewModel.filterItemsCommand,
                 ),
               ),
               const SizedBox(width: 8),
@@ -122,13 +146,11 @@ class AddOrSelectItemScreen extends StatelessWidget {
   Widget _buildItemList(
       AddOrSelectItemViewModel viewModel, List<ItemUIModel> items) {
     final availableItemsByCategory = _groupItemsByCategory(items);
-
     return ListView.builder(
       itemCount: availableItemsByCategory.length,
       itemBuilder: (context, index) {
         final category = availableItemsByCategory.keys.elementAt(index);
         final categoryItems = availableItemsByCategory[category]!;
-
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(
@@ -136,14 +158,11 @@ class AddOrSelectItemScreen extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  category,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: Text(category,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 8),
               GridView.builder(
@@ -160,12 +179,11 @@ class AddOrSelectItemScreen extends StatelessWidget {
                 itemBuilder: (context, itemIndex) {
                   final item = categoryItems[itemIndex];
                   final isSelected = viewModel.isSelected(item.key);
-
                   return ItemPortraitTile(
                     item: item,
                     isSelected: isSelected,
-                    onTap: () =>
-                        viewModel.toggleItemSelection(item.key, !isSelected),
+                    onTap: () => viewModel.toggleItemSelectionCommand(
+                        item.key, !isSelected),
                   );
                 },
               ),
@@ -207,8 +225,8 @@ class AddOrSelectItemScreen extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              onPressed: () {
-                viewModel.addSelectedItems();
+              onPressed: () async {
+                viewModel.addSelectedItemsCommand();
                 Navigator.pop(context, true);
               },
               child: const Text('Add Items'),
@@ -223,11 +241,9 @@ class AddOrSelectItemScreen extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Text(
-          errorMessage,
-          style: const TextStyle(color: Colors.white),
-          textAlign: TextAlign.center,
-        ),
+        child: Text(errorMessage,
+            style: const TextStyle(color: Colors.white),
+            textAlign: TextAlign.center),
       ),
     );
   }
@@ -236,7 +252,7 @@ class AddOrSelectItemScreen extends StatelessWidget {
       BuildContext context, AddOrSelectItemViewModel viewModel) async {
     final newItem = await context.push<ItemUIModel>(AppRouter.addNewItemRoute);
     if (newItem != null) {
-      await viewModel.createItem(newItem);
+      await viewModel.createItemCommand(newItem);
     }
   }
 
