@@ -15,6 +15,9 @@ class CollectionManagementScreen extends StatefulWidget {
 class _CollectionManagementScreenState
     extends State<CollectionManagementScreen> {
   final TextEditingController _categoryController = TextEditingController();
+  final FocusNode _categoryFocusNode = FocusNode();
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  List<String> _categories = [];
 
   @override
   Widget build(BuildContext context) {
@@ -45,10 +48,20 @@ class _CollectionManagementScreenState
             }
             final userCategories = snapshot.data ?? [];
 
+            // Avoid unnecessary rebuilds when list is the same
+            if (_categories.length != userCategories.length) {
+              _categories = userCategories;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _listKey.currentState?.setState(() {});
+              });
+            }
+
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _buildCategoryManagementSection(viewModel, userCategories),
+                _buildCategoryManagementSection(viewModel),
+                const SizedBox(height: 24),
+                _buildCategoryList(viewModel),
                 const SizedBox(height: 24),
                 _buildDangerZone(viewModel),
               ],
@@ -65,18 +78,13 @@ class _CollectionManagementScreenState
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(errorMessage, style: const TextStyle(color: Colors.white)),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {},
-            child: const Text('Retry'),
-          ),
         ],
       ),
     );
   }
 
   Widget _buildCategoryManagementSection(
-      CollectionManagementViewModel viewModel, List<String> userCategories) {
+      CollectionManagementViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -86,53 +94,54 @@ class _CollectionManagementScreenState
         ),
         const SizedBox(height: 8),
         _buildAddCategoryField(viewModel),
-        const SizedBox(height: 8),
-        _buildCategoryList(viewModel, userCategories),
       ],
     );
   }
 
   Widget _buildAddCategoryField(CollectionManagementViewModel viewModel) {
-    return StatefulBuilder(
-      builder: (context, setStateLocal) {
-        return Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _categoryController,
-                style: const TextStyle(color: Colors.white),
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _addCategory(viewModel),
-                decoration: InputDecoration(
-                  hintText: 'Enter category name...',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.grey[800],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                onChanged: (_) => setStateLocal(() {}),
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _categoryController,
+            focusNode: _categoryFocusNode,
+            style: const TextStyle(color: Colors.white),
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _addCategory(viewModel),
+            decoration: InputDecoration(
+              hintText: 'Enter category name...',
+              hintStyle: const TextStyle(color: Colors.grey),
+              filled: true,
+              fillColor: Colors.grey[800],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
               ),
             ),
-            const SizedBox(width: 8),
-            ValueListenableBuilder<bool>(
-              valueListenable: viewModel.addCategoryCommand.isExecuting,
-              builder: (context, isExecuting, child) {
-                final isDisabled =
-                    _categoryController.text.trim().isEmpty || isExecuting;
+          ),
+        ),
+        const SizedBox(width: 8),
+        ValueListenableBuilder<bool>(
+          valueListenable: viewModel.addCategoryCommand.isExecuting,
+          builder: (context, isExecuting, child) {
+            return StatefulBuilder(
+              builder: (context, setStateLocal) {
                 return LoadingBorderButton(
                   title: 'Add',
-                  color: isDisabled ? Colors.grey[600]! : Colors.blueGrey[700]!,
+                  color: _categoryController.text.trim().isEmpty || isExecuting
+                      ? Colors.grey[600]!
+                      : Colors.blueGrey[700]!,
                   isExecuting: viewModel.addCategoryCommand.isExecuting,
-                  onPressed: isDisabled ? null : () => _addCategory(viewModel),
+                  onPressed:
+                      _categoryController.text.trim().isEmpty || isExecuting
+                          ? null
+                          : () => _addCategory(viewModel),
                 );
               },
-            ),
-          ],
-        );
-      },
+            );
+          },
+        )
+      ],
     );
   }
 
@@ -141,40 +150,67 @@ class _CollectionManagementScreenState
     if (newCategory.isNotEmpty) {
       viewModel.addCategoryCommand.execute(newCategory);
       _categoryController.clear();
-      setState(() {});
+      _categoryFocusNode.requestFocus(); // Keep focus after adding
+
+      if (!_categories.contains(newCategory)) {
+        _categories.insert(0, newCategory);
+        _listKey.currentState?.insertItem(0);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Category "$newCategory" added!'),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 
-  Widget _buildCategoryList(
-      CollectionManagementViewModel viewModel, List<String> userCategories) {
-    return ListView.builder(
+  Widget _buildCategoryList(CollectionManagementViewModel viewModel) {
+    return AnimatedList(
+      key: _listKey,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: userCategories.length,
-      itemBuilder: (context, index) {
-        final category = userCategories[index];
-
-        return ValueListenableBuilder<bool>(
-          valueListenable: viewModel.deleteCategoriesCommand.isExecuting,
-          builder: (context, isExecuting, child) {
-            return ListTile(
-              title:
-                  Text(category, style: const TextStyle(color: Colors.white)),
-              trailing: isExecuting
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.redAccent),
-                      onPressed: () =>
-                          viewModel.deleteCategoriesCommand.execute(category),
-                    ),
-            );
-          },
+      initialItemCount: _categories.isNotEmpty ? _categories.length : 0,
+      itemBuilder: (context, index, animation) {
+        if (_categories.isEmpty) {
+          return const SizedBox.shrink(); // Prevents RangeError when empty
+        }
+        final category = _categories[index];
+        return SizeTransition(
+          sizeFactor: animation,
+          child: ListTile(
+            title: Text(category, style: const TextStyle(color: Colors.white)),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              onPressed: () => _removeCategory(viewModel, category, index),
+            ),
+          ),
         );
       },
+    );
+  }
+
+  void _removeCategory(
+      CollectionManagementViewModel viewModel, String category, int index) {
+    viewModel.deleteCategoriesCommand.execute(category);
+    _listKey.currentState?.removeItem(
+      index,
+      (context, animation) => SizeTransition(
+        sizeFactor: animation,
+        child: ListTile(
+          title: Text(category, style: const TextStyle(color: Colors.white)),
+        ),
+      ),
+    );
+
+    _categories.removeAt(index);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Category "$category" deleted!'),
+        backgroundColor: Colors.red,
+      ),
     );
   }
 
@@ -182,6 +218,7 @@ class _CollectionManagementScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Divider(color: Colors.white24, height: 24),
         const Text(
           'Danger Zone',
           style: TextStyle(color: Colors.redAccent, fontSize: 18),
@@ -217,16 +254,15 @@ class _CollectionManagementScreenState
               style: TextStyle(color: Colors.grey)),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-            ),
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel')),
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                command.execute();
-              },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  command.execute();
+                },
+                child:
+                    const Text('Delete', style: TextStyle(color: Colors.red))),
           ],
         );
       },
