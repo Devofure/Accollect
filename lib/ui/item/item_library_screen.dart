@@ -3,6 +3,7 @@ import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -24,13 +25,13 @@ class ItemLibraryScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _buildCategorySelector(context, viewModel),
+            _buildCategoryDropdown(context, viewModel),
             Expanded(
               child: StreamBuilder<List<ItemUIModel>>(
                 stream: viewModel.itemsStream,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return _buildLoadingState(); // 🔥 Improved UX
                   }
                   if (snapshot.hasError) {
                     return _buildErrorState(snapshot.error.toString());
@@ -38,74 +39,72 @@ class ItemLibraryScreen extends StatelessWidget {
                   final items = snapshot.data ?? [];
                   return items.isEmpty
                       ? _buildEmptyState()
-                      : _buildItemGrid(context, items);
+                      : _buildItemGrid(context, items, viewModel);
                 },
               ),
             ),
           ],
         ),
       ),
-      floatingActionButton: AnimatedSlide(
-        offset: viewModel.isScrollingDown ? const Offset(0, 2) : Offset.zero,
-        duration: const Duration(milliseconds: 300),
-        child: FloatingActionButton.extended(
-          backgroundColor: Colors.blueGrey[800],
-          foregroundColor: Colors.white,
-          onPressed: () => _navigateToAddNewItemScreen(context),
-          icon: const Icon(Icons.add),
-          label: const Text('Create Item'),
-        ),
-      ),
+      floatingActionButton: _buildFloatingActionButton(viewModel, context),
     );
   }
 
-  Widget _buildCategorySelector(
+  Widget _buildCategoryDropdown(
       BuildContext context, ItemLibraryViewModel viewModel) {
     return ValueListenableBuilder<List<String>>(
       valueListenable: viewModel.fetchCategoriesCommand,
       builder: (context, categories, _) {
-        final List<Widget> categoryButtons = [
-          _CategoryButton(
-            label: "All",
-            isSelected: viewModel.categoryFilter == null,
-            onTap: () => viewModel.selectCategoryCommand.execute(null),
-          ),
-        ];
+        final uniqueCategories = ['All Items', ...categories.toSet().toList()];
 
-        if (viewModel.fetchCategoriesCommand.isExecuting.value) {
-          categoryButtons.add(
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-          );
-        } else {
-          categoryButtons.addAll(
-            categories.map(
-              (category) => _CategoryButton(
-                label: category,
-                isSelected: viewModel.categoryFilter == category,
-                onTap: () => viewModel.selectCategoryCommand.execute(category),
-              ),
-            ),
-          );
+        if (viewModel.categoryFilter != null &&
+            !uniqueCategories.contains(viewModel.categoryFilter)) {
+          viewModel.selectCategoryCommand.execute('All Items');
         }
 
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(children: categoryButtons),
+        return Padding(
+          padding: const EdgeInsets.all(12),
+          child: DropdownButtonFormField<String>(
+            value: viewModel.categoryFilter ?? 'All Items',
+            items: uniqueCategories.map((category) {
+              return DropdownMenuItem<String>(
+                value: category,
+                child:
+                    Text(category, style: const TextStyle(color: Colors.white)),
+              );
+            }).toList(),
+            onChanged: (newCategory) {
+              viewModel.selectCategoryCommand
+                  .execute(newCategory == 'All Items' ? null : newCategory);
+            },
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.grey[800],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            dropdownColor: Colors.grey[900],
+          ),
         );
       },
     );
   }
 
-  Widget _buildItemGrid(BuildContext context, List<ItemUIModel> items) {
+  Widget _buildItemGrid(BuildContext context, List<ItemUIModel> items,
+      ItemLibraryViewModel viewModel) {
     return NotificationListener<ScrollNotification>(
+      onNotification: (scrollNotification) {
+        if (scrollNotification is UserScrollNotification) {
+          if (scrollNotification.direction == ScrollDirection.reverse) {
+            viewModel.setScrollDirection(true);
+          } else if (scrollNotification.direction == ScrollDirection.forward) {
+            viewModel.setScrollDirection(false);
+          }
+        }
+        return false;
+      },
       child: GridView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -128,13 +127,14 @@ class ItemLibraryScreen extends StatelessWidget {
   }
 
   Widget _buildEmptyState() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.sentiment_dissatisfied, color: Colors.grey, size: 64),
-          SizedBox(height: 8),
-          Text(
+          const Icon(Icons.sentiment_dissatisfied,
+              color: Colors.grey, size: 64),
+          const SizedBox(height: 8),
+          const Text(
             "No items found",
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white70, fontSize: 18),
@@ -164,41 +164,35 @@ class ItemLibraryScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToAddNewItemScreen(BuildContext context) {
-    context.push<ItemUIModel>(AppRouter.addNewItemRoute);
-  }
-}
-
-class _CategoryButton extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _CategoryButton({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        margin: const EdgeInsets.only(right: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.blue : Colors.grey[800],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 12),
+          const Text("Loading items...", style: TextStyle(color: Colors.white)),
+        ],
       ),
     );
+  }
+
+  Widget _buildFloatingActionButton(
+      ItemLibraryViewModel viewModel, BuildContext context) {
+    return AnimatedSlide(
+      offset: viewModel.isScrollingDown ? const Offset(0, 2) : Offset.zero,
+      duration: const Duration(milliseconds: 300),
+      child: FloatingActionButton.extended(
+        backgroundColor: Colors.blueGrey[800],
+        foregroundColor: Colors.white,
+        onPressed: () => _navigateToAddNewItemScreen(context),
+        icon: const Icon(Icons.add),
+        label: const Text('Create Item'),
+      ),
+    );
+  }
+
+  void _navigateToAddNewItemScreen(BuildContext context) {
+    context.push<ItemUIModel>(AppRouter.addNewItemRoute);
   }
 }

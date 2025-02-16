@@ -25,7 +25,10 @@ class CategoryRepository implements ICategoryRepository {
     try {
       final staticCategories = await _fetchStaticCategories();
       final dynamicCategories = await fetchUserCategories();
-      return [...staticCategories, ...dynamicCategories];
+      final allCategories = [...staticCategories, ...dynamicCategories]
+        ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+      return allCategories;
     } catch (e) {
       throw Exception('Failed to fetch all categories: $e');
     }

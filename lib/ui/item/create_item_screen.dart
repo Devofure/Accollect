@@ -105,21 +105,43 @@ class AddNewItemScreen extends StatelessWidget {
     return ValueListenableBuilder<List<String>>(
       valueListenable: viewModel.fetchCategoriesCommand,
       builder: (context, categories, _) {
-        return DropdownButtonFormField<String>(
-          value: categories.isNotEmpty ? viewModel.selectedCategory : null,
-          dropdownColor: Colors.grey[900],
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.grey[800],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+        categories = categories.toSet().toList(); // Remove duplicates
+
+        if (!categories.contains(viewModel.selectedCategory)) {
+          viewModel
+              .setCategory(categories.isNotEmpty ? categories.first : null);
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Category',
+                style: TextStyle(color: Colors.grey, fontSize: 14)),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: viewModel.selectedCategory,
+              dropdownColor: Colors.grey[900],
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.grey[800],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              items: categories
+                  .map((category) => DropdownMenuItem<String>(
+                        value: category,
+                        child: Text(category),
+                      ))
+                  .toList(),
+              onChanged: (selected) {
+                if (selected != null) {
+                  viewModel.setCategory(selected);
+                }
+              },
             ),
-          ),
-          items: categories.map((category) {
-            return DropdownMenuItem(value: category, child: Text(category));
-          }).toList(),
-          onChanged: viewModel.setCategory,
+          ],
         );
       },
     );
