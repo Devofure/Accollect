@@ -71,10 +71,11 @@ class ItemDetailScreen extends StatelessWidget {
           _buildItemImage(item.imageUrl),
           const SizedBox(height: 16),
           _buildDetailRow('Name', item.title),
-          _buildDetailRow('Category', item.category),
+          _buildDetailRow('Category', item.category ?? 'No category'),
           _buildDetailRow('Added On', _formatDate(item.addedOn)),
-          if (item.description.isNotEmpty)
-            _buildDetailRow('Description', item.description),
+          if (item.description?.isNotEmpty == true)
+            _buildDetailRow(
+                'Description', item.description ?? 'No description'),
         ],
       ),
     );
@@ -124,6 +125,7 @@ class ItemDetailScreen extends StatelessWidget {
 
   void _deleteItem(BuildContext context, ItemDetailViewModel viewModel) async {
     await viewModel.deleteItem();
+    if (!context.mounted) return;
     context.go(AppRouter.homeRoute);
   }
 

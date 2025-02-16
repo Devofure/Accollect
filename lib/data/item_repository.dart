@@ -94,9 +94,19 @@ class ItemRepository implements IItemRepository {
 
   @override
   Future<void> addItemToCollection(String collectionKey, String itemKey) async {
-    final docRef = _itemsRef.doc(itemKey);
-    await docRef.update({
-      'collectionIds': FieldValue.arrayUnion([collectionKey])
+    final itemDocRef = _itemsRef.doc(itemKey);
+    final collectionDocRef =
+        FirebaseFirestore.instance.collection('collections').doc(collectionKey);
+
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      // Add the collection key to the item's array field.
+      transaction.update(itemDocRef, {
+        'collectionIds': FieldValue.arrayUnion([collectionKey]),
+      });
+      // Increment the collection's aggregated item count.
+      transaction.update(collectionDocRef, {
+        'itemsCount': FieldValue.increment(1),
+      });
     });
   }
 
@@ -120,23 +130,17 @@ class ItemRepository implements IItemRepository {
   @override
   Future<void> removeItemFromCollection(
       String collectionKey, String itemKey) async {
-    final docRef = _itemsRef.doc(itemKey);
-    final docSnapshot = await docRef.get();
+    final itemDocRef = _itemsRef.doc(itemKey);
+    final collectionDocRef =
+        FirebaseFirestore.instance.collection('collections').doc(collectionKey);
 
-    if (!docSnapshot.exists) {
-      throw Exception("Item not found.");
-    }
-
-    final data = docSnapshot.data() as Map<String, dynamic>;
-    List<String> collectionKeys =
-        List<String>.from(data['collectionKeys'] ?? []);
-
-    if (collectionKeys.contains(collectionKey)) {
-      collectionKeys.remove(collectionKey);
-
-      await docRef.update({
-        'collectionKeys': collectionKeys,
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      transaction.update(itemDocRef, {
+        'collectionIds': FieldValue.arrayRemove([collectionKey]),
       });
-    } else {}
+      transaction.update(collectionDocRef, {
+        'itemsCount': FieldValue.increment(-1),
+      });
+    });
   }
 }

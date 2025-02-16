@@ -106,7 +106,7 @@ class LatestAddedItemTile extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Text(
-          item.collectionName ?? 'No Collection',
+          item.description ?? 'No description',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.bodyMedium?.copyWith(

@@ -48,7 +48,7 @@ class CreateCollectionViewModel extends ChangeNotifier {
             key: DateTime.now().millisecondsSinceEpoch.toString(),
             name: collectionName!,
             description: description,
-            itemCount: 0,
+            itemsCount: 0,
             imageUrl: uploadedImage?.path,
             lastUpdated: DateTime.now(),
             category: category,

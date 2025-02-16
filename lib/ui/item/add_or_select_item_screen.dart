@@ -257,10 +257,11 @@ class AddOrSelectItemScreen extends StatelessWidget {
   }
 
   Map<String, List<ItemUIModel>> _groupItemsByCategory(
-      List<ItemUIModel> items) {
+    List<ItemUIModel> items,
+  ) {
     final Map<String, List<ItemUIModel>> groupedItems = {};
     for (final item in items) {
-      final category = item.category;
+      final category = item.category ?? "Uncategorized";
       groupedItems.putIfAbsent(category, () => []).add(item);
     }
     return groupedItems;

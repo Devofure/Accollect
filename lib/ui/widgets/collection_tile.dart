@@ -84,7 +84,7 @@ class CollectionTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (collection.isFavorite) _buildFavoriteIcon(),
+                  if (collection.isFavorite == true) _buildFavoriteIcon(),
                 ],
               ),
               const SizedBox(height: 3),
@@ -123,7 +123,7 @@ class CollectionTile extends StatelessWidget {
           alignment: Alignment.topRight,
           children: [
             _buildCircularImage(size: imageSize),
-            if (collection.isFavorite)
+            if (collection.isFavorite == true)
               Positioned(
                 top: 6,
                 right: 6,
@@ -183,7 +183,7 @@ class CollectionTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        '${collection.itemCount}',
+        '${collection.itemsCount}',
         style: const TextStyle(
           color: Colors.white,
           fontSize: 16,

@@ -335,8 +335,7 @@ class _CollectionManagementScreenState
     showDialog(
       context: context,
       builder: (context) {
-        final TextEditingController _confirmController =
-            TextEditingController();
+        final TextEditingController confirmController = TextEditingController();
 
         return AlertDialog(
           backgroundColor: Colors.grey[900],
@@ -350,7 +349,7 @@ class _CollectionManagementScreenState
               ),
               const SizedBox(height: 8),
               TextField(
-                controller: _confirmController,
+                controller: confirmController,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   filled: true,
@@ -369,7 +368,7 @@ class _CollectionManagementScreenState
             ),
             TextButton(
               onPressed: () {
-                if (_confirmController.text.trim().toUpperCase() == "DELETE") {
+                if (confirmController.text.trim().toUpperCase() == "DELETE") {
                   Navigator.of(context).pop();
                   command.execute();
                 }

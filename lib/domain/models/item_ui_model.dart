@@ -3,9 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ItemUIModel {
   final String key;
   final String title;
-  final String description;
+  final String? description;
   final String? collectionName;
-  final String category;
+  final String? category;
   final DateTime addedOn;
   final String? imageUrl;
   final String? collectionKey;

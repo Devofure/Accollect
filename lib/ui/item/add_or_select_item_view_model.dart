@@ -62,9 +62,7 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
     try {
       _loadingController.add(true);
       await Future.wait(selectedItems.map((itemKey) async {
-        try {
-          await repository.addItemToCollection(collectionKey!, itemKey);
-        } catch (e) {}
+        await repository.addItemToCollection(collectionKey!, itemKey);
       }));
       selectedItems.clear();
     } catch (e) {
