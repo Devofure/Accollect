@@ -4,26 +4,27 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 
-class FirebaseService {
-  static bool isTestEnvironment = false;
+abstract class IFirebaseService {
+  User? get currentUser;
 
-  static User? get currentUser =>
-      isTestEnvironment ? null : FirebaseAuth.instance.currentUser;
+  Future<void> initialize();
 
-  static Future<void> initializeFirebase({bool testEnv = false}) async {
-    isTestEnvironment = testEnv;
-    if (!testEnv) {
-      await Firebase.initializeApp();
-    }
-  }
+  List<AuthProvider<AuthListener, AuthCredential>> getAuthProviders();
+}
 
-  static List<AuthProvider<AuthListener, AuthCredential>> getAuthProviders() {
-    return [
-      EmailAuthProvider(),
-      GoogleProvider(
-        clientId:
-            '256581349302-cu3676dq09s1ub8eg84pl3r9k4uottat.apps.googleusercontent.com',
-      ),
-    ];
-  }
+class FirebaseService implements IFirebaseService {
+  @override
+  User? get currentUser => FirebaseAuth.instance.currentUser;
+
+  @override
+  Future<void> initialize() async => await Firebase.initializeApp();
+
+  @override
+  List<AuthProvider<AuthListener, AuthCredential>> getAuthProviders() => [
+        EmailAuthProvider(),
+        GoogleProvider(
+          clientId:
+              '256581349302-cu3676dq09s1ub8eg84pl3r9k4uottat.apps.googleusercontent.com',
+        ),
+      ];
 }

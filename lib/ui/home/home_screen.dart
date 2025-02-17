@@ -1,5 +1,6 @@
 import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
+import 'package:accollect/domain/models/collection_ui_model.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/widgets/collection_tile.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
@@ -26,7 +27,7 @@ class HomeScreen extends StatelessWidget {
             _buildHeader(context, viewModel),
             _buildTitleRow(context),
             Expanded(
-              child: StreamBuilder<List>(
+              child: StreamBuilder<List<CollectionUIModel>>(
                 stream: viewModel.collectionsStream,
                 builder: (context, collectionSnapshot) {
                   if (!collectionSnapshot.hasData ||

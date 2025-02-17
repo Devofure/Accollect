@@ -8,7 +8,8 @@ import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await FirebaseService.initializeFirebase();
+  final firebaseService = FirebaseService();
+  await firebaseService.initialize();
 
   final categoryRepository = CategoryRepository();
   final collectionRepository = CollectionRepository();
@@ -21,17 +22,19 @@ void main() async {
         Provider<ICollectionRepository>.value(value: collectionRepository),
         Provider<IItemRepository>.value(value: itemRepository),
       ],
-      child: const MyApp(),
+      child: MyApp(firebaseService: firebaseService),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final IFirebaseService firebaseService;
+
+  const MyApp({super.key, required this.firebaseService});
 
   @override
   Widget build(BuildContext context) {
-    final router = AppRouterConfig.configureRouter(context);
+    final router = AppRouterConfig.configureRouter(context, firebaseService);
 
     return MaterialApp.router(
       routerConfig: router,

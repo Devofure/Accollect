@@ -23,11 +23,14 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class AppRouterConfig {
-  static GoRouter configureRouter(BuildContext context) {
-    final providers = FirebaseService.getAuthProviders();
+  static GoRouter configureRouter(
+    BuildContext context,
+    IFirebaseService firebaseService,
+  ) {
+    final providers = firebaseService.getAuthProviders();
 
     return GoRouter(
-      initialLocation: FirebaseService.currentUser != null
+      initialLocation: firebaseService.currentUser != null
           ? AppRouter.homeRoute
           : AppRouter.onboardingRoute,
       routes: [
@@ -53,6 +56,7 @@ class AppRouterConfig {
               create: (_) => HomeViewModel(
                 collectionRepository: context.read(),
                 itemRepository: context.read(),
+                firebaseService: firebaseService,
               ),
               child: const HomeScreen(),
             );

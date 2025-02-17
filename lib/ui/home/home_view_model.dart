@@ -1,3 +1,4 @@
+import 'package:accollect/core/firebase_service.dart';
 import 'package:accollect/data/collection_repository.dart';
 import 'package:accollect/data/item_repository.dart';
 import 'package:accollect/domain/models/collection_ui_model.dart';
@@ -9,13 +10,15 @@ import 'package:intl/intl.dart';
 class HomeViewModel extends ChangeNotifier {
   final IItemRepository itemRepository;
   final ICollectionRepository collectionRepository;
+  final IFirebaseService firebaseService;
 
   HomeViewModel({
     required this.itemRepository,
     required this.collectionRepository,
+    required this.firebaseService,
   });
 
-  User? get currentUser => FirebaseAuth.instance.currentUser;
+  User? get currentUser => firebaseService.currentUser;
 
   Stream<List<CollectionUIModel>> get collectionsStream =>
       collectionRepository.fetchCollectionsStream();
