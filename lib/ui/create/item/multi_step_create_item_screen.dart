@@ -29,9 +29,8 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
       ),
       body: Column(
         children: [
-          // Stepper Header (with defined height)
           SizedBox(
-            height: 100, // Prevents height constraint issues
+            height: 100,
             child: Stepper(
               type: StepperType.horizontal,
               currentStep: _currentStep,
@@ -45,26 +44,23 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
                   content: const SizedBox.shrink(),
                 ),
                 Step(
-                  title: const Text('Images',
+                  title: const Text('Details',
                       style: TextStyle(color: Colors.white)),
                   isActive: _currentStep >= 1,
                   state: _stepState(1),
                   content: const SizedBox.shrink(),
                 ),
                 Step(
-                  title: const Text('Details',
+                  title: const Text('Images',
                       style: TextStyle(color: Colors.white)),
                   isActive: _currentStep >= 2,
                   state: _stepState(2),
                   content: const SizedBox.shrink(),
                 ),
               ],
-              controlsBuilder: (context, details) =>
-                  const SizedBox.shrink(), // No default buttons
+              controlsBuilder: (context, details) => const SizedBox.shrink(),
             ),
           ),
-
-          // Step Content (Scrollable)
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
@@ -73,8 +69,6 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
           ),
         ],
       ),
-
-      // Bottom Navigation (Static)
       bottomNavigationBar: BottomAppBar(
         color: Colors.black,
         elevation: 8,
@@ -146,9 +140,9 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
       case 0:
         return const StepCategoryWidget();
       case 1:
-        return const StepImagesWidget();
-      case 2:
         return const StepDetailsWidget();
+      case 2:
+        return const StepImagesWidget();
       default:
         return Container();
     }
