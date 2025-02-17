@@ -62,7 +62,7 @@ flutter {
 // ▼ Dependencies go here
 dependencies {
     // If using multiple Firebase services, you can use the BOM for version alignment:
-    implementation platform('com.google.firebase:firebase-bom:33.7.0')
+    implementation platform('com.google.firebase:firebase-bom:33.9.0')
     // Then add Firebase services without specifying versions:
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-firestore'
