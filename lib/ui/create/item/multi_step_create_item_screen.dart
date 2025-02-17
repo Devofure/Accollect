@@ -96,6 +96,7 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
                   onPressed: _isSaving
                       ? null
                       : () async {
+                          final currentContext = context;
                           final formState = viewModel.formKey.currentState;
                           if (formState == null || !formState.validate()) {
                             debugPrint("🚨 Form validation failed!");
@@ -105,8 +106,12 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
                           setState(() => _isSaving = true);
                           try {
                             await viewModel.saveItemCommand.executeWithFuture();
-                            if (!mounted) return;
-                            Navigator.pop(context);
+                            if (mounted) {
+                              setState(() => _isSaving = false);
+                            }
+                            if (currentContext.mounted) {
+                              Navigator.pop(currentContext);
+                            }
                           } finally {
                             if (mounted) setState(() => _isSaving = false);
                           }
