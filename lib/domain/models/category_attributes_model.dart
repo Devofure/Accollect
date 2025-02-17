@@ -23,9 +23,9 @@ class CategoryAttributesModel {
 }
 
 class AttributeDefinition {
-  final String field; // the key in the item's additionalAttributes map
-  final String label; // a human-readable label to show on the UI
-  final String type; // e.g., "text", "number", "date"
+  final String field;
+  final String label;
+  final String type;
   final String? placeholder;
 
   AttributeDefinition({
