@@ -1,8 +1,11 @@
 import 'package:accollect/core/app_router.dart';
+import 'package:accollect/domain/models/category_attributes_model.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/item/item_details_view_model.dart';
+import 'package:accollect/ui/widgets/common.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -78,9 +81,62 @@ class ItemDetailScreen extends StatelessWidget {
           _buildDetailRow('Added On', _formatDate(item.addedOn)),
           if (item.description?.isNotEmpty == true)
             _buildDetailRow('Description', item.description!),
+          const SizedBox(height: 16),
+          _buildAdditionalAttributesSection(item),
         ],
       ),
     );
+  }
+
+  Widget _buildAdditionalAttributesSection(ItemUIModel item) {
+    return FutureBuilder<CategoryAttributesModel?>(
+      future: _fetchCategoryAttributes(item.category),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: CircularProgressIndicator(),
+          );
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          // If static attributes are not available, we show nothing.
+          return const SizedBox.shrink();
+        }
+        final catAttributes = snapshot.data!;
+        // For each defined attribute, display the stored value (or "N/A" if missing)
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Additional Information',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...catAttributes.attributes.map((attrDef) {
+              final value = item.additionalAttributes != null
+                  ? item.additionalAttributes![attrDef.field]
+                  : null;
+              return _buildDetailRow(attrDef.label, value?.toString() ?? 'N/A');
+            }),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<CategoryAttributesModel?> _fetchCategoryAttributes(
+      String? category) async {
+    if (category == null) return null;
+    final doc = await FirebaseFirestore.instance
+        .collection('categoryAttributes')
+        .doc(category)
+        .get();
+    if (!doc.exists) return null;
+    return CategoryAttributesModel.fromJson(doc.data() as Map<String, dynamic>);
   }
 
   Widget _buildItemImage(String? imageUrl) {
@@ -91,18 +147,9 @@ class ItemDetailScreen extends StatelessWidget {
         width: double.infinity,
         height: 300,
         fit: BoxFit.cover,
-        placeholder: (context, url) => _imagePlaceholder(),
-        errorWidget: (context, url, error) => _imagePlaceholder(),
+        placeholder: (context, url) => imagePlaceholder(),
+        errorWidget: (context, url, error) => imagePlaceholder(),
       ),
-    );
-  }
-
-  Widget _imagePlaceholder() {
-    return Container(
-      width: double.infinity,
-      height: 300,
-      color: Colors.grey[800],
-      child: const Icon(Icons.image, color: Colors.white, size: 50),
     );
   }
 

@@ -16,8 +16,9 @@ class ItemLibraryViewModel extends ChangeNotifier {
   String? _categoryFilter;
 
   String? get categoryFilter => _categoryFilter;
-  Stream<List<ItemUIModel>>? _itemsStream;
-  Stream<List<ItemUIModel>> get itemsStream => _itemsStream!;
+  late Stream<List<ItemUIModel>> _itemsStream;
+
+  Stream<List<ItemUIModel>> get itemsStream => _itemsStream;
 
   ItemLibraryViewModel({
     required this.categoryRepository,

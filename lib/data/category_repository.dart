@@ -1,3 +1,4 @@
+import 'package:accollect/domain/models/category_attributes_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -11,6 +12,8 @@ abstract class ICategoryRepository {
   Future<void> deleteCategory(String category);
 
   Future<void> deleteAllCategories();
+
+  Future<CategoryAttributesModel?> fetchCategoryAttributes(String category);
 }
 
 class CategoryRepository implements ICategoryRepository {
@@ -107,5 +110,16 @@ class CategoryRepository implements ICategoryRepository {
     } catch (e) {
       throw Exception('Failed to delete all user categories: $e');
     }
+  }
+
+  @override
+  Future<CategoryAttributesModel?> fetchCategoryAttributes(
+      String category) async {
+    final doc = await FirebaseFirestore.instance
+        .collection('categoryAttributes')
+        .doc(category)
+        .get();
+    if (!doc.exists) return null;
+    return CategoryAttributesModel.fromJson(doc.data() as Map<String, dynamic>);
   }
 }

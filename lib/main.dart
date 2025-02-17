@@ -3,14 +3,14 @@ import 'package:accollect/data/collection_repository.dart';
 import 'package:accollect/data/item_repository.dart';
 import 'package:accollect/ui/collection/collection_screen.dart';
 import 'package:accollect/ui/collection/collection_view_model.dart';
-import 'package:accollect/ui/collection/create_collection_screen.dart';
-import 'package:accollect/ui/collection/create_collection_view_model.dart';
+import 'package:accollect/ui/create/collection/create_collection_screen.dart';
+import 'package:accollect/ui/create/collection/create_collection_view_model.dart';
+import 'package:accollect/ui/create/item/multi_step_create_item_screen.dart';
+import 'package:accollect/ui/create/item/multi_step_create_item_view_model.dart';
 import 'package:accollect/ui/home/home_screen.dart';
 import 'package:accollect/ui/home/home_view_model.dart';
 import 'package:accollect/ui/item/add_or_select_item_screen.dart';
 import 'package:accollect/ui/item/add_or_select_item_view_model.dart';
-import 'package:accollect/ui/item/create_item_screen.dart';
-import 'package:accollect/ui/item/create_item_view_model.dart';
 import 'package:accollect/ui/item/item_details_screen.dart';
 import 'package:accollect/ui/item/item_details_view_model.dart';
 import 'package:accollect/ui/item/item_library_screen.dart';
@@ -194,11 +194,11 @@ class MyApp extends StatelessWidget {
           path: AppRouter.addNewItemRoute,
           builder: (context, state) {
             return ChangeNotifierProvider(
-              create: (_) => AddNewItemViewModel(
+              create: (_) => MultiStepCreateItemViewModel(
                 categoryRepository: context.read<ICategoryRepository>(),
                 itemRepository: context.read<IItemRepository>(),
               ),
-              child: const CreateItemScreen(),
+              child: const MultiStepCreateItemScreen(),
             );
           },
         ),

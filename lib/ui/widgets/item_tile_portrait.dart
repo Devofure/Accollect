@@ -1,4 +1,5 @@
 import 'package:accollect/domain/models/item_ui_model.dart';
+import 'package:accollect/ui/widgets/common.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -48,8 +49,8 @@ class ItemPortraitTile extends StatelessWidget {
                     child: CachedNetworkImage(
                       imageUrl: item.imageUrl ?? '',
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => _imagePlaceholder(),
-                      errorWidget: (context, url, error) => _imagePlaceholder(),
+                      placeholder: (context, url) => imagePlaceholder(),
+                      errorWidget: (context, url, error) => imagePlaceholder(),
                     ),
                   ),
                 ),
@@ -86,13 +87,6 @@ class ItemPortraitTile extends StatelessWidget {
             ),
         ],
       ),
-    );
-  }
-
-  Widget _imagePlaceholder() {
-    return Container(
-      color: Colors.grey[700],
-      child: const Icon(Icons.image, color: Colors.white, size: 40),
     );
   }
 }

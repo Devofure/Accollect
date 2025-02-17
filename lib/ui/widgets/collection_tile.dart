@@ -1,4 +1,5 @@
 import 'package:accollect/domain/models/collection_ui_model.dart';
+import 'package:accollect/ui/widgets/common.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -158,21 +159,9 @@ class CollectionTile extends StatelessWidget {
               height: size,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) =>
-                  _imagePlaceholder(size),
+                  circularImagePlaceholder(size),
             )
-          : _imagePlaceholder(size),
-    );
-  }
-
-  Widget _imagePlaceholder(double size) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: const BoxDecoration(
-        color: Colors.grey,
-        shape: BoxShape.circle,
-      ),
-      child: const Icon(Icons.image, color: Colors.white, size: 32),
+          : circularImagePlaceholder(size),
     );
   }
 

@@ -31,7 +31,7 @@ class ItemLibraryScreen extends StatelessWidget {
                 stream: viewModel.itemsStream,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return _buildLoadingState(); // 🔥 Improved UX
+                    return _buildLoadingState();
                   }
                   if (snapshot.hasError) {
                     return _buildErrorState(snapshot.error.toString());

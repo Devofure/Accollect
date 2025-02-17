@@ -9,6 +9,9 @@ class ItemUIModel {
   final DateTime addedOn;
   final String? imageUrl;
   final String? collectionKey;
+  final String? notes;
+  final String? originalPrice;
+  final Map<String, dynamic>? additionalAttributes;
 
   ItemUIModel({
     required this.key,
@@ -19,6 +22,9 @@ class ItemUIModel {
     this.collectionName,
     this.imageUrl,
     this.collectionKey,
+    this.notes,
+    this.originalPrice,
+    this.additionalAttributes,
   });
 
   Map<String, dynamic> toJson() {
@@ -30,6 +36,9 @@ class ItemUIModel {
       'addedOn': Timestamp.fromDate(addedOn),
       'imageUrl': imageUrl,
       'collectionKey': collectionKey,
+      'additionalAttributes': additionalAttributes,
+      'originalPrice': originalPrice,
+      'notes': notes,
     };
   }
 
@@ -43,6 +52,11 @@ class ItemUIModel {
       addedOn: (json['addedOn'] as Timestamp).toDate(),
       imageUrl: json['imageUrl'],
       collectionKey: json['collectionKey'],
+      notes: json['notes'],
+      originalPrice: json['originalPrice'],
+      additionalAttributes: json['additionalAttributes'] != null
+          ? Map<String, dynamic>.from(json['additionalAttributes'])
+          : null,
     );
   }
 }
