@@ -11,16 +11,12 @@ void main() async {
   final firebaseService = FirebaseService();
   await firebaseService.initialize();
 
-  final categoryRepository = CategoryRepository();
-  final collectionRepository = CollectionRepository();
-  final itemRepository = ItemRepository();
-
   runApp(
     MultiProvider(
       providers: [
-        Provider<ICategoryRepository>.value(value: categoryRepository),
-        Provider<ICollectionRepository>.value(value: collectionRepository),
-        Provider<IItemRepository>.value(value: itemRepository),
+        Provider<ICategoryRepository>.value(value: CategoryRepository()),
+        Provider<ICollectionRepository>.value(value: CollectionRepository()),
+        Provider<IItemRepository>.value(value: ItemRepository()),
       ],
       child: MyApp(firebaseService: firebaseService),
     ),
