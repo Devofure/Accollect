@@ -27,47 +27,43 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
         backgroundColor: Colors.black,
         title: const Text('Create Item', style: TextStyle(color: Colors.white)),
       ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 100,
-            child: Stepper(
-              type: StepperType.horizontal,
-              currentStep: _currentStep,
-              onStepTapped: (step) => setState(() => _currentStep = step),
-              steps: [
-                Step(
-                  title: const Text('Category',
-                      style: TextStyle(color: Colors.white)),
-                  isActive: _currentStep >= 0,
-                  state: _stepState(0),
-                  content: const SizedBox.shrink(),
-                ),
-                Step(
-                  title: const Text('Details',
-                      style: TextStyle(color: Colors.white)),
-                  isActive: _currentStep >= 1,
-                  state: _stepState(1),
-                  content: const SizedBox.shrink(),
-                ),
-                Step(
-                  title: const Text('Images',
-                      style: TextStyle(color: Colors.white)),
-                  isActive: _currentStep >= 2,
-                  state: _stepState(2),
-                  content: const SizedBox.shrink(),
-                ),
-              ],
-              controlsBuilder: (context, details) => const SizedBox.shrink(),
+      body: Form(
+        key: viewModel.formKey,
+        child: Column(
+          children: [
+            Expanded(
+              child: Stepper(
+                type: StepperType.horizontal,
+                currentStep: _currentStep,
+                onStepTapped: (step) => setState(() => _currentStep = step),
+                steps: [
+                  Step(
+                    title: const Text('Images',
+                        style: TextStyle(color: Colors.white)),
+                    isActive: _currentStep >= 0,
+                    state: _stepState(0),
+                    content: const StepImagesWidget(),
+                  ),
+                  Step(
+                    title: const Text('Details',
+                        style: TextStyle(color: Colors.white)),
+                    isActive: _currentStep >= 1,
+                    state: _stepState(1),
+                    content: const StepDetailsWidget(),
+                  ),
+                  Step(
+                    title: const Text('Category',
+                        style: TextStyle(color: Colors.white)),
+                    isActive: _currentStep >= 2,
+                    state: _stepState(2),
+                    content: const StepCategoryWidget(),
+                  ),
+                ],
+                controlsBuilder: (context, details) => const SizedBox.shrink(),
+              ),
             ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: _getStepContent(),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: BottomAppBar(
         color: Colors.black,
@@ -100,18 +96,19 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
                   onPressed: _isSaving
                       ? null
                       : () async {
-                          final form = viewModel.formKey.currentState!;
-                          if (form.validate()) {
-                            form.save();
-                            setState(() => _isSaving = true);
-                            try {
-                              await viewModel.saveItemCommand
-                                  .executeWithFuture();
-                              if (!mounted) return;
-                              Navigator.pop(context);
-                            } finally {
-                              if (mounted) setState(() => _isSaving = false);
-                            }
+                          final formState = viewModel.formKey.currentState;
+                          if (formState == null || !formState.validate()) {
+                            debugPrint("🚨 Form validation failed!");
+                            return;
+                          }
+                          formState.save();
+                          setState(() => _isSaving = true);
+                          try {
+                            await viewModel.saveItemCommand.executeWithFuture();
+                            if (!mounted) return;
+                            Navigator.pop(context);
+                          } finally {
+                            if (mounted) setState(() => _isSaving = false);
                           }
                         },
                   style: ElevatedButton.styleFrom(
@@ -122,9 +119,7 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                          ),
+                          child: CircularProgressIndicator(color: Colors.white),
                         )
                       : const Text('Finish'),
                 ),
@@ -133,19 +128,6 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
         ),
       ),
     );
-  }
-
-  Widget _getStepContent() {
-    switch (_currentStep) {
-      case 0:
-        return const StepCategoryWidget();
-      case 1:
-        return const StepDetailsWidget();
-      case 2:
-        return const StepImagesWidget();
-      default:
-        return Container();
-    }
   }
 
   StepState _stepState(int stepIndex) {

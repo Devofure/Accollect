@@ -188,6 +188,6 @@ class ItemLibraryScreen extends StatelessWidget {
   }
 
   void _navigateToAddNewItemScreen(BuildContext context) {
-    context.push<ItemUIModel>(AppRouter.addNewItemRoute);
+    context.push<ItemUIModel>(AppRouter.createNewItemRoute);
   }
 }

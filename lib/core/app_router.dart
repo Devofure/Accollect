@@ -8,7 +8,7 @@ class AppRouter {
   static const String createCollectionRoute = '/create-collection';
   static const String addOrSelectItemRoute = '/add-or-select-item/:key/:name';
   static const String itemLibraryRoute = '/item-library';
-  static const String addNewItemRoute = '/add-new-item';
+  static const String createNewItemRoute = '/add-new-item';
   static const String collectionRoute = '/collection/:key';
   static const String itemDetailsRoute = '/item-details/:key';
 }

@@ -112,13 +112,16 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
     try {
       final pickedFiles = await _imagePicker.pickMultiImage();
       if (pickedFiles.isNotEmpty) {
-        for (var pickedFile in pickedFiles) {
-          uploadedImages.add(File(pickedFile.path));
-        }
+        uploadedImages.addAll(pickedFiles.map((e) => File(e.path)));
         notifyListeners();
       }
     } catch (e) {
       debugPrint('Error picking images: $e');
     }
+  }
+
+  void clearAllImages() {
+    uploadedImages.clear();
+    notifyListeners();
   }
 }

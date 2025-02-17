@@ -13,6 +13,7 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<MultiStepCreateItemViewModel>();
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -23,13 +24,29 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
             style: TextStyle(color: Colors.white, fontSize: 16),
           ),
           const SizedBox(height: 12),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[800],
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => _pickImages(viewModel),
-            child: const Text('Pick Images'),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[800],
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () => _pickImages(viewModel),
+                  child: const Text('Pick Images'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              if (viewModel.uploadedImages.isNotEmpty)
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () => _clearAllImages(viewModel),
+                  child: const Text('Clear All'),
+                ),
+            ],
           ),
           const SizedBox(height: 12),
           _buildImageGrid(viewModel),
@@ -43,11 +60,16 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
     );
   }
 
+  /// **📸 Image Grid Display**
   Widget _buildImageGrid(MultiStepCreateItemViewModel viewModel) {
     final images = viewModel.uploadedImages;
     if (images.isEmpty) {
-      return const Text('No images selected',
-          style: TextStyle(color: Colors.grey));
+      return const Center(
+        child: Text(
+          'No images selected',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
     }
     return GridView.builder(
       shrinkWrap: true,
@@ -68,11 +90,9 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
               top: 4,
               right: 4,
               child: GestureDetector(
-                onTap: () {
-                  viewModel.removeImageAt(index);
-                },
+                onTap: () => _removeImage(viewModel, index),
                 child: Container(
-                  padding: const EdgeInsets.all(2),
+                  padding: const EdgeInsets.all(4),
                   decoration: const BoxDecoration(
                     color: Colors.black54,
                     shape: BoxShape.circle,
@@ -87,8 +107,21 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
     );
   }
 
+  /// **📥 Pick Multiple Images**
   Future<void> _pickImages(MultiStepCreateItemViewModel viewModel) async {
     await viewModel.pickMultipleImages();
+    setState(() {});
+  }
+
+  /// **❌ Remove a Single Image**
+  void _removeImage(MultiStepCreateItemViewModel viewModel, int index) {
+    viewModel.removeImageAt(index);
+    setState(() {});
+  }
+
+  /// **🗑️ Clear All Images**
+  void _clearAllImages(MultiStepCreateItemViewModel viewModel) {
+    viewModel.clearAllImages();
     setState(() {});
   }
 }

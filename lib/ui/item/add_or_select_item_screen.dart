@@ -250,7 +250,8 @@ class AddOrSelectItemScreen extends StatelessWidget {
 
   void _navigateToAddNewItemScreen(
       BuildContext context, AddOrSelectItemViewModel viewModel) async {
-    final newItem = await context.push<ItemUIModel>(AppRouter.addNewItemRoute);
+    final newItem =
+        await context.push<ItemUIModel>(AppRouter.createNewItemRoute);
     if (newItem != null) {
       await viewModel.createItemCommand(newItem);
     }

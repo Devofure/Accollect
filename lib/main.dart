@@ -191,7 +191,7 @@ class MyApp extends StatelessWidget {
           },
         ),
         GoRoute(
-          path: AppRouter.addNewItemRoute,
+          path: AppRouter.createNewItemRoute,
           builder: (context, state) {
             return ChangeNotifierProvider(
               create: (_) => MultiStepCreateItemViewModel(
