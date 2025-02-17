@@ -1,0 +1,47 @@
+name: Flutter Android Build & Firebase Distribution
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.18.0
+        with:
+          flutter-version: 3.x
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Bump Version
+        run: |
+          NEW_BUILD_NUMBER=$(( $(grep 'version:' pubspec.yaml | cut -d+ -f2) + 1 ))
+          sed -i "s/version: \(.*\)+[0-9]\+/version: \1+$NEW_BUILD_NUMBER/" pubspec.yaml
+
+      - name: Commit Version Change
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add pubspec.yaml
+          git commit -m "Bump version to build $NEW_BUILD_NUMBER" || echo "No changes to commit"
+          git push
+
+      - name: Build Android APK
+        run: flutter build apk --release
+
+      - name: Build Android AppBundle
+        run: flutter build appbundle --release
+
+      - name: Upload to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsJson: ${{ secrets.FIREBASE_CREDENTIALS }}
+          groups: testers
+          file: build/app/outputs/flutter-apk/app-release.apk
