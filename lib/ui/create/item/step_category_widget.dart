@@ -20,12 +20,6 @@ class StepCategoryWidget extends StatelessWidget {
           valueListenable: viewModel.fetchCategoriesCommand,
           builder: (context, categories, _) {
             final uniqueCats = categories.toSet().toList();
-            // Set a default if needed.
-            if (uniqueCats.isNotEmpty &&
-                (viewModel.selectedCategory == 'Other' ||
-                    !uniqueCats.contains(viewModel.selectedCategory))) {
-              viewModel.setCategory(uniqueCats.first);
-            }
             return Wrap(
               spacing: 12,
               runSpacing: 12,
