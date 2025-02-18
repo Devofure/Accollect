@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart'
     hide AuthProvider, EmailAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart'
+    show FirebaseCrashlytics;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
+import 'package:flutter/foundation.dart' show FlutterError;
 
 abstract class IFirebaseService {
   User? get currentUser;
@@ -17,7 +20,10 @@ class FirebaseService implements IFirebaseService {
   User? get currentUser => FirebaseAuth.instance.currentUser;
 
   @override
-  Future<void> initialize() async => await Firebase.initializeApp();
+  initialize() async {
+    await Firebase.initializeApp();
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+  }
 
   @override
   List<AuthProvider<AuthListener, AuthCredential>> getAuthProviders() => [

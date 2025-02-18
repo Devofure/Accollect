@@ -68,3 +68,5 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore'
     // etc.
 }
+
+apply plugin: 'com.google.firebase.crashlytics'
