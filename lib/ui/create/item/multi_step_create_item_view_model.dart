@@ -24,6 +24,8 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
   String? notes;
   Map<String, dynamic> additionalAttributes = {};
 
+  /// List of **actual** images (no placeholders).
+  /// For ephemeral reordering with placeholders, you can manage them in the widget.
   final List<File> uploadedImages = [];
 
   MultiStepCreateItemViewModel({
@@ -117,25 +119,35 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> pickImage(int index) async {
+  Future<void> pickMultipleImages() async {
+    try {
+      final pickedFiles = await _imagePicker.pickMultiImage();
+      if (pickedFiles.isNotEmpty) {
+        uploadedImages.addAll(pickedFiles.map((e) => File(e.path)));
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error picking images: $e');
+    }
+  }
+
+  Future<File?> pickImage(int index) async {
     try {
       final pickedFile =
           await _imagePicker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
+        final file = File(pickedFile.path);
         if (index < uploadedImages.length) {
-          uploadedImages[index] = File(pickedFile.path);
+          uploadedImages[index] = file;
         } else {
-          uploadedImages.add(File(pickedFile.path));
+          uploadedImages.add(file);
         }
         notifyListeners();
+        return file;
       }
     } catch (e) {
       debugPrint('Error picking image: $e');
     }
-  }
-
-  void clearAllImages() {
-    uploadedImages.clear();
-    notifyListeners();
+    return null;
   }
 }

@@ -38,11 +38,9 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
   }
 
   Widget _buildImageGrid(MultiStepCreateItemViewModel viewModel) {
-    // Current images count
     final currentCount = viewModel.uploadedImages.length;
-    // We allow an extra slot if not at max
+    // If not at max, allow one extra slot for a placeholder.
     final maxSlots = currentCount < _maxSlots ? currentCount + 1 : _maxSlots;
-    // Use our constant minimum
     final slots = (maxSlots < _initialSlots) ? _initialSlots : maxSlots;
 
     return GridView.builder(
@@ -63,7 +61,6 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
         return LayoutBuilder(
           builder: (context, constraints) {
             final tileSize = constraints.biggest;
-
             return LongPressDraggable<int>(
               data: index,
               feedback: Material(
@@ -87,20 +84,17 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
                 ),
               ),
               child: DragTarget<int>(
-                onWillAccept: (oldIndex) {
-                  final withinBoundsOld =
-                      (oldIndex! < viewModel.uploadedImages.length);
-                  final withinBoundsNew =
-                      (index < viewModel.uploadedImages.length);
-
-                  return withinBoundsOld && withinBoundsNew;
-                },
-                onAccept: (oldIndex) {
+                onMove: (DragTargetDetails<int> details) {
+                  final oldIndex = details.data;
                   if (oldIndex < viewModel.uploadedImages.length &&
-                      index < viewModel.uploadedImages.length) {
+                      index < viewModel.uploadedImages.length &&
+                      oldIndex != index) {
                     viewModel.reorderImages(oldIndex, index);
                     setState(() {});
                   }
+                },
+                onAcceptWithDetails: (DragTargetDetails<int> details) {
+                  setState(() {});
                 },
                 builder: (context, candidateData, rejectedData) {
                   final isHighlighted = candidateData.isNotEmpty;
@@ -181,7 +175,14 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
 
   Future<void> _pickImage(
       MultiStepCreateItemViewModel viewModel, int index) async {
-    await viewModel.pickImage(index);
+    if (index < viewModel.uploadedImages.length) {
+      final File? file = await viewModel.pickImage(index);
+      if (file != null) {
+        viewModel.uploadedImages[index] = file;
+      }
+    } else {
+      viewModel.pickMultipleImages();
+    }
     setState(() {});
   }
 
