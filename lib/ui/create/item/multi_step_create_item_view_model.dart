@@ -108,15 +108,29 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> pickMultipleImages() async {
+  void reorderImages(int oldIndex, int newIndex) {
+    if (newIndex > oldIndex) {
+      newIndex -= 1;
+    }
+    final movedImage = uploadedImages.removeAt(oldIndex);
+    uploadedImages.insert(newIndex, movedImage);
+    notifyListeners();
+  }
+
+  Future<void> pickImage(int index) async {
     try {
-      final pickedFiles = await _imagePicker.pickMultiImage();
-      if (pickedFiles.isNotEmpty) {
-        uploadedImages.addAll(pickedFiles.map((e) => File(e.path)));
+      final pickedFile =
+          await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        if (index < uploadedImages.length) {
+          uploadedImages[index] = File(pickedFile.path);
+        } else {
+          uploadedImages.add(File(pickedFile.path));
+        }
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Error picking images: $e');
+      debugPrint('Error picking image: $e');
     }
   }
 

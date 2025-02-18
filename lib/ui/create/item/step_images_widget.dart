@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:accollect/ui/create/item/multi_step_create_item_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,118 +12,181 @@ class StepImagesWidget extends StatefulWidget {
 }
 
 class _StepImagesWidgetState extends State<StepImagesWidget> {
+  static const int _maxSlots = 8;
+  static const int _initialSlots = 1;
+
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<MultiStepCreateItemViewModel>();
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Upload Item Images',
-            style: TextStyle(color: Colors.white, fontSize: 16),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[800],
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () => _pickImages(viewModel),
-                  child: const Text('Pick Images'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              if (viewModel.uploadedImages.isNotEmpty)
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () => _clearAllImages(viewModel),
-                  child: const Text('Clear All'),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildImageGrid(viewModel),
-          const SizedBox(height: 8),
-          const Text(
-            'Tip: You can pick multiple images to showcase different angles.',
-            style: TextStyle(color: Colors.grey, fontSize: 14),
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Upload Item Images',
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+        const SizedBox(height: 12),
+        _buildImageGrid(viewModel),
+        const SizedBox(height: 8),
+        const Text(
+          'Tap to upload an image. Long-press and drag to reorder.',
+          style: TextStyle(color: Colors.grey, fontSize: 14),
+        ),
+      ],
     );
   }
 
-  /// **📸 Image Grid Display**
   Widget _buildImageGrid(MultiStepCreateItemViewModel viewModel) {
-    final images = viewModel.uploadedImages;
-    if (images.isEmpty) {
-      return const Center(
-        child: Text(
-          'No images selected',
-          style: TextStyle(color: Colors.grey),
-        ),
-      );
-    }
+    // Current images count
+    final currentCount = viewModel.uploadedImages.length;
+    // We allow an extra slot if not at max
+    final maxSlots = currentCount < _maxSlots ? currentCount + 1 : _maxSlots;
+    // Use our constant minimum
+    final slots = (maxSlots < _initialSlots) ? _initialSlots : maxSlots;
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: images.length,
+      itemCount: slots,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 6,
-        crossAxisSpacing: 6,
+        crossAxisCount: 2,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 1.0,
       ),
       itemBuilder: (context, index) {
-        final file = images[index];
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.file(file, fit: BoxFit.cover),
-            Positioned(
-              top: 4,
-              right: 4,
-              child: GestureDetector(
-                onTap: () => _removeImage(viewModel, index),
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.black54,
-                    shape: BoxShape.circle,
+        final imageFile = (index < viewModel.uploadedImages.length)
+            ? viewModel.uploadedImages[index]
+            : null;
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final tileSize = constraints.biggest;
+
+            return LongPressDraggable<int>(
+              data: index,
+              feedback: Material(
+                elevation: 6,
+                color: Colors.transparent,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: tileSize.width,
+                    maxHeight: tileSize.height,
                   ),
-                  child: const Icon(Icons.close, color: Colors.white, size: 16),
+                  child: Opacity(
+                    opacity: 0.8,
+                    child: _buildImageTile(viewModel, imageFile, index),
+                  ),
                 ),
               ),
-            ),
-          ],
+              childWhenDragging: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: DragTarget<int>(
+                onWillAccept: (oldIndex) {
+                  final withinBoundsOld =
+                      (oldIndex! < viewModel.uploadedImages.length);
+                  final withinBoundsNew =
+                      (index < viewModel.uploadedImages.length);
+
+                  return withinBoundsOld && withinBoundsNew;
+                },
+                onAccept: (oldIndex) {
+                  if (oldIndex < viewModel.uploadedImages.length &&
+                      index < viewModel.uploadedImages.length) {
+                    viewModel.reorderImages(oldIndex, index);
+                    setState(() {});
+                  }
+                },
+                builder: (context, candidateData, rejectedData) {
+                  final isHighlighted = candidateData.isNotEmpty;
+                  return Container(
+                    decoration: BoxDecoration(
+                      border: isHighlighted
+                          ? Border.all(color: Colors.blueAccent, width: 2)
+                          : null,
+                    ),
+                    child: _buildImageTile(viewModel, imageFile, index),
+                  );
+                },
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  /// **📥 Pick Multiple Images**
-  Future<void> _pickImages(MultiStepCreateItemViewModel viewModel) async {
-    await viewModel.pickMultipleImages();
+  Widget _buildImageTile(
+    MultiStepCreateItemViewModel viewModel,
+    File? imageFile,
+    int index,
+  ) {
+    return GestureDetector(
+      onTap: () => _pickImage(viewModel, index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: Colors.grey[900],
+          borderRadius: BorderRadius.circular(12),
+          image: (imageFile != null)
+              ? DecorationImage(
+                  image: FileImage(imageFile),
+                  fit: BoxFit.cover,
+                )
+              : null,
+          border: Border.all(
+            color: (imageFile == null) ? Colors.white30 : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Stack(
+          children: [
+            if (imageFile == null)
+              const Center(
+                child: Icon(
+                  Icons.add_photo_alternate,
+                  color: Colors.white70,
+                  size: 32,
+                ),
+              ),
+            if (imageFile != null)
+              Align(
+                alignment: Alignment.topRight,
+                child: GestureDetector(
+                  onTap: () => _removeImage(viewModel, index),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.black54,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(6),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(
+      MultiStepCreateItemViewModel viewModel, int index) async {
+    await viewModel.pickImage(index);
     setState(() {});
   }
 
-  /// **❌ Remove a Single Image**
   void _removeImage(MultiStepCreateItemViewModel viewModel, int index) {
     viewModel.removeImageAt(index);
-    setState(() {});
-  }
-
-  /// **🗑️ Clear All Images**
-  void _clearAllImages(MultiStepCreateItemViewModel viewModel) {
-    viewModel.clearAllImages();
     setState(() {});
   }
 }
