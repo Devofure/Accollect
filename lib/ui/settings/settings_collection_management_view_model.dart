@@ -1,7 +1,7 @@
 import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/collection_repository.dart';
 import 'package:accollect/data/item_repository.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 
 class CollectionManagementViewModel extends ChangeNotifier {
