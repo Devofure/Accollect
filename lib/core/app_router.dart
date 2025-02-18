@@ -11,6 +11,10 @@ import 'package:accollect/ui/create/item/multi_step_create_item_screen.dart';
 import 'package:accollect/ui/create/item/multi_step_create_item_view_model.dart';
 import 'package:accollect/ui/home/home_screen.dart';
 import 'package:accollect/ui/home/home_view_model.dart';
+import 'package:accollect/ui/item/add_or_select_item_screen.dart';
+import 'package:accollect/ui/item/add_or_select_item_view_model.dart';
+import 'package:accollect/ui/item/item_details_screen.dart';
+import 'package:accollect/ui/item/item_details_view_model.dart';
 import 'package:accollect/ui/item/item_library_screen.dart';
 import 'package:accollect/ui/item/item_library_view_model.dart';
 import 'package:accollect/ui/onboarding/onboarding_screen.dart';
@@ -125,6 +129,50 @@ class AppRouterConfig {
                 itemRepository: context.read<IItemRepository>(),
               ),
               child: const MultiStepCreateItemScreen(),
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRouter.itemDetailsRoute,
+          builder: (context, state) {
+            final itemKey = state.pathParameters['key'];
+            if (itemKey == null) {
+              return const Scaffold(
+                backgroundColor: Colors.black,
+                body: Center(
+                  child: Text(
+                    'Invalid item key',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              );
+            }
+
+            return ChangeNotifierProvider(
+              create: (_) => ItemDetailViewModel(
+                itemKey: itemKey,
+                repository: context.read<IItemRepository>(),
+              ),
+              child: const ItemDetailScreen(),
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRouter.addOrSelectItemRoute,
+          builder: (context, state) {
+            final collectionKey = state.pathParameters['key'];
+            final collectionName = state.pathParameters['name'];
+            final itemRepo = context.read<IItemRepository>();
+
+            return ChangeNotifierProvider(
+              create: (_) => AddOrSelectItemViewModel(
+                repository: itemRepo,
+                collectionKey: collectionKey,
+              ),
+              child: AddOrSelectItemScreen(
+                collectionKey: collectionKey,
+                collectionName: collectionName,
+              ),
             );
           },
         ),
