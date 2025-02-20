@@ -7,7 +7,7 @@ class ItemUIModel {
   final String? collectionName;
   final String? category;
   final DateTime addedOn;
-  final String? imageUrl;
+  final List<String>? imageUrls;
   final String? collectionKey;
   final String? notes;
   final String? originalPrice;
@@ -20,7 +20,7 @@ class ItemUIModel {
     required this.category,
     required this.addedOn,
     this.collectionName,
-    this.imageUrl,
+    this.imageUrls,
     this.collectionKey,
     this.notes,
     this.originalPrice,
@@ -34,7 +34,7 @@ class ItemUIModel {
       'description': description,
       'category': category,
       'addedOn': Timestamp.fromDate(addedOn),
-      'imageUrl': imageUrl,
+      'imageUrls': imageUrls,
       'collectionKey': collectionKey,
       'additionalAttributes': additionalAttributes,
       'originalPrice': originalPrice,
@@ -50,7 +50,7 @@ class ItemUIModel {
       collectionName: json['collectionName'],
       category: json['category'],
       addedOn: (json['addedOn'] as Timestamp).toDate(),
-      imageUrl: json['imageUrl'],
+      imageUrls: (json['imageUrls'] as List?)?.map((e) => e as String).toList(),
       collectionKey: json['collectionKey'],
       notes: json['notes'],
       originalPrice: json['originalPrice'],
@@ -58,5 +58,11 @@ class ItemUIModel {
           ? Map<String, dynamic>.from(json['additionalAttributes'])
           : null,
     );
+  }
+}
+
+extension ItemUIModelExtensions on ItemUIModel {
+  String? get firstImageUrl {
+    return (imageUrls?.isNotEmpty == true) ? imageUrls!.first : null;
   }
 }

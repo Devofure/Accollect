@@ -47,7 +47,7 @@ class ItemPortraitTile extends StatelessWidget {
                     borderRadius:
                         const BorderRadius.vertical(top: Radius.circular(12)),
                     child: CachedNetworkImage(
-                      imageUrl: item.imageUrl ?? '',
+                      imageUrl: item.firstImageUrl ?? '',
                       fit: BoxFit.cover,
                       placeholder: (context, url) => imagePlaceholder(),
                       errorWidget: (context, url, error) => imagePlaceholder(),

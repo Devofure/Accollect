@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 abstract class IItemRepository {
   Stream<List<ItemUIModel>> fetchItemsStream(String? categoryFilter);
@@ -12,7 +15,7 @@ abstract class IItemRepository {
 
   Stream<ItemUIModel?> fetchItemStream(String itemKey);
 
-  Future<ItemUIModel> createItem(ItemUIModel item);
+  Future<ItemUIModel> createItem(ItemUIModel item, List<File> images);
 
   Future<void> removeItemFromCollection(String collectionKey, String itemKey);
 
@@ -26,6 +29,7 @@ abstract class IItemRepository {
 class ItemRepository implements IItemRepository {
   final CollectionReference _itemsRef =
       FirebaseFirestore.instance.collection('items');
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   @override
   Stream<ItemUIModel?> fetchItemStream(String itemKey) {
@@ -67,9 +71,9 @@ class ItemRepository implements IItemRepository {
     }
 
     return _itemsRef
-        .where('ownerId', isEqualTo: user.uid) // Ensure only user's items
-        .orderBy('addedOn', descending: true) // Fetch most recent items first
-        .limit(10) // Limit to the last 10 added items
+        .where('ownerId', isEqualTo: user.uid)
+        .orderBy('addedOn', descending: true)
+        .limit(10)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) =>
@@ -78,18 +82,31 @@ class ItemRepository implements IItemRepository {
   }
 
   @override
-  Future<ItemUIModel> createItem(ItemUIModel item) async {
+  Future<ItemUIModel> createItem(ItemUIModel item, List<File> images) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception("User not authenticated.");
 
+    final imageUrls = await _uploadImagesToFirebase(images);
+
     final itemData = item.toJson();
     itemData['ownerId'] = user.uid;
+    itemData['imageUrls'] = imageUrls;
 
-    await FirebaseFirestore.instance
-        .collection("items")
-        .doc(item.key)
-        .set(itemData);
+    await _itemsRef.doc(item.key).set(itemData);
     return item;
+  }
+
+  Future<List<String>> _uploadImagesToFirebase(List<File> images) async {
+    List<String> imageUrls = [];
+    for (var image in images) {
+      final ref = _storage
+          .ref()
+          .child('items/${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await ref.putFile(image);
+      final url = await ref.getDownloadURL();
+      imageUrls.add(url);
+    }
+    return imageUrls;
   }
 
   @override
@@ -99,11 +116,9 @@ class ItemRepository implements IItemRepository {
         FirebaseFirestore.instance.collection('collections').doc(collectionKey);
 
     await FirebaseFirestore.instance.runTransaction((transaction) async {
-      // Add the collection key to the item's array field.
       transaction.update(itemDocRef, {
         'collectionIds': FieldValue.arrayUnion([collectionKey]),
       });
-      // Increment the collection's aggregated item count.
       transaction.update(collectionDocRef, {
         'itemsCount': FieldValue.increment(1),
       });

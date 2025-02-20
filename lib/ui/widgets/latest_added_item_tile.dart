@@ -55,9 +55,10 @@ class LatestAddedItemTile extends StatelessWidget {
   }
 
   Widget _buildItemImage(double size) {
-    return item.imageUrl != null && item.imageUrl!.isNotEmpty
+    final imageUrl = item.firstImageUrl;
+    return imageUrl != null
         ? CachedNetworkImage(
-            imageUrl: item.imageUrl!,
+            imageUrl: imageUrl,
             width: size,
             height: size,
             fit: BoxFit.cover,

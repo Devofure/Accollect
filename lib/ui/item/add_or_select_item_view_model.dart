@@ -20,7 +20,6 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
   late final void Function(String itemKey, bool isSelected)
       toggleItemSelectionCommand;
   late final void Function() addSelectedItemsCommand;
-  late final Future<void> Function(ItemUIModel newItem) createItemCommand;
   late final void Function(String query) filterItemsCommand;
   String? _categoryFilter;
 
@@ -34,9 +33,6 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
     };
     addSelectedItemsCommand = () {
       _addSelectedItems();
-    };
-    createItemCommand = (newItem) {
-      return _createItem(newItem);
     };
     filterItemsCommand = (query) {
       _filterItems(query);
@@ -67,17 +63,6 @@ class AddOrSelectItemViewModel extends ChangeNotifier {
       selectedItems.clear();
     } catch (e) {
       _errorController.add('Failed to add selected items to collection');
-    } finally {
-      _loadingController.add(false);
-    }
-  }
-
-  Future<void> _createItem(ItemUIModel newItem) async {
-    try {
-      _loadingController.add(true);
-      await repository.createItem(newItem);
-    } catch (e) {
-      _errorController.add('Failed to create and add item');
     } finally {
       _loadingController.add(false);
     }

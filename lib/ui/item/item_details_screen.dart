@@ -73,7 +73,7 @@ class ItemDetailScreen extends StatelessWidget {
         children: [
           Hero(
             tag: 'item-${item.key}',
-            child: _buildItemImage(item.imageUrl),
+            child: _buildItemImage(item.firstImageUrl),
           ),
           const SizedBox(height: 16),
           _buildDetailRow('Name', item.title),
@@ -99,11 +99,9 @@ class ItemDetailScreen extends StatelessWidget {
           );
         }
         if (snapshot.hasError || !snapshot.hasData) {
-          // If static attributes are not available, we show nothing.
           return const SizedBox.shrink();
         }
         final catAttributes = snapshot.data!;
-        // For each defined attribute, display the stored value (or "N/A" if missing)
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

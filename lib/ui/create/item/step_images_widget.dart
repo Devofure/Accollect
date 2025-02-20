@@ -176,12 +176,9 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
   Future<void> _pickImage(
       MultiStepCreateItemViewModel viewModel, int index) async {
     if (index < viewModel.uploadedImages.length) {
-      final File? file = await viewModel.pickImage(index);
-      if (file != null) {
-        viewModel.uploadedImages[index] = file;
-      }
+      await viewModel.pickImage(index);
     } else {
-      viewModel.pickMultipleImages();
+      await viewModel.pickMultipleImages();
     }
     setState(() {});
   }

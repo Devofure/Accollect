@@ -9,7 +9,6 @@ class ItemLibraryViewModel extends ChangeNotifier {
   final ICategoryRepository categoryRepository;
 
   late final Command<void, List<String>> fetchCategoriesCommand;
-  late final Command<ItemUIModel, void> createItemCommand;
   late final Command<String?, void> selectCategoryCommand;
 
   bool isScrollingDown = false;
@@ -35,13 +34,6 @@ class ItemLibraryViewModel extends ChangeNotifier {
       _itemsStream = itemRepository.fetchItemsStream(_categoryFilter);
       notifyListeners();
     });
-
-    createItemCommand = Command.createAsync(
-      (item) async {
-        await itemRepository.createItem(item);
-      },
-      initialValue: null,
-    );
 
     _itemsStream = itemRepository.fetchItemsStream(_categoryFilter);
   }

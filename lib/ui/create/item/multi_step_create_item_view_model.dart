@@ -24,8 +24,6 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
   String? notes;
   Map<String, dynamic> additionalAttributes = {};
 
-  /// List of **actual** images (no placeholders).
-  /// For ephemeral reordering with placeholders, you can manage them in the widget.
   final List<File> uploadedImages = [];
 
   MultiStepCreateItemViewModel({
@@ -56,15 +54,14 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
           description: description ?? '',
           category: selectedCategory,
           addedOn: DateTime.now(),
-          imageUrl:
-              uploadedImages.isNotEmpty ? uploadedImages.first.path : null,
           collectionKey: null,
           originalPrice: originalPrice,
           notes: notes,
           additionalAttributes:
               additionalAttributes.isNotEmpty ? additionalAttributes : null,
         );
-        await itemRepository.createItem(newItem);
+
+        await itemRepository.createItem(newItem, uploadedImages);
       },
       initialValue: null,
     );
@@ -131,23 +128,17 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
     }
   }
 
-  Future<File?> pickImage(int index) async {
-    try {
-      final pickedFile =
-          await _imagePicker.pickImage(source: ImageSource.gallery);
-      if (pickedFile != null) {
-        final file = File(pickedFile.path);
-        if (index < uploadedImages.length) {
-          uploadedImages[index] = file;
-        } else {
-          uploadedImages.add(file);
-        }
-        notifyListeners();
-        return file;
+  Future<void> pickImage(int index) async {
+    final pickedFile =
+        await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final file = File(pickedFile.path);
+      if (index < uploadedImages.length) {
+        uploadedImages[index] = file;
+      } else {
+        uploadedImages.add(file);
       }
-    } catch (e) {
-      debugPrint('Error picking image: $e');
+      notifyListeners();
     }
-    return null;
   }
 }
