@@ -1,31 +1,29 @@
 import 'package:accollect/data/collection_repository.dart';
 import 'package:accollect/data/item_repository.dart';
+import 'package:accollect/domain/models/collection_ui_model.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:flutter/foundation.dart';
 
 class CollectionViewModel extends ChangeNotifier {
   final ICollectionRepository collectionRepository;
   final IItemRepository itemRepository;
-  final String collectionKey;
 
-  String collectionName = '';
-  String? collectionImageUrl;
-  String? category;
+  CollectionUIModel collection;
   String? errorMessage;
   late Stream<List<ItemUIModel>> itemsStream;
 
   CollectionViewModel({
-    required this.collectionKey,
     required this.collectionRepository,
     required this.itemRepository,
-  }) {
+    required CollectionUIModel initialCollection,
+  }) : collection = initialCollection {
     _initializeStreams();
-    _loadCollectionDetails();
+    _fetchLatestCollection();
   }
 
   void _initializeStreams() {
     itemsStream = itemRepository
-        .fetchItemsFromCollectionStream(collectionKey)
+        .fetchItemsFromCollectionStream(collection.key)
         .handleError((error) {
       errorMessage = 'Failed to load items';
       debugPrint('Error loading items stream: $error');
@@ -33,13 +31,11 @@ class CollectionViewModel extends ChangeNotifier {
     });
   }
 
-  Future<void> _loadCollectionDetails() async {
+  Future<void> _fetchLatestCollection() async {
     try {
-      final collection =
-          await collectionRepository.fetchCollectionDetails(collectionKey);
-      collectionName = collection.name;
-      collectionImageUrl = collection.imageUrl;
-      category = collection.category;
+      final updatedCollection =
+          await collectionRepository.fetchCollectionDetails(collection.key);
+      collection = updatedCollection;
       errorMessage = null;
       notifyListeners();
     } catch (e) {
@@ -49,14 +45,11 @@ class CollectionViewModel extends ChangeNotifier {
     }
   }
 
-  void removeItemFromCollection(String key) {
-    itemRepository.removeItemFromCollection(collectionKey, key);
+  Future<void> refreshData() async {
+    await _fetchLatestCollection();
   }
 
-  Future<void> refreshData() async {
-    debugPrint("🔄 Refreshing collection data...");
-    await _loadCollectionDetails();
-    _initializeStreams();
-    notifyListeners();
+  void removeItemFromCollection(String key) {
+    itemRepository.removeItemFromCollection(collection.key, key);
   }
 }

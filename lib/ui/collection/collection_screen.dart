@@ -10,9 +10,7 @@ import 'package:provider/provider.dart';
 import 'collection_view_model.dart';
 
 class CollectionScreen extends StatelessWidget {
-  final String collectionKey;
-
-  const CollectionScreen({super.key, required this.collectionKey});
+  const CollectionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -70,15 +68,14 @@ class CollectionScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          circularImageWidget(viewModel.collectionImageUrl, size: 90),
-          // ✅ Reused
+          circularImageWidget(viewModel.collection.imageUrl, size: 90),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  viewModel.collectionName,
+                  viewModel.collection.name,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -88,7 +85,7 @@ class CollectionScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  viewModel.category ?? "No category",
+                  viewModel.collection.category ?? "No category",
                   style: TextStyle(color: Colors.grey[400], fontSize: 16),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -104,7 +101,7 @@ class CollectionScreen extends StatelessWidget {
       List<ItemUIModel> items, CollectionViewModel viewModel) {
     return RefreshIndicator(
       onRefresh: () async {
-        viewModel.refreshData();
+        await viewModel.refreshData();
       },
       child: GridView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -191,8 +188,10 @@ class CollectionScreen extends StatelessWidget {
 
   void _navigateToAddOrSelectItemScreen(
       BuildContext context, CollectionViewModel viewModel) {
-    context.pushWithParams(AppRouter.addOrSelectItemRoute,
-        [collectionKey, viewModel.collectionName]);
+    context.pushWithParams(
+      AppRouter.addOrSelectItemRoute,
+      [viewModel.collection.key, viewModel.collection.name],
+    );
   }
 
   AppBar _buildAppBar(BuildContext context) {

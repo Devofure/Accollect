@@ -92,9 +92,9 @@ class HomeScreen extends StatelessWidget {
                   return CollectionTile(
                     collection: collection,
                     onTap: () {
-                      context.pushWithParams(
+                      context.push(
                         AppRouter.collectionRoute,
-                        [collection.key],
+                        extra: collection,
                       );
                     },
                   );

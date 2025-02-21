@@ -2,6 +2,7 @@ import 'package:accollect/core/firebase_service.dart';
 import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/collection_repository.dart';
 import 'package:accollect/data/item_repository.dart';
+import 'package:accollect/domain/models/collection_ui_model.dart';
 import 'package:accollect/ui/auth/sign_in_header.dart';
 import 'package:accollect/ui/collection/collection_screen.dart';
 import 'package:accollect/ui/collection/collection_view_model.dart';
@@ -97,14 +98,14 @@ class AppRouterConfig {
         GoRoute(
           path: AppRouter.collectionRoute,
           builder: (context, state) {
-            final collectionKey = state.pathParameters['key']!;
+            final collection = state.extra as CollectionUIModel;
             return ChangeNotifierProvider(
               create: (context) => CollectionViewModel(
-                collectionKey: collectionKey,
+                initialCollection: collection,
                 collectionRepository: context.read<ICollectionRepository>(),
                 itemRepository: context.read<IItemRepository>(),
               ),
-              child: CollectionScreen(collectionKey: collectionKey),
+              child: const CollectionScreen(),
             );
           },
         ),
@@ -191,6 +192,6 @@ class AppRouter {
   static const String addOrSelectItemRoute = '/add-or-select-item/:key/:name';
   static const String itemLibraryRoute = '/item-library';
   static const String createNewItemRoute = '/add-new-item';
-  static const String collectionRoute = '/collection/:key';
+  static const String collectionRoute = '/collection';
   static const String itemDetailsRoute = '/item-details/:key';
 }

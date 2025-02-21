@@ -9,18 +9,6 @@ Widget imagePlaceholder() {
   );
 }
 
-Widget circularImagePlaceholder(double size) {
-  return Container(
-    width: size,
-    height: size,
-    decoration: const BoxDecoration(
-      color: Colors.grey,
-      shape: BoxShape.circle,
-    ),
-    child: const Icon(Icons.image, color: Colors.white, size: 32),
-  );
-}
-
 Widget buildErrorState(String errorMessage) {
   return Center(
     child: Column(
