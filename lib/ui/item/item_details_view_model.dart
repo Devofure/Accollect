@@ -5,22 +5,28 @@ import 'package:flutter/foundation.dart';
 class ItemDetailViewModel extends ChangeNotifier {
   final IItemRepository repository;
   final ItemUIModel initialItem;
+
+  late final Stream<ItemUIModel?> _itemStream;
+
+  Stream<ItemUIModel?> get itemStream => _itemStream;
+
   String? _errorMessage;
-  late final Stream<ItemUIModel?> itemStream;
+
+  String? get errorMessage => _errorMessage;
 
   ItemDetailViewModel({
     required this.repository,
     required this.initialItem,
   }) {
-    itemStream = _createItemStream();
+    _itemStream = _createItemStream();
   }
 
   Stream<ItemUIModel?> _createItemStream() {
-    return Stream.value(initialItem)
-        .asyncExpand((_) => repository.fetchItemStream(initialItem.key))
-        .handleError((error) {
-      _setError("Failed to load item", error);
-    });
+    return Stream.value(initialItem).asyncExpand(
+      (_) => repository.fetchItemStream(initialItem.key).handleError(
+            (error, stackTrace) => _setError("Failed to load item", error),
+          ),
+    );
   }
 
   Future<void> deleteItem() async {
@@ -36,6 +42,4 @@ class ItemDetailViewModel extends ChangeNotifier {
     debugPrint('$message: $error');
     notifyListeners();
   }
-
-  String? get errorMessage => _errorMessage;
 }
