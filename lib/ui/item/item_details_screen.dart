@@ -148,7 +148,7 @@ class ItemDetailScreen extends StatelessWidget {
         const SizedBox(height: 8),
         ...item.additionalAttributes!.entries.map((entry) {
           return _buildDetailRow(entry.key, entry.value.toString());
-        }).toList(),
+        }),
       ],
     );
   }
@@ -205,11 +205,11 @@ class ItemDetailScreen extends StatelessWidget {
                 Navigator.of(dialogContext).pop();
                 await viewModel.deleteItem();
               },
-              child:
-                  const Text('Delete', style: TextStyle(color: Colors.white)),
               style: TextButton.styleFrom(
                 backgroundColor: Colors.redAccent,
               ),
+              child:
+                  const Text('Delete', style: TextStyle(color: Colors.white)),
             ),
           ],
         );

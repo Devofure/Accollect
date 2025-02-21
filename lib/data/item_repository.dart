@@ -4,6 +4,7 @@ import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
 
 abstract class IItemRepository {
   Stream<List<ItemUIModel>> fetchItemsStream(String? categoryFilter);
@@ -109,7 +110,7 @@ class ItemRepository implements IItemRepository {
       }
     } catch (e) {
       // TODO silently fail for now because Storage cost
-      print('Error uploading images: $e');
+      debugPrint('Error uploading images: $e');
     }
     return imageUrls;
   }
