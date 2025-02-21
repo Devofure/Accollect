@@ -43,3 +43,62 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+# NEW GIT IGNORE
+
+# macOS and Linux System Files
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+Thumbs.db
+ehthumbs.db
+
+# Flutter Generated Files
+.flutter-plugins
+.flutter-plugins-dependencies
+.flutter-settings
+.packages
+pubspec.lock
+
+# VS Code (If you don't want to include workspace settings)
+.vscode/
+
+# Android Gradle & Keystore Files
+/android/.gradle/
+/android/.idea/
+/android/local.properties
+/android/key.properties
+/android/app/key.jks
+
+# Firebase & Google Services (If not public)
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Coverage Reports
+/coverage/
+
+# Xcode Derived Data (macOS)
+/ios/.symlinks/
+/ios/Pods/
+/ios/.generated/
+/ios/Flutter/Flutter.podspec
+/ios/Flutter/App.framework
+/ios/Flutter/Flutter.podspec
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/engine/
+/ios/.dart_tool/
+
+# Web Build
+/web/.dart_tool/
+/web/main.dart.js
+/web/index.html
+/web/favicon.png
+
+# Fastlane (iOS/Android deployment automation)
+/fastlane/report.xml
+/fastlane/Preview.html
+/fastlane/screenshots
+/fastlane/test_output
