@@ -24,22 +24,24 @@ class ItemDetailViewModel extends ChangeNotifier {
   Stream<ItemUIModel?> _createItemStream() {
     return Stream.value(initialItem).asyncExpand(
       (_) => repository.fetchItemStream(initialItem.key).handleError(
-            (error, stackTrace) => _setError("Failed to load item", error),
-          ),
+        (error, stackTrace) {
+          _setError("Failed to load item", error, stackTrace);
+        },
+      ),
     );
   }
 
   Future<void> deleteItem() async {
     try {
       await repository.deleteItem(initialItem.key);
-    } catch (e) {
-      _setError("Failed to delete item", e);
+    } catch (e, stackTrace) {
+      _setError("Failed to delete item", e, stackTrace);
     }
   }
 
-  void _setError(String message, Object error) {
+  void _setError(String message, Object error, StackTrace stackTrace) {
     _errorMessage = message;
-    debugPrint('$message: $error');
+    debugPrint('$message: $error\n$stackTrace');
     notifyListeners();
   }
 }
