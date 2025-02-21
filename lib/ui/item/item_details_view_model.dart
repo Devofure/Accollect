@@ -4,36 +4,38 @@ import 'package:flutter/foundation.dart';
 
 class ItemDetailViewModel extends ChangeNotifier {
   final IItemRepository repository;
-  ItemUIModel item;
-  String? errorMessage;
+  final ItemUIModel initialItem;
+  String? _errorMessage;
   late final Stream<ItemUIModel?> itemStream;
 
   ItemDetailViewModel({
     required this.repository,
-    required ItemUIModel initialItem,
-  }) : item = initialItem {
-    _initializeStream();
+    required this.initialItem,
+  }) {
+    itemStream = _createItemStream();
   }
 
-  void _initializeStream() {
-    itemStream = repository.fetchItemStream(item.key);
-    itemStream.listen((updatedItem) {
-      if (updatedItem != null) {
-        item = updatedItem;
-        notifyListeners();
-      }
-    }, onError: (error) {
-      errorMessage = "Failed to load item";
-      notifyListeners();
+  Stream<ItemUIModel?> _createItemStream() {
+    return Stream.value(initialItem)
+        .asyncExpand((_) => repository.fetchItemStream(initialItem.key))
+        .handleError((error) {
+      _setError("Failed to load item", error);
     });
   }
 
   Future<void> deleteItem() async {
     try {
-      await repository.deleteItem(item.key);
+      await repository.deleteItem(initialItem.key);
     } catch (e) {
-      errorMessage = "Failed to delete item";
+      _setError("Failed to delete item", e);
     }
+  }
+
+  void _setError(String message, Object error) {
+    _errorMessage = message;
+    debugPrint('$message: $error');
     notifyListeners();
   }
+
+  String? get errorMessage => _errorMessage;
 }
