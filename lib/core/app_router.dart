@@ -63,6 +63,9 @@ class AppRouterConfig {
               SignedOutAction((context) {
                 context.go(AppRouter.signInRoute);
               }),
+              DisplayNameChangedAction(
+                (context, oldName, newName) {},
+              ),
             ],
             showDeleteConfirmationDialog: true,
           ),

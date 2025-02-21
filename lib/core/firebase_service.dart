@@ -10,6 +10,8 @@ import 'package:flutter/foundation.dart' show FlutterError;
 abstract class IFirebaseService {
   User? get currentUser;
 
+  Stream<User?> get userChanges;
+
   Future<void> initialize();
 
   List<AuthProvider<AuthListener, AuthCredential>> getAuthProviders();
@@ -33,4 +35,7 @@ class FirebaseService implements IFirebaseService {
               '256581349302-cu3676dq09s1ub8eg84pl3r9k4uottat.apps.googleusercontent.com',
         ),
       ];
+
+  @override
+  Stream<User?> get userChanges => FirebaseAuth.instance.userChanges();
 }

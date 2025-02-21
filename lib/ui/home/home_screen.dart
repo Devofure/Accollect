@@ -5,6 +5,7 @@ import 'package:accollect/ui/widgets/collection_tile.dart';
 import 'package:accollect/ui/widgets/common.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:accollect/ui/widgets/latest_added_item_tile.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -111,39 +112,46 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, HomeViewModel viewModel) {
-    final currentUser = viewModel.currentUser;
-    final photoUrl = currentUser?.photoURL;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
+      child: StreamBuilder<User?>(
+        stream: viewModel.userChanges,
+        builder: (context, snapshot) {
+          final user = snapshot.data;
+          final photoUrl = user?.photoURL;
+          final displayName = user?.displayName ?? 'User';
+
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: Colors.grey[700],
-                backgroundImage:
-                    photoUrl != null ? NetworkImage(photoUrl) : null,
-                child: photoUrl == null
-                    ? const Icon(Icons.person, color: Colors.white, size: 20)
-                    : null,
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.grey[700],
+                    backgroundImage:
+                        photoUrl != null ? NetworkImage(photoUrl) : null,
+                    child: photoUrl == null
+                        ? const Icon(Icons.person,
+                            color: Colors.white, size: 20)
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    displayName, // ✅ Updated display name appears here
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                currentUser?.displayName ?? 'User',
-                style: const TextStyle(color: Colors.white, fontSize: 16),
+              IconButton(
+                icon: const Icon(Icons.settings, color: Colors.white),
+                onPressed: () {
+                  context.push(AppRouter.settingsRoute);
+                },
               ),
             ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              context.push(AppRouter.settingsRoute);
-            },
-          ),
-        ],
+          );
+        },
       ),
     );
   }

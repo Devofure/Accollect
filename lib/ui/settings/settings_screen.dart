@@ -64,52 +64,62 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildProfileSection(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
     return GestureDetector(
       onTap: () {
         context.push(AppRouter.profileRoute);
       },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.grey[850],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.grey[700],
-              backgroundImage:
-                  user?.photoURL != null ? NetworkImage(user!.photoURL!) : null,
-              child: user?.photoURL == null
-                  ? const Icon(Icons.person, color: Colors.white, size: 30)
-                  : null,
+      child: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.userChanges(),
+        builder: (context, snapshot) {
+          final user = snapshot.data;
+          final displayName = user?.displayName ?? 'User';
+          final photoUrl = user?.photoURL;
+          final email = user?.email ?? 'No email linked';
+
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[850],
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    user?.displayName ?? 'User',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.grey[700],
+                  backgroundImage:
+                      photoUrl != null ? NetworkImage(photoUrl) : null,
+                  child: photoUrl == null
+                      ? const Icon(Icons.person, color: Colors.white, size: 30)
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        email,
+                        style:
+                            const TextStyle(color: Colors.grey, fontSize: 14),
+                      ),
+                    ],
                   ),
-                  Text(
-                    user?.email ?? 'No email linked',
-                    style: const TextStyle(color: Colors.grey, fontSize: 14),
-                  ),
-                ],
-              ),
+                ),
+                const Icon(Icons.arrow_forward_ios,
+                    color: Colors.white, size: 18),
+              ],
             ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 18),
-            // Add an indicator for navigation
-          ],
-        ),
+          );
+        },
       ),
     );
   }

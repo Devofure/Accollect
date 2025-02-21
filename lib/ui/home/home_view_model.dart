@@ -34,4 +34,6 @@ class HomeViewModel extends ChangeNotifier {
     }
     return groupedItems;
   }
+
+  Stream<User?> get userChanges => firebaseService.userChanges;
 }
