@@ -39,7 +39,13 @@ class ItemLibraryScreen extends StatelessWidget {
                   }
                   final items = snapshot.data ?? [];
                   return items.isEmpty
-                      ? _buildEmptyState()
+                      ? buildEmptyState(
+                          title: 'No items found',
+                          description: 'Create a new item to get started',
+                          onActionPressed: () =>
+                              _navigateToAddNewItemScreen(context),
+                          actionLabel: 'Create Item',
+                        )
                       : _buildItemGrid(context, items, viewModel);
                 },
               ),
@@ -118,24 +124,6 @@ class ItemLibraryScreen extends StatelessWidget {
                 context.pushWithParams(AppRouter.itemDetailsRoute, [item.key]),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.sentiment_dissatisfied,
-              color: Colors.grey, size: 64),
-          const SizedBox(height: 8),
-          const Text(
-            "No items found",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white70, fontSize: 18),
-          ),
-        ],
       ),
     );
   }

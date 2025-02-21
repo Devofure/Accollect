@@ -10,6 +10,7 @@ class CollectionViewModel extends ChangeNotifier {
 
   String collectionName = '';
   String? collectionImageUrl;
+  String? category;
   String? errorMessage;
   late Stream<List<ItemUIModel>> itemsStream;
 
@@ -38,6 +39,7 @@ class CollectionViewModel extends ChangeNotifier {
           await collectionRepository.fetchCollectionDetails(collectionKey);
       collectionName = collection.name;
       collectionImageUrl = collection.imageUrl;
+      category = collection.category;
       errorMessage = null;
       notifyListeners();
     } catch (e) {

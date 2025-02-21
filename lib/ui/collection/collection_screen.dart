@@ -2,7 +2,6 @@ import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/widgets/common.dart';
-import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -38,7 +37,10 @@ class CollectionScreen extends StatelessWidget {
                   }
                   final items = snapshot.data ?? [];
                   return items.isEmpty
-                      ? _buildEmptyState(context)
+                      ? buildEmptyState(
+                          title: 'No items in your collection.',
+                          description: 'Start by adding your first item!',
+                        )
                       : _buildItemGrid(items, viewModel);
                 },
               ),
@@ -47,41 +49,50 @@ class CollectionScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.blueAccent,
         onPressed: () => _navigateToAddOrSelectItemScreen(context, viewModel),
-        icon: const Icon(Icons.add, color: Colors.black),
-        label: const Text("Add Item", style: TextStyle(color: Colors.black)),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text("Add Item", style: TextStyle(color: Colors.white)),
       ),
     );
   }
 
   Widget _buildCollectionHeader(CollectionViewModel viewModel) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: const BoxDecoration(
-        color: Colors.black,
-        boxShadow: [BoxShadow(color: Colors.white10, blurRadius: 4)],
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 8)
+        ],
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundImage: viewModel.collectionImageUrl != null
-                ? NetworkImage(viewModel.collectionImageUrl!)
-                : null,
-            child: viewModel.collectionImageUrl == null
-                ? const Icon(Icons.image, color: Colors.white)
-                : null,
-          ),
-          const SizedBox(width: 12),
+          circularImageWidget(viewModel.collectionImageUrl, size: 90),
+          // ✅ Reused
+          const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              viewModel.collectionName,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold),
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  viewModel.collectionName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  viewModel.category ?? "No category",
+                  style: TextStyle(color: Colors.grey[400], fontSize: 16),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
         ],
@@ -99,9 +110,9 @@ class CollectionScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          childAspectRatio: 0.75,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.8,
         ),
         itemCount: items.length,
         itemBuilder: (context, index) {
@@ -126,21 +137,14 @@ class CollectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    return EmptyStateWidget(
-      title: 'No items in your collection.',
-      description: 'Start by adding your first item!',
-    );
-  }
-
   Widget _buildLoadingGrid() {
     return GridView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 0.75,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.8,
       ),
       itemCount: 6,
       itemBuilder: (_, __) => Container(
@@ -158,28 +162,35 @@ class CollectionScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Remove Item"),
+        backgroundColor: Colors.grey[850],
+        title: const Text("Remove Item", style: TextStyle(color: Colors.white)),
         content: const Text(
-            "Are you sure you want to remove this item from the collection?"),
+          "Are you sure you want to remove this item from the collection?",
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: const Text("Cancel", style: TextStyle(color: Colors.white)),
           ),
           TextButton(
             onPressed: () {
               viewModel.removeItemFromCollection(itemKey);
               Navigator.pop(context);
             },
-            child: const Text("Remove", style: TextStyle(color: Colors.red)),
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            ),
+            child: const Text("Remove", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
   }
 
-  void _navigateToAddOrSelectItemScreen(BuildContext context,
-      CollectionViewModel viewModel) {
+  void _navigateToAddOrSelectItemScreen(
+      BuildContext context, CollectionViewModel viewModel) {
     context.pushWithParams(AppRouter.addOrSelectItemRoute,
         [collectionKey, viewModel.collectionName]);
   }

@@ -28,8 +28,8 @@ class CollectionTile extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.grey[850],
               borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(45), // Rounded on the left
-                right: Radius.circular(14), // Squarer on the right
+                left: Radius.circular(45),
+                right: Radius.circular(14),
               ),
               boxShadow: [
                 BoxShadow(
@@ -62,10 +62,9 @@ class CollectionTile extends StatelessWidget {
   }
 
   Widget _buildListTile(BuildContext context) {
-    double imageSize = 90;
     return Row(
       children: [
-        _buildCircularImage(size: imageSize),
+        circularImageWidget(collection.imageUrl, size: 90),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -116,14 +115,14 @@ class CollectionTile extends StatelessWidget {
   }
 
   Widget _buildSquareTile(BuildContext context) {
-    double imageSize = 80;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Stack(
           alignment: Alignment.topRight,
           children: [
-            _buildCircularImage(size: imageSize),
+            circularImageWidget(collection.imageUrl, size: 80),
+            // ✅ Reused widget
             if (collection.isFavorite == true)
               Positioned(
                 top: 6,
@@ -147,21 +146,6 @@ class CollectionTile extends StatelessWidget {
         const SizedBox(height: 3),
         _buildItemCountBadge(),
       ],
-    );
-  }
-
-  Widget _buildCircularImage({double size = 120}) {
-    return ClipOval(
-      child: collection.imageUrl != null
-          ? Image.network(
-              collection.imageUrl!,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  circularImagePlaceholder(size),
-            )
-          : circularImagePlaceholder(size),
     );
   }
 
