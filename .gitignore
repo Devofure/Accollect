@@ -47,6 +47,8 @@ app.*.map.json
 
 # NEW GIT IGNORE
 
+**/android/app/.cxx/
+
 # macOS and Linux System Files
 *.swp
 *.swo

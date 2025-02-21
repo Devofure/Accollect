@@ -23,4 +23,7 @@ class MockFirebaseService implements IFirebaseService {
   void setMockUser(User? user) {
     _mockUser = user;
   }
+
+  @override
+  Stream<User?> get userChanges => throw UnimplementedError();
 }
