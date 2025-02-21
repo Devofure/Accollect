@@ -3,6 +3,7 @@ import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/domain/models/collection_ui_model.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/widgets/collection_tile.dart';
+import 'package:accollect/ui/widgets/common.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:accollect/ui/widgets/latest_added_item_tile.dart';
 import 'package:flutter/material.dart';
@@ -36,8 +37,7 @@ class HomeScreen extends StatelessWidget {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (collectionSnapshot.hasError) {
-                    return _buildErrorState(
-                        collectionSnapshot.error.toString());
+                    return buildErrorState(collectionSnapshot.error.toString());
                   }
                   final collections = collectionSnapshot.data ?? [];
 
@@ -50,7 +50,7 @@ class HomeScreen extends StatelessWidget {
                         return const Center(child: CircularProgressIndicator());
                       }
                       if (latestItemsSnapshot.hasError) {
-                        return _buildErrorState(
+                        return buildErrorState(
                             latestItemsSnapshot.error.toString());
                       }
                       final groupedItems = latestItemsSnapshot.data ?? {};
@@ -66,22 +66,6 @@ class HomeScreen extends StatelessWidget {
       ),
       floatingActionButton: _buildFloatingActionButton(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-    );
-  }
-
-  Widget _buildErrorState(String errorMessage) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(errorMessage, style: const TextStyle(color: Colors.white)),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {},
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:accollect/ui/settings/settings_collection_management_view_model.dart';
+import 'package:accollect/ui/widgets/common.dart';
 import 'package:accollect/ui/widgets/loading_border_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
@@ -45,7 +46,7 @@ class _CollectionManagementScreenState
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return _buildErrorState(snapshot.error.toString());
+              return buildErrorState(snapshot.error.toString());
             }
             final userCategories = snapshot.data ?? [];
 
@@ -68,19 +69,6 @@ class _CollectionManagementScreenState
               ],
             );
           },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String errorMessage) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          errorMessage,
-          style: const TextStyle(color: Colors.redAccent),
-          textAlign: TextAlign.center,
         ),
       ),
     );

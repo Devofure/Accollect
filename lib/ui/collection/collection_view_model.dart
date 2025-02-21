@@ -51,7 +51,6 @@ class CollectionViewModel extends ChangeNotifier {
     itemRepository.removeItemFromCollection(collectionKey, key);
   }
 
-  /// 🔄 **Refreshes the collection details & restarts the item stream.**
   Future<void> refreshData() async {
     debugPrint("🔄 Refreshing collection data...");
     await _loadCollectionDetails();

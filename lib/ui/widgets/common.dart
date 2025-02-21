@@ -20,3 +20,19 @@ Widget circularImagePlaceholder(double size) {
     child: const Icon(Icons.image, color: Colors.white, size: 32),
   );
 }
+
+Widget buildErrorState(String errorMessage) {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(errorMessage, style: const TextStyle(color: Colors.white)),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: () {},
+          child: const Text('Retry'),
+        ),
+      ],
+    ),
+  );
+}

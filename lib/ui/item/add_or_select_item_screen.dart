@@ -1,6 +1,7 @@
 import 'package:accollect/core/app_router.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/item/add_or_select_item_view_model.dart';
+import 'package:accollect/ui/widgets/common.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +42,7 @@ class AddOrSelectItemScreen extends StatelessWidget {
                         return const Center(child: CircularProgressIndicator());
                       }
                       if (snapshot.hasError) {
-                        return _buildErrorState(snapshot.error.toString());
+                        return buildErrorState(snapshot.error.toString());
                       }
                       final availableItems = snapshot.data ?? [];
                       if (availableItems.isEmpty) {
@@ -233,17 +234,6 @@ class AddOrSelectItemScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String errorMessage) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(errorMessage,
-            style: const TextStyle(color: Colors.white),
-            textAlign: TextAlign.center),
       ),
     );
   }

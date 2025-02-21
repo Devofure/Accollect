@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:accollect/domain/models/collection_ui_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 abstract class ICollectionRepository {
   Future<CollectionUIModel> fetchCollectionDetails(String collectionKey);
@@ -9,9 +12,7 @@ abstract class ICollectionRepository {
 
   Stream<List<CollectionUIModel>> fetchSharedCollectionsStream();
 
-  Future<void> createCollection(CollectionUIModel collection);
-
-  Future<void> shareCollection(String collectionKey, String userId);
+  Future<void> createCollection(CollectionUIModel collection, File? image);
 
   Future<void> deleteCollection(String collectionKey);
 
@@ -21,6 +22,14 @@ abstract class ICollectionRepository {
 class CollectionRepository implements ICollectionRepository {
   final CollectionReference _collectionRef =
       FirebaseFirestore.instance.collection('collections');
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  @override
+  Future<CollectionUIModel> fetchCollectionDetails(String collectionKey) async {
+    final doc = await _collectionRef.doc(collectionKey).get();
+    if (!doc.exists) throw Exception('Collection not found');
+    return CollectionUIModel.fromJson(doc.data() as Map<String, dynamic>);
+  }
 
   @override
   Stream<List<CollectionUIModel>> fetchCollectionsStream() {
@@ -49,31 +58,35 @@ class CollectionRepository implements ICollectionRepository {
   }
 
   @override
-  Future<CollectionUIModel> fetchCollectionDetails(String collectionKey) async {
-    final doc = await _collectionRef.doc(collectionKey).get();
-    if (!doc.exists) throw Exception('Collection not found');
-    return CollectionUIModel.fromJson(doc.data() as Map<String, dynamic>);
-  }
-
-  @override
-  Future<void> createCollection(CollectionUIModel collection) async {
+  Future<void> createCollection(
+      CollectionUIModel collection, File? image) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception("User not authenticated.");
+
+    String? imageUrl;
+    if (image != null) {
+      imageUrl = await _uploadCollectionImage(collection.key, image);
+    }
 
     final data = collection.toJson();
     data['ownerId'] = user.uid;
     data['sharedWith'] = [];
     data['itemsCount'] = 0;
+    data['imageUrl'] = imageUrl;
 
     await _collectionRef.doc(collection.key).set(data);
   }
 
-  @override
-  Future<void> shareCollection(String collectionKey, String userId) async {
-    final docRef = _collectionRef.doc(collectionKey);
-    await docRef.update({
-      'sharedWith': FieldValue.arrayUnion([userId])
-    });
+  Future<String> _uploadCollectionImage(
+      String collectionKey, File image) async {
+    try {
+      final ref = _storage.ref().child('collections/$collectionKey.jpg');
+      await ref.putFile(image);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      // TODO silently fail for now because Storage cost
+      throw Exception('Failed to upload image: $e');
+    }
   }
 
   @override

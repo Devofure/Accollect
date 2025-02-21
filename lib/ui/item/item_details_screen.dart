@@ -1,13 +1,12 @@
-import 'package:accollect/core/app_router.dart';
 import 'package:accollect/domain/models/category_attributes_model.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/item/item_details_view_model.dart';
 import 'package:accollect/ui/widgets/common.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -33,7 +32,7 @@ class ItemDetailScreen extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return _buildErrorState(context, "Failed to load item.");
+              return buildErrorState("Failed to load item.");
             }
             final item = snapshot.data;
             if (item == null) {
@@ -46,21 +45,12 @@ class ItemDetailScreen extends StatelessWidget {
           },
         ),
       ),
-      floatingActionButton: StreamBuilder<ItemUIModel?>(
-        stream: viewModel.itemStream,
-        builder: (context, snapshot) {
-          final item = snapshot.data;
-          if (item == null) {
-            return const SizedBox.shrink();
-          }
-          return FloatingActionButton.extended(
-            backgroundColor: Colors.redAccent,
-            foregroundColor: Colors.white,
-            onPressed: () => _confirmDelete(context, viewModel),
-            icon: const Icon(Icons.delete),
-            label: const Text('Delete Item'),
-          );
-        },
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Colors.redAccent,
+        foregroundColor: Colors.white,
+        onPressed: () => _confirmDelete(context, viewModel),
+        icon: const Icon(Icons.delete),
+        label: const Text('Delete Item'),
       ),
     );
   }
@@ -71,19 +61,46 @@ class ItemDetailScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Hero(
-            tag: 'item-${item.key}',
-            child: _buildItemImage(item.firstImageUrl),
-          ),
+          _buildImageCarousel(item.imageUrls ?? []),
           const SizedBox(height: 16),
           _buildDetailRow('Name', item.title),
           _buildDetailRow('Category', item.category ?? 'No category'),
           _buildDetailRow('Added On', _formatDate(item.addedOn)),
           if (item.description?.isNotEmpty == true)
             _buildDetailRow('Description', item.description!),
+          if (item.originalPrice?.isNotEmpty == true)
+            _buildDetailRow('Original Price', item.originalPrice!),
+          if (item.notes?.isNotEmpty == true)
+            _buildDetailRow('Notes', item.notes!),
+          if (item.collectionName?.isNotEmpty == true)
+            _buildDetailRow('Collection', item.collectionName!),
           const SizedBox(height: 16),
           _buildAdditionalAttributesSection(item),
         ],
+      ),
+    );
+  }
+
+  Widget _buildImageCarousel(List<String> imageUrls) {
+    if (imageUrls.isEmpty) {
+      return _buildItemImage(null);
+    }
+    return CarouselSlider(
+      options: CarouselOptions(height: 300, enableInfiniteScroll: false),
+      items: imageUrls.map((imageUrl) => _buildItemImage(imageUrl)).toList(),
+    );
+  }
+
+  Widget _buildItemImage(String? imageUrl) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: CachedNetworkImage(
+        imageUrl: imageUrl ?? '',
+        width: double.infinity,
+        height: 300,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => imagePlaceholder(),
+        errorWidget: (context, url, error) => imagePlaceholder(),
       ),
     );
   }
@@ -115,10 +132,8 @@ class ItemDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             ...catAttributes.attributes.map((attrDef) {
-              final value = item.additionalAttributes != null
-                  ? item.additionalAttributes![attrDef.field]
-                  : null;
-              return _buildDetailRow(attrDef.label, value?.toString() ?? 'N/A');
+              final value = item.additionalAttributes?[attrDef.field] ?? 'N/A';
+              return _buildDetailRow(attrDef.label, value.toString());
             }),
           ],
         );
@@ -135,20 +150,6 @@ class ItemDetailScreen extends StatelessWidget {
         .get();
     if (!doc.exists) return null;
     return CategoryAttributesModel.fromJson(doc.data() as Map<String, dynamic>);
-  }
-
-  Widget _buildItemImage(String? imageUrl) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: CachedNetworkImage(
-        imageUrl: imageUrl ?? '',
-        width: double.infinity,
-        height: 300,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => imagePlaceholder(),
-        errorWidget: (context, url, error) => imagePlaceholder(),
-      ),
-    );
   }
 
   Widget _buildDetailRow(String label, String value) {
@@ -170,12 +171,6 @@ class ItemDetailScreen extends StatelessWidget {
     );
   }
 
-  void _deleteItem(BuildContext context, ItemDetailViewModel viewModel) async {
-    await viewModel.deleteItem();
-    if (!context.mounted) return;
-    context.go(AppRouter.homeRoute);
-  }
-
   void _confirmDelete(BuildContext context, ItemDetailViewModel viewModel) {
     showDialog(
       context: context,
@@ -188,38 +183,16 @@ class ItemDetailScreen extends StatelessWidget {
               style: TextStyle(color: Colors.white)),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-              child:
-                  const Text('Cancel', style: TextStyle(color: Colors.white)),
-            ),
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancel',
+                    style: TextStyle(color: Colors.white))),
             TextButton(
-              onPressed: () async {
-                Navigator.of(dialogContext).pop();
-                _deleteItem(context, viewModel);
-              },
-              child: const Text('Delete',
-                  style: TextStyle(color: Colors.redAccent)),
-            ),
+                onPressed: () async => Navigator.of(dialogContext).pop(),
+                child: const Text('Delete',
+                    style: TextStyle(color: Colors.redAccent))),
           ],
         );
       },
-    );
-  }
-
-  Widget _buildErrorState(BuildContext context, String errorMessage) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error, color: Colors.red, size: 48),
-          const SizedBox(height: 8),
-          Text(errorMessage,
-              style: const TextStyle(color: Colors.redAccent, fontSize: 16)),
-          const SizedBox(height: 16),
-        ],
-      ),
     );
   }
 

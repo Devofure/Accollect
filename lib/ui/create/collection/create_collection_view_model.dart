@@ -49,11 +49,12 @@ class CreateCollectionViewModel extends ChangeNotifier {
             name: collectionName!,
             description: description,
             itemsCount: 0,
-            imageUrl: uploadedImage?.path,
+            imageUrl: null,
             lastUpdated: DateTime.now(),
             category: category,
           );
-          await collectionRepository.createCollection(newCollection);
+          await collectionRepository.createCollection(
+              newCollection, uploadedImage);
         }
       },
       initialValue: null,
@@ -65,6 +66,7 @@ class CreateCollectionViewModel extends ChangeNotifier {
             await _imagePicker.pickImage(source: ImageSource.gallery);
         if (pickedFile != null) {
           uploadedImage = File(pickedFile.path);
+          notifyListeners();
         }
         return uploadedImage;
       },

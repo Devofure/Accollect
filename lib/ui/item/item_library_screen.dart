@@ -1,6 +1,7 @@
 import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
+import 'package:accollect/ui/widgets/common.dart';
 import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -34,7 +35,7 @@ class ItemLibraryScreen extends StatelessWidget {
                     return _buildLoadingState();
                   }
                   if (snapshot.hasError) {
-                    return _buildErrorState(snapshot.error.toString());
+                    return buildErrorState(snapshot.error.toString());
                   }
                   final items = snapshot.data ?? [];
                   return items.isEmpty
@@ -135,26 +136,6 @@ class ItemLibraryScreen extends StatelessWidget {
             style: TextStyle(color: Colors.white70, fontSize: 18),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String errorMessage) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error, color: Colors.red, size: 48),
-            const SizedBox(height: 8),
-            Text(
-              errorMessage,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.redAccent, fontSize: 16),
-            ),
-          ],
-        ),
       ),
     );
   }

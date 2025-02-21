@@ -1,6 +1,7 @@
 import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
+import 'package:accollect/ui/widgets/common.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +34,7 @@ class CollectionScreen extends StatelessWidget {
                     return _buildLoadingGrid();
                   }
                   if (snapshot.hasError) {
-                    return _buildErrorState(snapshot.error.toString());
+                    return buildErrorState(snapshot.error.toString());
                   }
                   final items = snapshot.data ?? [];
                   return items.isEmpty
@@ -148,22 +149,6 @@ class CollectionScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         margin: const EdgeInsets.all(8),
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String errorMessage) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(errorMessage, style: const TextStyle(color: Colors.white)),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {}, // TODO: Implement retry logic
-            child: const Text('Retry'),
-          ),
-        ],
       ),
     );
   }

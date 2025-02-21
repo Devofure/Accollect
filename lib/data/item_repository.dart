@@ -98,13 +98,18 @@ class ItemRepository implements IItemRepository {
 
   Future<List<String>> _uploadImagesToFirebase(List<File> images) async {
     List<String> imageUrls = [];
-    for (var image in images) {
-      final ref = _storage
-          .ref()
-          .child('items/${DateTime.now().millisecondsSinceEpoch}.jpg');
-      await ref.putFile(image);
-      final url = await ref.getDownloadURL();
-      imageUrls.add(url);
+    try {
+      for (var image in images) {
+        final ref = _storage
+            .ref()
+            .child('items/${DateTime.now().millisecondsSinceEpoch}.jpg');
+        await ref.putFile(image);
+        final url = await ref.getDownloadURL();
+        imageUrls.add(url);
+      }
+    } catch (e) {
+      // TODO silently fail for now because Storage cost
+      print('Error uploading images: $e');
     }
     return imageUrls;
   }

@@ -4,12 +4,16 @@ import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/collection_repository.dart';
 import 'package:accollect/data/item_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_command/flutter_command.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final firebaseService = FirebaseService();
   await firebaseService.initialize();
+  Command.globalExceptionHandler = (command, exception) {
+    debugPrint("Error in Command: ${command.commandName}: $exception");
+  };
 
   runApp(
     MultiProvider(
