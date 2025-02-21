@@ -44,7 +44,7 @@ class AppRouterConfig {
             path: AppRouter.onboardingRoute,
             builder: (_, __) => const OnboardingScreen()),
         GoRoute(
-          path: AppRouter.signupRoute,
+          path: AppRouter.signInRoute,
           builder: (_, __) => SignInScreen(
             providers: providers,
             actions: [
@@ -53,6 +53,18 @@ class AppRouterConfig {
               }),
             ],
             headerBuilder: (_, __, ___) => const SignInHeader(),
+          ),
+        ),
+        GoRoute(
+          path: AppRouter.profileRoute,
+          builder: (_, __) => ProfileScreen(
+            providers: providers,
+            actions: [
+              SignedOutAction((context) {
+                context.go(AppRouter.signInRoute);
+              }),
+            ],
+            showDeleteConfirmationDialog: true,
           ),
         ),
         GoRoute(
@@ -173,7 +185,8 @@ class AppRouterConfig {
 
 class AppRouter {
   static const String onboardingRoute = '/';
-  static const String signupRoute = '/signup';
+  static const String signInRoute = '/sign-in';
+  static const String profileRoute = '/profile';
   static const String homeRoute = '/home';
   static const String settingsRoute = '/settings';
   static const String settingsCollectionsRoute = '/settings/collections';

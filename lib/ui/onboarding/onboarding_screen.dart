@@ -73,7 +73,7 @@ class OnboardingScreen extends StatelessWidget {
               CustomButton(
                 text: 'Start Tracking',
                 onPressed: () {
-                  context.go(AppRouter.signupRoute);
+                  context.go(AppRouter.signInRoute);
                 },
               ),
             ],
