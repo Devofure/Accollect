@@ -16,8 +16,6 @@ Funko Pops, Lego,** or anything else, Accollect helps you stay organized.
 ✔ **Firebase Integration** – Authentication and Firestore-based data storage.  
 ✔ **Custom Categories & Attributes** – Organize items with custom categories.
 
----
-
 ## 📂 Project Architecture
 
 The project follows the **MVVM (Model-View-ViewModel) Architecture**, ensuring **separation of
@@ -39,7 +37,23 @@ Flutter recommendation: https://docs.flutter.dev/app-architecture
    - **Widgets** (UI components, responsive designs, and animations).
    - **Navigation** using **GoRouter**.
 
----
+## 📦 Folder Structure
+
+Following **best practices** for **scalability and maintainability**, the folder structure is:
+
+```
+📂 lib/
+ ┣ 📂 core/              # App-wide utilities & navigation (GoRouter)
+ ┣ 📂 data/              # Data layer (Repositories & Firebase integrations)
+ ┣ 📂 domain/            # Business logic (Models & Interfaces)
+ ┣ 📂 ui/                # Presentation layer (Screens, ViewModels & Widgets)
+ ┃ ┣ 📂 widgets/        # Shared UI components (Buttons, Cards, etc.)
+ ┃ ┣ 📂 home/           # Home screen & ViewModel
+ ┃ ┣ 📂 onboarding/     # Onboarding UI & logic
+ ┃ ┣ 📂 collection/     # Collection management UI & ViewModel
+ ┃ ┣ 📂 item/           # Item details UI & ViewModel
+ ┣ 📂 main.dart         # App entry point
+```
 
 ## 📚 Database Structure (Firestore)
 
@@ -72,8 +86,6 @@ follows:
 - **meta** → Stores globally available static categories.
 - **categoryAttributes** → Stores **custom fields** for each category.
 
----
-
 ## 🛠️ Tech Stack
 
 - **Flutter** (Latest stable version)
@@ -82,28 +94,6 @@ follows:
 - **GoRouter** (Navigation)
 - **Firebase** (Authentication, Firestore, Storage)
 - **Flutter Command** (Reactive ViewModels)
-
----
-
-## 📦 Folder Structure
-
-Following **best practices** for **scalability and maintainability**, the folder structure is:
-
-```
-📂 lib/
- ┣ 📂 core/              # App-wide utilities & navigation (GoRouter)
- ┣ 📂 data/              # Data layer (Repositories & Firebase integrations)
- ┣ 📂 domain/            # Business logic (Models & Interfaces)
- ┣ 📂 ui/                # Presentation layer (Screens, ViewModels & Widgets)
- ┃ ┣ 📂 widgets/        # Shared UI components (Buttons, Cards, etc.)
- ┃ ┣ 📂 home/           # Home screen & ViewModel
- ┃ ┣ 📂 onboarding/     # Onboarding UI & logic
- ┃ ┣ 📂 collection/     # Collection management UI & ViewModel
- ┃ ┣ 📂 item/           # Item details UI & ViewModel
- ┣ 📂 main.dart         # App entry point
-```
-
----
 
 ## 📱 Screenshots
 
