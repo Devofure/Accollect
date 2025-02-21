@@ -54,10 +54,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  mockito: ^5.3.0
+  mockito: ^5.4.5
   integration_test:
     sdk: flutter
-  firebase_core_platform_interface: ^5.0.0
+  firebase_core_platform_interface: ^5.4.0
   plugin_platform_interface: ^2.1.8
 
   # The "flutter_lints" package below contains a set of recommended lints to

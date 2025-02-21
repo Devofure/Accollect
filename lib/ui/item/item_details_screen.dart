@@ -1,11 +1,9 @@
-import 'package:accollect/domain/models/category_attributes_model.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/item/item_details_view_model.dart';
 import 'package:accollect/ui/widgets/common.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -62,7 +60,7 @@ class ItemDetailScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildImageCarousel(item.imageUrls ?? []),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildDetailRow('Name', item.title),
           _buildDetailRow('Category', item.category ?? 'No category'),
           _buildDetailRow('Added On', _formatDate(item.addedOn)),
@@ -74,7 +72,7 @@ class ItemDetailScreen extends StatelessWidget {
             _buildDetailRow('Notes', item.notes!),
           if (item.collectionName?.isNotEmpty == true)
             _buildDetailRow('Collection', item.collectionName!),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           _buildAdditionalAttributesSection(item),
         ],
       ),
@@ -85,9 +83,35 @@ class ItemDetailScreen extends StatelessWidget {
     if (imageUrls.isEmpty) {
       return _buildItemImage(null);
     }
-    return CarouselSlider(
-      options: CarouselOptions(height: 300, enableInfiniteScroll: false),
-      items: imageUrls.map((imageUrl) => _buildItemImage(imageUrl)).toList(),
+    return Column(
+      children: [
+        CarouselSlider(
+          options: CarouselOptions(
+            height: 300,
+            enableInfiniteScroll: false,
+            enlargeCenterPage: true,
+            viewportFraction: 0.9,
+            autoPlay: true,
+          ),
+          items:
+              imageUrls.map((imageUrl) => _buildItemImage(imageUrl)).toList(),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: imageUrls.asMap().entries.map((entry) {
+            return Container(
+              width: 8,
+              height: 8,
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.5),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
@@ -106,50 +130,27 @@ class ItemDetailScreen extends StatelessWidget {
   }
 
   Widget _buildAdditionalAttributesSection(ItemUIModel item) {
-    return FutureBuilder<CategoryAttributesModel?>(
-      future: _fetchCategoryAttributes(item.category),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: CircularProgressIndicator(),
-          );
-        }
-        if (snapshot.hasError || !snapshot.hasData) {
-          return const SizedBox.shrink();
-        }
-        final catAttributes = snapshot.data!;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Additional Information',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ...catAttributes.attributes.map((attrDef) {
-              final value = item.additionalAttributes?[attrDef.field] ?? 'N/A';
-              return _buildDetailRow(attrDef.label, value.toString());
-            }),
-          ],
-        );
-      },
+    if (item.additionalAttributes == null ||
+        item.additionalAttributes!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Additional Information',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...item.additionalAttributes!.entries.map((entry) {
+          return _buildDetailRow(entry.key, entry.value.toString());
+        }).toList(),
+      ],
     );
-  }
-
-  Future<CategoryAttributesModel?> _fetchCategoryAttributes(
-      String? category) async {
-    if (category == null) return null;
-    final doc = await FirebaseFirestore.instance
-        .collection('categoryAttributes')
-        .doc(category)
-        .get();
-    if (!doc.exists) return null;
-    return CategoryAttributesModel.fromJson(doc.data() as Map<String, dynamic>);
   }
 
   Widget _buildDetailRow(String label, String value) {
@@ -179,17 +180,37 @@ class ItemDetailScreen extends StatelessWidget {
           backgroundColor: Colors.grey[850],
           title: const Text('Confirm Delete',
               style: TextStyle(color: Colors.white)),
-          content: const Text('Are you sure you want to delete this item?',
-              style: TextStyle(color: Colors.white)),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Are you sure you want to delete this item?',
+                style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(height: 10),
+              Text(
+                'This action cannot be undone.',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ],
+          ),
           actions: [
             TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(),
                 child: const Text('Cancel',
                     style: TextStyle(color: Colors.white))),
             TextButton(
-                onPressed: () async => Navigator.of(dialogContext).pop(),
-                child: const Text('Delete',
-                    style: TextStyle(color: Colors.redAccent))),
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                await viewModel.deleteItem();
+              },
+              child:
+                  const Text('Delete', style: TextStyle(color: Colors.white)),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+              ),
+            ),
           ],
         );
       },
