@@ -117,7 +117,7 @@ class CollectionScreen extends StatelessWidget {
           return ItemPortraitTile(
             item: item,
             onTap: () {
-              context.pushWithParams(AppRouter.itemDetailsRoute, [item.key]);
+              context.push(AppRouter.itemDetailsRoute, extra: item);
             },
             menuOptions: [
               PopupMenuItem(

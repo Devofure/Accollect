@@ -3,16 +3,37 @@ import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:flutter/foundation.dart';
 
 class ItemDetailViewModel extends ChangeNotifier {
-  final String itemKey;
   final IItemRepository repository;
+  ItemUIModel item;
+  String? errorMessage;
   late final Stream<ItemUIModel?> itemStream;
 
-  ItemDetailViewModel({required this.itemKey, required this.repository}) {
-    itemStream = repository.fetchItemStream(itemKey);
+  ItemDetailViewModel({
+    required this.repository,
+    required ItemUIModel initialItem,
+  }) : item = initialItem {
+    _initializeStream();
+  }
+
+  void _initializeStream() {
+    itemStream = repository.fetchItemStream(item.key);
+    itemStream.listen((updatedItem) {
+      if (updatedItem != null) {
+        item = updatedItem;
+        notifyListeners();
+      }
+    }, onError: (error) {
+      errorMessage = "Failed to load item";
+      notifyListeners();
+    });
   }
 
   Future<void> deleteItem() async {
-    await repository.deleteItem(itemKey);
+    try {
+      await repository.deleteItem(item.key);
+    } catch (e) {
+      errorMessage = "Failed to delete item";
+    }
     notifyListeners();
   }
 }

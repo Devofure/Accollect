@@ -1,5 +1,4 @@
 import 'package:accollect/core/app_router.dart';
-import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/domain/models/collection_ui_model.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/widgets/collection_tile.dart';
@@ -191,8 +190,7 @@ class HomeScreen extends StatelessWidget {
                 child: LatestAddedItemTile(
                   item: item,
                   onTap: () {
-                    context
-                        .pushWithParams(AppRouter.itemDetailsRoute, [item.key]);
+                    context.push(AppRouter.itemDetailsRoute, extra: item);
                   },
                 ),
               );

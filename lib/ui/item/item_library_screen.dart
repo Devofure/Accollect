@@ -1,5 +1,4 @@
 import 'package:accollect/core/app_router.dart';
-import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/widgets/common.dart';
 import 'package:accollect/ui/widgets/item_tile_portrait.dart';
@@ -119,10 +118,9 @@ class ItemLibraryScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final item = items[index];
           return ItemPortraitTile(
-            item: item,
-            onTap: () =>
-                context.pushWithParams(AppRouter.itemDetailsRoute, [item.key]),
-          );
+              item: item,
+              onTap: () =>
+                  context.push(AppRouter.itemDetailsRoute, extra: item));
         },
       ),
     );

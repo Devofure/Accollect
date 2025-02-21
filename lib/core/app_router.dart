@@ -3,6 +3,7 @@ import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/collection_repository.dart';
 import 'package:accollect/data/item_repository.dart';
 import 'package:accollect/domain/models/collection_ui_model.dart';
+import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/auth/sign_in_header.dart';
 import 'package:accollect/ui/collection/collection_screen.dart';
 import 'package:accollect/ui/collection/collection_view_model.dart';
@@ -136,22 +137,10 @@ class AppRouterConfig {
         GoRoute(
           path: AppRouter.itemDetailsRoute,
           builder: (context, state) {
-            final itemKey = state.pathParameters['key'];
-            if (itemKey == null) {
-              return const Scaffold(
-                backgroundColor: Colors.black,
-                body: Center(
-                  child: Text(
-                    'Invalid item key',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              );
-            }
-
+            final item = state.extra as ItemUIModel;
             return ChangeNotifierProvider(
               create: (_) => ItemDetailViewModel(
-                itemKey: itemKey,
+                initialItem: item,
                 repository: context.read<IItemRepository>(),
               ),
               child: const ItemDetailScreen(),
@@ -193,5 +182,5 @@ class AppRouter {
   static const String itemLibraryRoute = '/item-library';
   static const String createNewItemRoute = '/add-new-item';
   static const String collectionRoute = '/collection';
-  static const String itemDetailsRoute = '/item-details/:key';
+  static const String itemDetailsRoute = '/item-details';
 }
