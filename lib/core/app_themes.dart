@@ -4,7 +4,7 @@ class AppTheme {
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.indigo, // 🌟 Indigo for a bold, modern look
+      seedColor: Colors.indigo,
       brightness: Brightness.light,
     ),
     textTheme: TextTheme(

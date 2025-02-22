@@ -36,4 +36,19 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Stream<User?> get userChanges => firebaseService.userChanges;
+
+  placeholderAsset(String? category) {
+    switch (category) {
+      case 'Lego':
+        return 'assets/images/category_funko_pop.png';
+      case "Funko Pop!":
+        return 'assets/images/category_funko_pop.png';
+      case "Hot Wheels":
+        return 'assets/images/category_hot_wheels.png';
+      case "Wine":
+        return 'assets/images/category_wine.png';
+      default:
+        return 'assets/images/category_other.png';
+    }
+  }
 }

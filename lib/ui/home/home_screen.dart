@@ -56,7 +56,8 @@ class HomeScreen extends StatelessWidget {
                       }
                       final groupedItems = latestItemsSnapshot.data ?? {};
 
-                      return _buildContent(context, collections, groupedItems);
+                      return _buildContent(
+                          context, collections, groupedItems, viewModel);
                     },
                   );
                 },
@@ -156,7 +157,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, List collections,
-      Map<String, List<ItemUIModel>> groupedItems) {
+      Map<String, List<ItemUIModel>> groupedItems, HomeViewModel viewModel) {
     final theme = Theme.of(context);
 
     return Padding(
@@ -176,9 +177,11 @@ class HomeScreen extends StatelessWidget {
             SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final collection = collections[index];
+                  final CollectionUIModel collection = collections[index];
                   return CollectionTile(
                     collection: collection,
+                    placeholderAsset:
+                        viewModel.placeholderAsset(collection.category),
                     onTap: () => context.push(
                       AppRouter.collectionRoute,
                       extra: collection,

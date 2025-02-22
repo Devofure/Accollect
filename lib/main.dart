@@ -1,14 +1,13 @@
 import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/app_themes.dart';
 import 'package:accollect/core/firebase_service.dart';
+import 'package:accollect/core/utils/theme_provider.dart';
 import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/collection_repository.dart';
 import 'package:accollect/data/item_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:provider/provider.dart';
-
-import 'core/utils/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

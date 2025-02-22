@@ -6,13 +6,13 @@ import 'package:intl/intl.dart';
 class CollectionTile extends StatelessWidget {
   final CollectionUIModel collection;
   final VoidCallback onTap;
-  final bool isSquareTile;
+  final String? placeholderAsset;
 
   const CollectionTile({
     super.key,
     required this.collection,
     required this.onTap,
-    this.isSquareTile = false,
+    this.placeholderAsset,
   });
 
   @override
@@ -44,9 +44,7 @@ class CollectionTile extends StatelessWidget {
                 ),
               ],
             ),
-            child: isSquareTile
-                ? _buildSquareTile(context, theme)
-                : _buildListTile(context, theme),
+            child: _buildListTile(context, theme),
           ),
           if (collection.category?.isNotEmpty == true)
             Positioned(
@@ -62,7 +60,11 @@ class CollectionTile extends StatelessWidget {
   Widget _buildListTile(BuildContext context, ThemeData theme) {
     return Row(
       children: [
-        _buildCollectionImage(theme),
+        circularImageWidget(
+          collection.imageUrl,
+          placeholderAsset: placeholderAsset,
+          size: 80,
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -120,42 +122,6 @@ class CollectionTile extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  Widget _buildSquareTile(BuildContext context, ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Stack(
-          alignment: Alignment.topRight,
-          children: [
-            _buildCollectionImage(theme, size: 80),
-            if (collection.isFavorite == true)
-              Positioned(
-                top: 6,
-                right: 6,
-                child: _buildFavoriteIcon(theme),
-              ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          collection.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 3),
-        _buildItemCountBadge(theme),
-      ],
-    );
-  }
-
-  Widget _buildCollectionImage(ThemeData theme, {double size = 90}) {
-    return circularImageWidget(collection.imageUrl, size: size);
   }
 
   Widget _buildFavoriteIcon(ThemeData theme) {

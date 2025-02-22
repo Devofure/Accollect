@@ -115,13 +115,20 @@ Widget buildEmptyState({
   );
 }
 
-Widget circularImageWidget(String? imageUrl, {double size = 90}) {
+Widget circularImageWidget(
+  String? imageUrl, {
+  double size = 90,
+  String? placeholderAsset,
+}) {
   return Builder(
     builder: (context) {
       final theme = Theme.of(context);
+
+      // If no image URL, use the passed placeholder
       if (imageUrl == null || imageUrl.trim().isEmpty) {
-        return _buildPlaceholder(size, theme);
+        return _buildImagePlaceholder(size, theme, placeholderAsset);
       }
+
       return ClipOval(
         child: Image.network(
           imageUrl,
@@ -129,13 +136,11 @@ Widget circularImageWidget(String? imageUrl, {double size = 90}) {
           height: size,
           fit: BoxFit.cover,
           loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) {
-              return child;
-            }
-            return _buildPlaceholder(size, theme);
+            if (loadingProgress == null) return child;
+            return _buildImagePlaceholder(size, theme, placeholderAsset);
           },
           errorBuilder: (context, error, stackTrace) {
-            return _buildPlaceholder(size, theme);
+            return _buildImagePlaceholder(size, theme, placeholderAsset);
           },
         ),
       );
@@ -143,19 +148,22 @@ Widget circularImageWidget(String? imageUrl, {double size = 90}) {
   );
 }
 
-Widget _buildPlaceholder(double size, ThemeData theme) {
+Widget _buildImagePlaceholder(double size, ThemeData theme, String? assetPath) {
   return SizedBox(
     width: size,
     height: size,
     child: ClipOval(
-      child: Container(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-        child: Icon(
-          Icons.image,
-          color: theme.colorScheme.onSurfaceVariant,
-          size: size * 0.4, // For example, 40 if size=100
-        ),
-      ),
+      child: assetPath != null
+          ? Image.asset(assetPath, width: size, height: size, fit: BoxFit.cover)
+          : Container(
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.2),
+              child: Icon(
+                Icons.image,
+                color: theme.colorScheme.onSurfaceVariant,
+                size: size * 0.4,
+              ),
+            ),
     ),
   );
 }
