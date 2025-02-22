@@ -1,7 +1,6 @@
 import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
-import 'package:accollect/ui/widgets/adaptive_header_widget.dart';
 import 'package:accollect/ui/widgets/common.dart';
 import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +34,7 @@ class CollectionScreen extends StatelessWidget {
       BuildContext context, ThemeData theme, CollectionViewModel viewModel) {
     return SliverAppBar(
       pinned: true,
-      expandedHeight: 200,
+      expandedHeight: 150,
       leading: BackButton(color: theme.colorScheme.onSurface),
       actions: [
         IconButton(
@@ -51,22 +50,51 @@ class CollectionScreen extends StatelessWidget {
       ],
       flexibleSpace: LayoutBuilder(
         builder: (context, constraints) {
-          final currentHeight = constraints.biggest.height;
-          final double minHeight = kToolbarHeight;
-          final double maxHeight = 200;
-          final double expandedPercentage =
-              ((currentHeight - minHeight) / (maxHeight - minHeight))
-                  .clamp(0.0, 1.0);
+          var imageUrl = viewModel.collection.imageUrl;
+          var title = viewModel.collection.name;
+          var subTitle = viewModel.collection.category;
+          var imageSize = 48.0;
+          var titleFontSize = 18.0;
+          var subTitleFontSize = 14.0;
           return FlexibleSpaceBar(
             collapseMode: CollapseMode.pin,
             centerTitle: false,
             titlePadding: const EdgeInsets.only(left: 48, bottom: 8),
-            title: AdaptiveHeader(
-              expandedPercentage: expandedPercentage,
-              theme: theme,
-              title: viewModel.collection.name,
-              subTitle: viewModel.collection.category,
-              imageUrl: viewModel.collection.imageUrl,
+            title: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                circularImageWidget(
+                  imageUrl,
+                  size: imageSize,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontSize: titleFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (subTitle != null && subTitle.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          subTitle,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontSize: subTitleFontSize,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
           );
         },
