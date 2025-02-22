@@ -17,54 +17,52 @@ class CollectionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: onTap,
       child: Stack(
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-            padding: const EdgeInsets.all(6),
+            margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.grey[850],
+              color: isDarkMode
+                  ? theme.colorScheme.surface
+                  : theme.colorScheme.surfaceContainerHighest,
               borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(45),
                 right: Radius.circular(14),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
+                  color: theme.shadowColor.withValues(alpha: 0.1),
                   blurRadius: 6,
                   offset: const Offset(2, 4),
                 ),
               ],
             ),
             child: isSquareTile
-                ? _buildSquareTile(context)
-                : _buildListTile(context),
+                ? _buildSquareTile(context, theme)
+                : _buildListTile(context, theme),
           ),
-          if (collection.category != null && collection.category!.isNotEmpty)
+          if (collection.category?.isNotEmpty == true)
             Positioned(
-              top: 4,
-              right: 4,
-              child: Chip(
-                label: Text(
-                  collection.category!,
-                  style: const TextStyle(fontSize: 12, color: Colors.white),
-                ),
-                backgroundColor: Colors.grey[700],
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-              ),
+              top: 8,
+              right: 8,
+              child: buildCategoryChip(theme, collection.category!),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildListTile(BuildContext context) {
+  Widget _buildListTile(BuildContext context, ThemeData theme) {
     return Row(
       children: [
-        circularImageWidget(collection.imageUrl, size: 90),
+        _buildCollectionImage(theme),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -77,14 +75,13 @@ class CollectionTile extends StatelessWidget {
                       collection.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                   ),
-                  if (collection.isFavorite == true) _buildFavoriteIcon(),
+                  if (collection.isFavorite == true) _buildFavoriteIcon(theme),
                 ],
               ),
               const SizedBox(height: 3),
@@ -94,17 +91,28 @@ class CollectionTile extends StatelessWidget {
                     : 'No description',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.grey, fontSize: 14),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Updated: ${_formatDate(collection.lastUpdated)}',
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today,
+                          size: 14, color: theme.hintColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Updated: ${_formatDate(collection.lastUpdated)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
-                  _buildItemCountBadge(),
+                  _buildItemCountBadge(theme),
                 ],
               ),
             ],
@@ -114,20 +122,19 @@ class CollectionTile extends StatelessWidget {
     );
   }
 
-  Widget _buildSquareTile(BuildContext context) {
+  Widget _buildSquareTile(BuildContext context, ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Stack(
           alignment: Alignment.topRight,
           children: [
-            circularImageWidget(collection.imageUrl, size: 80),
-            // ✅ Reused widget
+            _buildCollectionImage(theme, size: 80),
             if (collection.isFavorite == true)
               Positioned(
                 top: 6,
                 right: 6,
-                child: _buildFavoriteIcon(),
+                child: _buildFavoriteIcon(theme),
               ),
           ],
         ),
@@ -137,19 +144,25 @@ class CollectionTile extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
+          style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 3),
-        _buildItemCountBadge(),
+        _buildItemCountBadge(theme),
       ],
     );
   }
 
-  Widget _buildItemCountBadge() {
+  Widget _buildCollectionImage(ThemeData theme, {double size = 90}) {
+    return circularImageWidget(collection.imageUrl, size: size);
+  }
+
+  Widget _buildFavoriteIcon(ThemeData theme) {
+    return Icon(Icons.star, color: theme.colorScheme.secondary, size: 20);
+  }
+
+  Widget _buildItemCountBadge(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -157,17 +170,12 @@ class CollectionTile extends StatelessWidget {
       ),
       child: Text(
         '${collection.itemsCount}',
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: theme.colorScheme.primary,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
-  }
-
-  Widget _buildFavoriteIcon() {
-    return const Icon(Icons.star, color: Colors.yellow, size: 20);
   }
 
   String _formatDate(DateTime date) {

@@ -14,95 +14,145 @@ class CollectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<CollectionViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: _buildAppBar(context),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildCollectionHeader(viewModel),
-            Expanded(
-              child: StreamBuilder<List<ItemUIModel>>(
-                stream: viewModel.itemsStream,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return _buildLoadingGrid();
-                  }
-                  if (snapshot.hasError) {
-                    return buildErrorState(snapshot.error.toString());
-                  }
-                  final items = snapshot.data ?? [];
-                  return items.isEmpty
-                      ? buildEmptyState(
-                          title: 'No items in your collection.',
-                          description: 'Start by adding your first item!',
-                        )
-                      : _buildItemGrid(items, viewModel);
-                },
-              ),
-            ),
-          ],
-        ),
+      backgroundColor: theme.colorScheme.surface,
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          _buildSliverAppBar(context, theme, viewModel),
+        ],
+        body: _buildCollectionItems(viewModel, theme),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Colors.blueAccent,
-        onPressed: () => _navigateToAddOrSelectItemScreen(context, viewModel),
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text("Add Item", style: TextStyle(color: Colors.white)),
+      floatingActionButton:
+          _buildFloatingActionButton(context, viewModel, theme),
+    );
+  }
+
+  Widget _buildSliverAppBar(
+      BuildContext context, ThemeData theme, CollectionViewModel viewModel) {
+    return SliverAppBar(
+      pinned: true,
+      expandedHeight: 150,
+      leading: BackButton(color: theme.colorScheme.onSurface),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.more_vert, color: theme.colorScheme.onSurface),
+          onPressed: () {
+            // Handle your "More" action here:
+            showModalBottomSheet(
+              context: context,
+              builder: (context) => _buildMoreMenu(context, viewModel, theme),
+            );
+          },
+        ),
+      ],
+      flexibleSpace: LayoutBuilder(
+        builder: (context, constraints) {
+          var imageUrl = viewModel.collection.imageUrl;
+          var title = viewModel.collection.name;
+          var subTitle = viewModel.collection.category;
+          var imageSize = 48.0;
+          var titleFontSize = 18.0;
+          var subTitleFontSize = 14.0;
+          return FlexibleSpaceBar(
+            collapseMode: CollapseMode.pin,
+            centerTitle: false,
+            titlePadding: const EdgeInsets.only(left: 48, bottom: 8),
+            title: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                circularImageWidget(
+                  imageUrl,
+                  size: imageSize,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontSize: titleFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (subTitle != null && subTitle.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          subTitle,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontSize: subTitleFontSize,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildCollectionHeader(CollectionViewModel viewModel) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 8)
-        ],
-      ),
-      child: Row(
-        children: [
-          circularImageWidget(viewModel.collection.imageUrl, size: 90),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  viewModel.collection.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  viewModel.collection.category ?? "No category",
-                  style: TextStyle(color: Colors.grey[400], fontSize: 16),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+  Widget _buildMoreMenu(
+    BuildContext context,
+    CollectionViewModel viewModel,
+    ThemeData theme,
+  ) {
+    return Wrap(
+      children: [
+        ListTile(
+          leading: Icon(Icons.edit, color: theme.colorScheme.onSurface),
+          title: const Text('Edit collection'),
+          onTap: () {
+            // ...
+          },
+        ),
+        ListTile(
+          leading: Icon(Icons.delete, color: theme.colorScheme.onSurface),
+          title: const Text('Delete collection'),
+          onTap: () {
+            // ...
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCollectionItems(CollectionViewModel viewModel, ThemeData theme) {
+    return StreamBuilder<List<ItemUIModel>>(
+      stream: viewModel.itemsStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildLoadingGrid(theme);
+        }
+        if (snapshot.hasError) {
+          return buildErrorState(snapshot.error.toString());
+        }
+        final items = snapshot.data ?? [];
+        return items.isEmpty
+            ? buildEmptyState(
+                context: context,
+                title: 'No items in your collection.',
+                description: 'Start by adding your first item!',
+              )
+            : _buildItemGrid(items, viewModel, theme);
+      },
     );
   }
 
   Widget _buildItemGrid(
-      List<ItemUIModel> items, CollectionViewModel viewModel) {
+      List<ItemUIModel> items, CollectionViewModel viewModel, ThemeData theme) {
     return RefreshIndicator(
-      onRefresh: () async {
-        await viewModel.refreshData();
-      },
+      onRefresh: viewModel.refreshData,
       child: GridView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -116,16 +166,13 @@ class CollectionScreen extends StatelessWidget {
           final item = items[index];
           return ItemPortraitTile(
             item: item,
-            onTap: () {
-              context.push(AppRouter.itemDetailsRoute, extra: item);
-            },
+            onTap: () => context.push(AppRouter.itemDetailsRoute, extra: item),
             menuOptions: [
               PopupMenuItem(
                 value: 'remove',
                 child: const Text('Remove from collection'),
-                onTap: () {
-                  _confirmRemoveItem(context, viewModel, item.key);
-                },
+                onTap: () =>
+                    _confirmRemoveItem(context, viewModel, item.key, theme),
               ),
             ],
           );
@@ -134,7 +181,8 @@ class CollectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLoadingGrid() {
+  /// Builds the loading grid
+  Widget _buildLoadingGrid(ThemeData theme) {
     return GridView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -146,7 +194,7 @@ class CollectionScreen extends StatelessWidget {
       itemCount: 6,
       itemBuilder: (_, __) => Container(
         decoration: BoxDecoration(
-          color: Colors.grey[850],
+          color: theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         margin: const EdgeInsets.all(8),
@@ -154,21 +202,35 @@ class CollectionScreen extends StatelessWidget {
     );
   }
 
-  void _confirmRemoveItem(
-      BuildContext context, CollectionViewModel viewModel, String itemKey) {
+  Widget _buildFloatingActionButton(
+      BuildContext context, CollectionViewModel viewModel, ThemeData theme) {
+    return FloatingActionButton.extended(
+      backgroundColor: theme.colorScheme.primary,
+      onPressed: () => _navigateToAddOrSelectItemScreen(context, viewModel),
+      icon: Icon(Icons.add, color: theme.colorScheme.onPrimary),
+      label: Text("Add Item",
+          style: TextStyle(color: theme.colorScheme.onPrimary)),
+    );
+  }
+
+  void _confirmRemoveItem(BuildContext context, CollectionViewModel viewModel,
+      String itemKey, ThemeData theme) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[850],
-        title: const Text("Remove Item", style: TextStyle(color: Colors.white)),
-        content: const Text(
+        backgroundColor: theme.colorScheme.surface,
+        title: Text("Remove Item", style: theme.textTheme.titleMedium),
+        content: Text(
           "Are you sure you want to remove this item from the collection?",
-          style: TextStyle(color: Colors.white70),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel", style: TextStyle(color: Colors.white)),
+            child: Text("Cancel",
+                style: TextStyle(color: theme.colorScheme.primary)),
           ),
           TextButton(
             onPressed: () {
@@ -176,10 +238,11 @@ class CollectionScreen extends StatelessWidget {
               Navigator.pop(context);
             },
             style: TextButton.styleFrom(
-              backgroundColor: Colors.redAccent,
+              backgroundColor: theme.colorScheme.error,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
-            child: const Text("Remove", style: TextStyle(color: Colors.white)),
+            child: Text("Remove",
+                style: TextStyle(color: theme.colorScheme.onError)),
           ),
         ],
       ),
@@ -191,19 +254,6 @@ class CollectionScreen extends StatelessWidget {
     context.pushWithParams(
       AppRouter.addOrSelectItemRoute,
       [viewModel.collection.key, viewModel.collection.name],
-    );
-  }
-
-  AppBar _buildAppBar(BuildContext context) {
-    return AppBar(
-      backgroundColor: Colors.black,
-      title: const Text('Collection', style: TextStyle(color: Colors.white)),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () {
-          context.go(AppRouter.homeRoute);
-        },
-      ),
     );
   }
 }

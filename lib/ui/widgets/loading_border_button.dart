@@ -45,6 +45,15 @@ class LoadingBorderButtonState extends State<LoadingBorderButton>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final borderColor = isDarkMode
+        ? Colors.white.withValues(alpha: 0.7)
+        : Colors.black.withValues(alpha: 0.5);
+    final shadowColor = isDarkMode
+        ? Colors.white.withValues(alpha: 0.3)
+        : Colors.black.withValues(alpha: 0.3);
+
     return ValueListenableBuilder<bool>(
       valueListenable: widget.isExecuting,
       builder: (context, executing, child) {
@@ -55,13 +64,13 @@ class LoadingBorderButtonState extends State<LoadingBorderButton>
             border: executing
                 ? Border.all(
                     width: _glowAnimation.value,
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: borderColor,
                   )
                 : null,
             boxShadow: executing
                 ? [
                     BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.3),
+                      color: shadowColor,
                       blurRadius: _glowAnimation.value,
                       spreadRadius: 1.5,
                     ),
@@ -71,7 +80,7 @@ class LoadingBorderButtonState extends State<LoadingBorderButton>
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: widget.color,
-              foregroundColor: Colors.white,
+              foregroundColor: theme.colorScheme.onPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -84,15 +93,21 @@ class LoadingBorderButtonState extends State<LoadingBorderButton>
                 AnimatedOpacity(
                   opacity: executing ? 0.0 : 1.0,
                   duration: const Duration(milliseconds: 200),
-                  child: Text(widget.title),
+                  child: Text(
+                    widget.title,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onPrimary,
+                    ),
+                  ),
                 ),
                 if (executing)
-                  const SizedBox(
+                  SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: theme.colorScheme.onPrimary,
                     ),
                   ),
               ],

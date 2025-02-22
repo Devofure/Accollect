@@ -20,13 +20,17 @@ class AddOrSelectItemScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<AddOrSelectItemViewModel>();
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text('Add to Collection',
-            style: TextStyle(color: Colors.white)),
+        backgroundColor: theme.colorScheme.surface,
+        title: Text(
+          'Add to Collection',
+          style: TextStyle(color: theme.colorScheme.onSurface),
+        ),
       ),
       body: SafeArea(
         child: Stack(
@@ -51,11 +55,11 @@ class AddOrSelectItemScreen extends StatelessWidget {
                           description: 'Create a new item to get started.',
                         );
                       }
-                      return _buildItemList(viewModel, availableItems);
+                      return _buildItemList(viewModel, availableItems, theme);
                     },
                   ),
                 ),
-                _buildActionButtons(context, viewModel),
+                _buildActionButtons(context, viewModel, theme),
               ],
             ),
             StreamBuilder<bool>(
@@ -78,10 +82,12 @@ class AddOrSelectItemScreen extends StatelessWidget {
                     left: 0,
                     right: 0,
                     child: Container(
-                      color: Colors.red,
+                      color: theme.colorScheme.errorContainer,
                       padding: const EdgeInsets.all(8),
-                      child: Text(snapshot.data!,
-                          style: const TextStyle(color: Colors.white)),
+                      child: Text(
+                        snapshot.data!,
+                        style: TextStyle(color: theme.colorScheme.onError),
+                      ),
                     ),
                   );
                 }
@@ -96,27 +102,32 @@ class AddOrSelectItemScreen extends StatelessWidget {
 
   Widget _buildHeader(
       BuildContext context, AddOrSelectItemViewModel viewModel) {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(collectionName ?? '',
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            collectionName ?? '',
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
                 child: TextField(
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: theme.colorScheme.onSurface),
                   decoration: InputDecoration(
                     hintText: 'Filter items...',
-                    hintStyle: const TextStyle(color: Colors.grey),
+                    hintStyle:
+                        TextStyle(color: theme.colorScheme.onSurfaceVariant),
                     filled: true,
-                    fillColor: Colors.grey[800],
+                    fillColor: theme.colorScheme.surfaceContainerHighest,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -130,7 +141,8 @@ class AddOrSelectItemScreen extends StatelessWidget {
                 onPressed: () =>
                     _navigateToAddNewItemScreen(context, viewModel),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[800],
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  foregroundColor: theme.colorScheme.onPrimaryContainer,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -144,8 +156,8 @@ class AddOrSelectItemScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemList(
-      AddOrSelectItemViewModel viewModel, List<ItemUIModel> items) {
+  Widget _buildItemList(AddOrSelectItemViewModel viewModel,
+      List<ItemUIModel> items, ThemeData theme) {
     final availableItemsByCategory = _groupItemsByCategory(items);
     return ListView.builder(
       itemCount: availableItemsByCategory.length,
@@ -159,11 +171,13 @@ class AddOrSelectItemScreen extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(category,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold)),
+                child: Text(
+                  category,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
               ),
               const SizedBox(height: 8),
               GridView.builder(
@@ -195,8 +209,8 @@ class AddOrSelectItemScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(
-      BuildContext context, AddOrSelectItemViewModel viewModel) {
+  Widget _buildActionButtons(BuildContext context,
+      AddOrSelectItemViewModel viewModel, ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -204,8 +218,8 @@ class AddOrSelectItemScreen extends StatelessWidget {
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[800],
-                foregroundColor: Colors.white,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                foregroundColor: theme.colorScheme.onSurfaceVariant,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -219,8 +233,8 @@ class AddOrSelectItemScreen extends StatelessWidget {
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -244,8 +258,7 @@ class AddOrSelectItemScreen extends StatelessWidget {
   }
 
   Map<String, List<ItemUIModel>> _groupItemsByCategory(
-    List<ItemUIModel> items,
-  ) {
+      List<ItemUIModel> items) {
     final Map<String, List<ItemUIModel>> groupedItems = {};
     for (final item in items) {
       final category = item.category ?? "Uncategorized";

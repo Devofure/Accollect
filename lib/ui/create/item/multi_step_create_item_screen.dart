@@ -19,13 +19,17 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<MultiStepCreateItemViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text('Create Item', style: TextStyle(color: Colors.white)),
+        backgroundColor: theme.colorScheme.surface,
+        title: Text(
+          'Create Item',
+          style: TextStyle(color: theme.colorScheme.onSurface),
+        ),
       ),
       body: Form(
         key: viewModel.formKey,
@@ -37,27 +41,9 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
                 currentStep: _currentStep,
                 onStepTapped: (step) => setState(() => _currentStep = step),
                 steps: [
-                  Step(
-                    title: const Text('Images',
-                        style: TextStyle(color: Colors.white)),
-                    isActive: _currentStep >= 0,
-                    state: _stepState(0),
-                    content: const StepImagesWidget(),
-                  ),
-                  Step(
-                    title: const Text('Details',
-                        style: TextStyle(color: Colors.white)),
-                    isActive: _currentStep >= 1,
-                    state: _stepState(1),
-                    content: const StepDetailsWidget(),
-                  ),
-                  Step(
-                    title: const Text('Category',
-                        style: TextStyle(color: Colors.white)),
-                    isActive: _currentStep >= 2,
-                    state: _stepState(2),
-                    content: const StepCategoryWidget(),
-                  ),
+                  _buildStep(theme, 'Images', 0, const StepImagesWidget()),
+                  _buildStep(theme, 'Details', 1, const StepDetailsWidget()),
+                  _buildStep(theme, 'Category', 2, const StepCategoryWidget()),
                 ],
                 controlsBuilder: (context, details) => const SizedBox.shrink(),
               ),
@@ -65,74 +51,92 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.black,
-        elevation: 8,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (_currentStep > 0)
-                ElevatedButton(
-                  onPressed: () => setState(() => _currentStep--),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[800],
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Back'),
+      bottomNavigationBar: _buildBottomBar(context, viewModel, theme),
+    );
+  }
+
+  Step _buildStep(
+      ThemeData theme, String title, int stepIndex, Widget content) {
+    return Step(
+      title: Text(
+        title,
+        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+      ),
+      isActive: _currentStep >= stepIndex,
+      state: _stepState(stepIndex),
+      content: content,
+    );
+  }
+
+  Widget _buildBottomBar(BuildContext context,
+      MultiStepCreateItemViewModel viewModel, ThemeData theme) {
+    return BottomAppBar(
+      color: theme.colorScheme.surface,
+      elevation: 8,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (_currentStep > 0)
+              ElevatedButton(
+                onPressed: () => setState(() => _currentStep--),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  foregroundColor: theme.colorScheme.onSurfaceVariant,
                 ),
-              if (_currentStep < 2)
-                ElevatedButton(
-                  onPressed: () => setState(() => _currentStep++),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Next'),
-                )
-              else
-                ElevatedButton(
-                  onPressed: _isSaving
-                      ? null
-                      : () async {
-                          final currentContext = context;
-                          final formState = viewModel.formKey.currentState;
-                          if (formState == null || !formState.validate()) {
-                            debugPrint("🚨 Form validation failed!");
-                            return;
-                          }
-                          formState.save();
-                          setState(() => _isSaving = true);
-                          try {
-                            await viewModel.saveItemCommand.executeWithFuture();
-                            if (mounted) {
-                              setState(() => _isSaving = false);
-                            }
-                            if (currentContext.mounted) {
-                              Navigator.pop(currentContext);
-                            }
-                          } finally {
-                            if (mounted) setState(() => _isSaving = false);
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(color: Colors.white),
-                        )
-                      : const Text('Finish'),
+                child: const Text('Back'),
+              ),
+            if (_currentStep < 2)
+              ElevatedButton(
+                onPressed: () => setState(() => _currentStep++),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
                 ),
-            ],
-          ),
+                child: const Text('Next'),
+              )
+            else
+              ElevatedButton(
+                onPressed: _isSaving ? null : () => _saveItem(viewModel),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.secondary,
+                  foregroundColor: theme.colorScheme.onSecondary,
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(),
+                      )
+                    : const Text('Finish'),
+              ),
+          ],
         ),
       ),
     );
+  }
+
+  void _saveItem(MultiStepCreateItemViewModel viewModel) async {
+    final formState = viewModel.formKey.currentState;
+    if (formState == null || !formState.validate()) {
+      debugPrint("🚨 Form validation failed!");
+      return;
+    }
+    formState.save();
+    final navigator = Navigator.of(context);
+    setState(() => _isSaving = true);
+    try {
+      await viewModel.saveItemCommand.executeWithFuture();
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+      if (mounted) {
+        navigator.pop();
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   StepState _stepState(int stepIndex) {

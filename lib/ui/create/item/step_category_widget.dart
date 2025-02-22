@@ -7,13 +7,18 @@ class StepCategoryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<MultiStepCreateItemViewModel>();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Select a Category',
-          style: TextStyle(color: Colors.white, fontSize: 16),
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 12),
         ValueListenableBuilder<List<String>>(
@@ -27,25 +32,30 @@ class StepCategoryWidget extends StatelessWidget {
                 final isSelected = cat == viewModel.selectedCategory;
                 return GestureDetector(
                   onTap: () => viewModel.setCategory(cat),
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(
                         vertical: 12, horizontal: 16),
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.blue : Colors.grey[800],
+                      color: isSelected
+                          ? theme.colorScheme.primaryContainer
+                          : theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color:
-                            isSelected ? Colors.blueAccent : Colors.transparent,
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : Colors.transparent,
                         width: 2,
                       ),
                     ),
                     child: Text(
                       cat,
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.white70,
-                        fontSize: 14,
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected
+                            ? theme.colorScheme.onPrimaryContainer
+                            : theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -55,9 +65,11 @@ class StepCategoryWidget extends StatelessWidget {
           },
         ),
         const SizedBox(height: 16),
-        const Text(
+        Text(
           'Tap a category to select it.',
-          style: TextStyle(color: Colors.grey, fontSize: 14),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );

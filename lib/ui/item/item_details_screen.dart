@@ -13,14 +13,15 @@ class ItemDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<ItemDetailViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        title:
-            const Text('Item Details', style: TextStyle(color: Colors.white)),
+        backgroundColor: theme.colorScheme.surface,
+        title: Text('Item Details',
+            style: TextStyle(color: theme.colorScheme.onSurface)),
       ),
       body: SafeArea(
         child: StreamBuilder<ItemUIModel?>(
@@ -39,49 +40,49 @@ class ItemDetailScreen extends StatelessWidget {
                 description: 'This item might have been deleted or moved.',
               );
             }
-            return _buildItemDetails(item);
+            return _buildItemDetails(item, theme);
           },
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Colors.redAccent,
-        foregroundColor: Colors.white,
-        onPressed: () => _confirmDelete(context, viewModel),
+        backgroundColor: theme.colorScheme.error,
+        foregroundColor: theme.colorScheme.onError,
+        onPressed: () => _confirmDelete(context, viewModel, theme),
         icon: const Icon(Icons.delete),
         label: const Text('Delete Item'),
       ),
     );
   }
 
-  Widget _buildItemDetails(ItemUIModel item) {
+  Widget _buildItemDetails(ItemUIModel item, ThemeData theme) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildImageCarousel(item.imageUrls ?? []),
+          _buildImageCarousel(item.imageUrls ?? [], theme),
           const SizedBox(height: 20),
-          _buildDetailRow('Name', item.title),
-          _buildDetailRow('Category', item.category ?? 'No category'),
-          _buildDetailRow('Added On', _formatDate(item.addedOn)),
+          _buildDetailRow('Name', item.title, theme),
+          _buildDetailRow('Category', item.category ?? 'No category', theme),
+          _buildDetailRow('Added On', _formatDate(item.addedOn), theme),
           if (item.description?.isNotEmpty == true)
-            _buildDetailRow('Description', item.description!),
+            _buildDetailRow('Description', item.description!, theme),
           if (item.originalPrice?.isNotEmpty == true)
-            _buildDetailRow('Original Price', item.originalPrice!),
+            _buildDetailRow('Original Price', item.originalPrice!, theme),
           if (item.notes?.isNotEmpty == true)
-            _buildDetailRow('Notes', item.notes!),
+            _buildDetailRow('Notes', item.notes!, theme),
           if (item.collectionName?.isNotEmpty == true)
-            _buildDetailRow('Collection', item.collectionName!),
+            _buildDetailRow('Collection', item.collectionName!, theme),
           const SizedBox(height: 20),
-          _buildAdditionalAttributesSection(item),
+          _buildAdditionalAttributesSection(item, theme),
         ],
       ),
     );
   }
 
-  Widget _buildImageCarousel(List<String> imageUrls) {
+  Widget _buildImageCarousel(List<String> imageUrls, ThemeData theme) {
     if (imageUrls.isEmpty) {
-      return _buildItemImage(null);
+      return _buildItemImage(null, theme);
     }
     return Column(
       children: [
@@ -93,8 +94,9 @@ class ItemDetailScreen extends StatelessWidget {
             viewportFraction: 0.9,
             autoPlay: true,
           ),
-          items:
-              imageUrls.map((imageUrl) => _buildItemImage(imageUrl)).toList(),
+          items: imageUrls
+              .map((imageUrl) => _buildItemImage(imageUrl, theme))
+              .toList(),
         ),
         const SizedBox(height: 8),
         Row(
@@ -106,7 +108,7 @@ class ItemDetailScreen extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 3),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             );
           }).toList(),
@@ -115,7 +117,7 @@ class ItemDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemImage(String? imageUrl) {
+  Widget _buildItemImage(String? imageUrl, ThemeData theme) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: CachedNetworkImage(
@@ -123,13 +125,26 @@ class ItemDetailScreen extends StatelessWidget {
         width: double.infinity,
         height: 300,
         fit: BoxFit.cover,
-        placeholder: (context, url) => imagePlaceholder(),
-        errorWidget: (context, url, error) => imagePlaceholder(),
+        placeholder: (context, url) => _buildPlaceholder(theme),
+        errorWidget: (context, url, error) => _buildPlaceholder(theme),
       ),
     );
   }
 
-  Widget _buildAdditionalAttributesSection(ItemUIModel item) {
+  Widget _buildPlaceholder(ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      height: 300,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: theme.colorScheme.surfaceContainerHighest,
+      ),
+      child: Icon(Icons.image,
+          color: theme.colorScheme.onSurfaceVariant, size: 40),
+    );
+  }
+
+  Widget _buildAdditionalAttributesSection(ItemUIModel item, ThemeData theme) {
     if (item.additionalAttributes == null ||
         item.additionalAttributes!.isEmpty) {
       return const SizedBox.shrink();
@@ -137,79 +152,85 @@ class ItemDetailScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Additional Information',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
+          style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
         ...item.additionalAttributes!.entries.map((entry) {
-          return _buildDetailRow(entry.key, entry.value.toString());
+          return _buildDetailRow(entry.key, entry.value.toString(), theme);
         }),
       ],
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String value, ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(value,
-              style: const TextStyle(color: Colors.white, fontSize: 16)),
+          Text(
+            value,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  void _confirmDelete(BuildContext context, ItemDetailViewModel viewModel) {
+  void _confirmDelete(
+      BuildContext context, ItemDetailViewModel viewModel, ThemeData theme) {
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: Colors.grey[850],
-          title: const Text('Confirm Delete',
-              style: TextStyle(color: Colors.white)),
-          content: const Column(
+          backgroundColor: theme.colorScheme.surface,
+          title: Text('Confirm Delete',
+              style: TextStyle(color: theme.colorScheme.onSurface)),
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Are you sure you want to delete this item?',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: theme.colorScheme.onSurface),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Text(
                 'This action cannot be undone.',
-                style: TextStyle(color: Colors.redAccent),
+                style: TextStyle(color: theme.colorScheme.error),
               ),
             ],
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('Cancel',
-                    style: TextStyle(color: Colors.white))),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text('Cancel',
+                  style: TextStyle(color: theme.colorScheme.primary)),
+            ),
             TextButton(
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
                 await viewModel.deleteItem();
               },
               style: TextButton.styleFrom(
-                backgroundColor: Colors.redAccent,
+                backgroundColor: theme.colorScheme.error,
               ),
-              child:
-                  const Text('Delete', style: TextStyle(color: Colors.white)),
+              child: Text('Delete',
+                  style: TextStyle(color: theme.colorScheme.onError)),
             ),
           ],
         );

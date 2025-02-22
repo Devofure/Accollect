@@ -8,11 +8,14 @@ import 'create_collection_view_model.dart';
 
 class CreateCollectionScreen extends StatelessWidget {
   const CreateCollectionScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<CreateCollectionViewModel>();
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: theme.colorScheme.surface,
       appBar: const CloseableAppBar(),
       body: SafeArea(
         child: Padding(
@@ -23,7 +26,7 @@ class CreateCollectionScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const HeaderText(
+                  HeaderText(
                     title: 'Create a Collection',
                     subtitle:
                         'Fill in the details to start your new collection.',
@@ -72,7 +75,6 @@ class CreateCollectionScreen extends StatelessWidget {
       ),
       bottomNavigationBar: BottomActionButton(
         title: 'Save Collection',
-        color: Colors.blue,
         isExecuting: viewModel.saveCollectionCommand.isExecuting,
         onPressed: () async {
           await viewModel.saveCollectionCommand.executeWithFuture();

@@ -18,10 +18,11 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<HomeViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -65,12 +66,99 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: _buildFloatingActionButton(context),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, HomeViewModel viewModel) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: StreamBuilder<User?>(
+        stream: viewModel.userChanges,
+        builder: (context, snapshot) {
+          final user = snapshot.data;
+          final photoUrl = user?.photoURL;
+          final displayName = user?.displayName ?? 'User';
+
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor:
+                        theme.colorScheme.primary.withValues(alpha: 0.2),
+                    backgroundImage:
+                        photoUrl != null ? NetworkImage(photoUrl) : null,
+                    child: photoUrl == null
+                        ? Icon(Icons.person,
+                            size: 24, color: theme.iconTheme.color)
+                        : null,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    displayName,
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              IconButton(
+                icon: Icon(Icons.settings, color: theme.iconTheme.color),
+                onPressed: () => context.push(AppRouter.settingsRoute),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTitleRow(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Collections',
+            style: theme.textTheme.headlineLarge
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          FloatingActionButton.extended(
+            onPressed: () => context.push(AppRouter.createCollectionRoute),
+            label: const Text('Create'),
+            icon: const Icon(Icons.add),
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
+            elevation: 2,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingActionButton(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return FloatingActionButton(
+      backgroundColor: theme.colorScheme.secondary,
+      foregroundColor: theme.colorScheme.onSecondary,
+      elevation: 4,
+      onPressed: () => context.push(AppRouter.itemLibraryRoute),
+      child: const Icon(Icons.library_books),
     );
   }
 
   Widget _buildContent(BuildContext context, List collections,
       Map<String, List<ItemUIModel>> groupedItems) {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: CustomScrollView(
@@ -91,84 +179,37 @@ class HomeScreen extends StatelessWidget {
                   final collection = collections[index];
                   return CollectionTile(
                     collection: collection,
-                    onTap: () {
-                      context.push(
-                        AppRouter.collectionRoute,
-                        extra: collection,
-                      );
-                    },
+                    onTap: () => context.push(
+                      AppRouter.collectionRoute,
+                      extra: collection,
+                    ),
                   );
                 },
                 childCount: collections.length,
               ),
             ),
             SliverToBoxAdapter(child: const SizedBox(height: 24)),
-            SliverToBoxAdapter(child: _buildLatestAddedTitle()),
-            ..._buildLatestItemsList(groupedItems),
+            SliverToBoxAdapter(child: _buildLatestAddedTitle(theme)),
+            ..._buildLatestItemsList(groupedItems, theme),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, HomeViewModel viewModel) {
+  Widget _buildLatestAddedTitle(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: StreamBuilder<User?>(
-        stream: viewModel.userChanges,
-        builder: (context, snapshot) {
-          final user = snapshot.data;
-          final photoUrl = user?.photoURL;
-          final displayName = user?.displayName ?? 'User';
-
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: Colors.grey[700],
-                    backgroundImage:
-                        photoUrl != null ? NetworkImage(photoUrl) : null,
-                    child: photoUrl == null
-                        ? const Icon(Icons.person,
-                            color: Colors.white, size: 20)
-                        : null,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    displayName, // ✅ Updated display name appears here
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ],
-              ),
-              IconButton(
-                icon: const Icon(Icons.settings, color: Colors.white),
-                onPressed: () {
-                  context.push(AppRouter.settingsRoute);
-                },
-              ),
-            ],
-          );
-        },
+      child: Text(
+        'New collected items',
+        style:
+            theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
       ),
     );
   }
 
-  Widget _buildFloatingActionButton(BuildContext context) {
-    return FloatingActionButton(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
-      onPressed: () {
-        context.push(AppRouter.itemLibraryRoute);
-      },
-      child: const Icon(Icons.library_books),
-    );
-  }
-
   static List<Widget> _buildLatestItemsList(
-      Map<String, List<ItemUIModel>> groupedItems) {
+      Map<String, List<ItemUIModel>> groupedItems, ThemeData theme) {
     List<Widget> slivers = [];
 
     groupedItems.forEach((date, items) {
@@ -178,11 +219,8 @@ class HomeScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             child: Text(
               DateFormat('MMMM dd, yyyy').format(DateTime.parse(date)),
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: theme.textTheme.bodyLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
         ),
@@ -197,9 +235,8 @@ class HomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: LatestAddedItemTile(
                   item: item,
-                  onTap: () {
-                    context.push(AppRouter.itemDetailsRoute, extra: item);
-                  },
+                  onTap: () =>
+                      context.push(AppRouter.itemDetailsRoute, extra: item),
                 ),
               );
             },
@@ -210,54 +247,5 @@ class HomeScreen extends StatelessWidget {
     });
 
     return slivers;
-  }
-
-  Widget _buildLatestAddedTitle() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16),
-      child: Text(
-        'New collected items',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTitleRow(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'Collections',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purple[700],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onPressed: () {
-              _navigateToCreateCollection(context);
-            },
-            child: const Text('Create'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _navigateToCreateCollection(BuildContext context) async {
-    await context.push(AppRouter.createCollectionRoute);
   }
 }

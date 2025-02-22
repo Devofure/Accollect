@@ -23,6 +23,7 @@ import 'package:accollect/ui/onboarding/onboarding_screen.dart';
 import 'package:accollect/ui/settings/settings_collection_management_screen.dart';
 import 'package:accollect/ui/settings/settings_collection_management_view_model.dart';
 import 'package:accollect/ui/settings/settings_screen.dart';
+import 'package:accollect/ui/settings/settings_view_model.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -84,8 +85,14 @@ class AppRouterConfig {
           },
         ),
         GoRoute(
-            path: AppRouter.settingsRoute,
-            builder: (_, __) => const SettingsScreen()),
+          path: AppRouter.settingsRoute,
+          builder: (context, state) {
+            return ChangeNotifierProvider(
+              create: (_) => SettingsViewModel(),
+              child: const SettingsScreen(),
+            );
+          },
+        ),
         GoRoute(
           path: AppRouter.settingsCollectionsRoute,
           builder: (context, state) {
