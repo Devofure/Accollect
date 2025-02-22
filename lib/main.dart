@@ -1,4 +1,5 @@
 import 'package:accollect/core/app_router.dart';
+import 'package:accollect/core/app_themes.dart';
 import 'package:accollect/core/firebase_service.dart';
 import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/collection_repository.dart';
@@ -41,12 +42,11 @@ class MyApp extends StatelessWidget {
 
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
-        debugPrint("Current Theme Mode: ${themeProvider.themeMode}");
         return MaterialApp.router(
           routerConfig: router,
           title: 'Accollect',
-          theme: ThemeData.light(),
-          darkTheme: ThemeData.dark(),
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.themeMode,
         );
       },

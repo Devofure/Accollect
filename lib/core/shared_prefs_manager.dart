@@ -6,7 +6,6 @@ class SharedPrefsManager {
 
   static Future<void> setThemeMode(ThemeMode mode) async {
     final prefs = await SharedPreferences.getInstance();
-    debugPrint('Saving Theme: ${mode.toString()}');
     await prefs.setInt(_themeModeKey, mode.index);
   }
 
@@ -14,7 +13,6 @@ class SharedPrefsManager {
     final prefs = await SharedPreferences.getInstance();
     final themeIndex = prefs.getInt(_themeModeKey) ?? ThemeMode.system.index;
     final themeMode = ThemeMode.values[themeIndex];
-    debugPrint('Loaded Theme: ${themeMode.toString()}');
     return themeMode;
   }
 }

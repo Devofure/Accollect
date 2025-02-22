@@ -3,44 +3,69 @@ import 'package:flutter/material.dart';
 class AppTheme {
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
-    primaryColor: Colors.blue,
-    scaffoldBackgroundColor: Colors.white,
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.blue,
-      titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
-      iconTheme: IconThemeData(color: Colors.white),
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.indigo, // 🌟 Indigo for a bold, modern look
+      brightness: Brightness.light,
     ),
-    textTheme: const TextTheme(
-      bodyLarge: TextStyle(color: Colors.black, fontSize: 16),
-      bodyMedium: TextStyle(color: Colors.black, fontSize: 14),
+    textTheme: TextTheme(
+      titleLarge: TextStyle(
+          fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),
+      bodyLarge: TextStyle(fontSize: 16, color: Colors.black),
+      bodyMedium: TextStyle(fontSize: 14, color: Colors.black87),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: Colors.indigo.shade100, // Light Indigo for chips
+      labelStyle: TextStyle(color: Colors.indigo.shade900),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.indigo.shade50, // Light Indigo for inputs
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
       ),
     ),
   );
 
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
-    primaryColor: Colors.purpleAccent,
-    scaffoldBackgroundColor: Colors.black,
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.purpleAccent,
-      titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
-      iconTheme: IconThemeData(color: Colors.white),
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Colors.cyan, // 🌊 Cyan for a modern, techy dark mode
+      brightness: Brightness.dark,
     ),
-    textTheme: const TextTheme(
-      bodyLarge: TextStyle(color: Colors.white, fontSize: 16),
-      bodyMedium: TextStyle(color: Colors.white70, fontSize: 14),
+    scaffoldBackgroundColor: Colors.black,
+    textTheme: TextTheme(
+      titleLarge: TextStyle(
+          fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+      bodyLarge: TextStyle(fontSize: 16, color: Colors.white),
+      bodyMedium: TextStyle(fontSize: 14, color: Colors.white70),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.purpleAccent,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        backgroundColor: Colors.cyan,
+        foregroundColor: Colors.black,
+        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: Colors.cyan.shade900, // Darker Cyan for contrast
+      labelStyle: TextStyle(color: Colors.white),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.cyan.shade800,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
       ),
     ),
   );

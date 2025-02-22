@@ -162,10 +162,8 @@ Widget buildCategoryChip(ThemeData theme, String text) {
       ),
     ),
     backgroundColor: isDarkMode
-        ? theme.colorScheme.secondaryContainer
-            .withValues(alpha: 0.3) // Darker in dark mode
-        : theme.colorScheme.secondaryContainer, // Default for light mode
-    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        ? theme.colorScheme.surfaceContainer
+        : theme.colorScheme.secondaryContainer,
     visualDensity: VisualDensity.compact,
   );
 }
