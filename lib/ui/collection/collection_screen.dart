@@ -32,9 +32,6 @@ class CollectionScreen extends StatelessWidget {
 
   Widget _buildSliverAppBar(
       BuildContext context, ThemeData theme, CollectionViewModel viewModel) {
-    final placeholderPath =
-        viewModel.placeholderAsset(viewModel.collection.category);
-
     return SliverAppBar(
       pinned: true,
       expandedHeight: 150,
@@ -45,47 +42,51 @@ class CollectionScreen extends StatelessWidget {
           onPressed: () => _showMoreMenu(context, viewModel, theme),
         ),
       ],
-      flexibleSpace: LayoutBuilder(
-        builder: (context, constraints) {
-          return FlexibleSpaceBar(
-            collapseMode: CollapseMode.pin,
-            centerTitle: false,
-            titlePadding: const EdgeInsets.only(left: 48, bottom: 8),
-            title: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                circularImageWidget(
-                  viewModel.collection.imageUrl,
-                  size: 55,
-                  placeholderAsset: placeholderPath,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        viewModel.collection.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleLarge
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      if (viewModel.collection.category?.isNotEmpty == true)
-                        Text(
-                          viewModel.collection.category!,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+      flexibleSpace: collectionHeader(viewModel, theme),
     );
+  }
+
+  Widget collectionHeader(CollectionViewModel viewModel, ThemeData theme) {
+    final placeholderPath =
+        viewModel.placeholderAsset(viewModel.collection.category);
+    return LayoutBuilder(
+        builder: (context, constraints) => FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
+              centerTitle: false,
+              titlePadding: const EdgeInsets.only(left: 42, bottom: 4, top: 4),
+              title: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  circularImageWidget(
+                    viewModel.collection.imageUrl,
+                    size: 45,
+                    placeholderAsset: placeholderPath,
+                  ),
+                  const SizedBox(width: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          viewModel.collection.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        if (viewModel.collection.category?.isNotEmpty == true)
+                          Text(
+                            viewModel.collection.category!,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium,
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ));
   }
 
   void _showMoreMenu(
