@@ -40,7 +40,7 @@ class HomeViewModel extends ChangeNotifier {
   placeholderAsset(String? category) {
     switch (category) {
       case 'Lego':
-        return 'assets/images/category_funko_pop.png';
+        return 'assets/images/category_lego.png';
       case "Funko Pop!":
         return 'assets/images/category_funko_pop.png';
       case "Hot Wheels":
