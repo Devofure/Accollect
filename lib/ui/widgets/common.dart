@@ -118,35 +118,51 @@ Widget buildEmptyState({
 Widget circularImageWidget(String? imageUrl, {double size = 90}) {
   return Builder(
     builder: (context) {
+      final theme = Theme.of(context);
+      // If the imageUrl is null or empty, just show placeholder
+      if (imageUrl == null || imageUrl.trim().isEmpty) {
+        return _buildPlaceholder(size, theme);
+      }
+
+      // Otherwise, show the network image with a loading builder + error builder
       return ClipOval(
-        child: imageUrl != null
-            ? Image.network(
-                imageUrl,
-                width: size,
-                height: size,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _circularImagePlaceholder(size, context),
-              )
-            : _circularImagePlaceholder(size, context),
+        child: Image.network(
+          imageUrl,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+
+          // Show a subtle placeholder or progress indicator while loading
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child; // Image is fully loaded
+            }
+            return _buildPlaceholder(size, theme);
+          },
+
+          // If an error occurs, show the placeholder
+          errorBuilder: (context, error, stackTrace) {
+            return _buildPlaceholder(size, theme);
+          },
+        ),
       );
     },
   );
 }
 
-Widget _circularImagePlaceholder(double size, BuildContext context) {
-  final theme = Theme.of(context);
-  return Container(
+Widget _buildPlaceholder(double size, ThemeData theme) {
+  return SizedBox(
     width: size,
     height: size,
-    decoration: BoxDecoration(
-      color: theme.colorScheme.surfaceContainerHighest,
-      shape: BoxShape.circle,
-    ),
-    child: Icon(
-      Icons.image,
-      color: theme.colorScheme.onSurfaceVariant,
-      size: 40,
+    child: ClipOval(
+      child: Container(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+        child: Icon(
+          Icons.image,
+          color: theme.colorScheme.onSurfaceVariant,
+          size: size * 0.4, // For example, 40 if size=100
+        ),
+      ),
     ),
   );
 }

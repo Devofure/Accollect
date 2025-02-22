@@ -1,11 +1,10 @@
 import 'package:accollect/core/app_router.dart';
 import 'package:accollect/core/utils/theme_provider.dart';
+import 'package:accollect/ui/widgets/sign_out_tile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-
-import '../widgets/sign_out_tile.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});

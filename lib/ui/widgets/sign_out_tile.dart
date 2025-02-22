@@ -22,7 +22,6 @@ class SignOutButton extends StatelessWidget {
     );
   }
 
-  /// 🔹 Extracted Ripple Effect Wrapper
   Widget _buildRippleEffect({
     required BuildContext context,
     required VoidCallback onTap,
@@ -41,7 +40,6 @@ class SignOutButton extends StatelessWidget {
     );
   }
 
-  /// 🔹 Sign-Out Button Content (Reused Inside Ripple)
   Widget _buildSignOutContent(BuildContext context) {
     final theme = Theme.of(context);
 
