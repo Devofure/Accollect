@@ -9,6 +9,7 @@ class StepDetailsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<MultiStepCreateItemViewModel>();
 
     return Container(
@@ -46,23 +47,20 @@ class StepDetailsWidget extends StatelessWidget {
               future: viewModel.getCategoryAttributes(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SizedBox.shrink();
+                  return _buildLoadingState(theme);
                 }
-                if (snapshot.hasError ||
-                    !snapshot.hasData ||
-                    snapshot.data == null) {
+                if (snapshot.hasError || !snapshot.hasData) {
                   return const SizedBox.shrink();
                 }
                 final catAttributes = snapshot.data!;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Additional Attributes',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
+                      style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -84,6 +82,28 @@ class StepDetailsWidget extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Loading attributes...',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
       ),
     );
   }

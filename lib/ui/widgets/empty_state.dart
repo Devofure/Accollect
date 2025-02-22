@@ -16,6 +16,9 @@ class EmptyStateWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -24,22 +27,33 @@ class EmptyStateWidget extends StatelessWidget {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: Colors.grey[800],
+              color: isDarkMode
+                  ? theme.colorScheme.surfaceContainerHighest
+                  : theme.colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.inbox, color: Colors.white, size: 40),
+            child: Icon(
+              Icons.inbox,
+              color: theme.colorScheme.onSurfaceVariant,
+              size: 40,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
             title,
-            style: const TextStyle(color: Colors.grey, fontSize: 20),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
             textAlign: TextAlign.center,
           ),
           if (description != null) ...[
             const SizedBox(height: 8),
             Text(
               description!,
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -48,13 +62,21 @@ class EmptyStateWidget extends StatelessWidget {
             ElevatedButton(
               onPressed: onActionPressed,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueGrey[700],
-                foregroundColor: Colors.white,
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-              child: Text(actionLabel!),
+              child: Text(
+                actionLabel!,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ],

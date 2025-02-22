@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 
-Widget imagePlaceholder() {
+Widget imagePlaceholder(BuildContext context) {
+  final theme = Theme.of(context);
   return Container(
     width: double.infinity,
     height: 300,
-    color: Colors.grey[800],
-    child: const Icon(Icons.image, color: Colors.white, size: 50),
+    color: theme.colorScheme.surfaceContainerHighest,
+    child: Icon(
+      Icons.image,
+      color: theme.colorScheme.onSurfaceVariant,
+      size: 50,
+    ),
   );
 }
 
@@ -14,10 +19,25 @@ Widget buildErrorState(String errorMessage) {
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(errorMessage, style: const TextStyle(color: Colors.white)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            errorMessage,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+          ),
+        ),
         const SizedBox(height: 16),
         ElevatedButton(
           onPressed: () {},
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.redAccent,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
           child: const Text('Retry'),
         ),
       ],
@@ -31,30 +51,43 @@ Widget buildEmptyState({
   IconData icon = Icons.sentiment_dissatisfied,
   VoidCallback? onActionPressed,
   String? actionLabel,
+  required BuildContext context,
 }) {
+  final theme = Theme.of(context);
+
   return Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, color: Colors.grey, size: 64),
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            shape: BoxShape.circle,
+          ),
+          child:
+              Icon(icon, color: theme.colorScheme.onSurfaceVariant, size: 48),
+        ),
         const SizedBox(height: 8),
         Text(
           title,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 18,
+          style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         if (description != null) ...[
           const SizedBox(height: 4),
-          Text(
-            description,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 16,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              description,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -65,11 +98,15 @@ Widget buildEmptyState({
             icon: const Icon(Icons.add),
             label: Text(actionLabel),
             style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: Colors.blueAccent,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              textStyle:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              textStyle: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           ),
         ],
@@ -79,28 +116,37 @@ Widget buildEmptyState({
 }
 
 Widget circularImageWidget(String? imageUrl, {double size = 90}) {
-  return ClipOval(
-    child: imageUrl != null
-        ? Image.network(
-            imageUrl,
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) =>
-                _circularImagePlaceholder(size),
-          )
-        : _circularImagePlaceholder(size),
+  return Builder(
+    builder: (context) {
+      return ClipOval(
+        child: imageUrl != null
+            ? Image.network(
+                imageUrl,
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    _circularImagePlaceholder(size, context),
+              )
+            : _circularImagePlaceholder(size, context),
+      );
+    },
   );
 }
 
-Widget _circularImagePlaceholder(double size) {
+Widget _circularImagePlaceholder(double size, BuildContext context) {
+  final theme = Theme.of(context);
   return Container(
     width: size,
     height: size,
-    decoration: const BoxDecoration(
-      color: Colors.grey,
+    decoration: BoxDecoration(
+      color: theme.colorScheme.surfaceContainerHighest,
       shape: BoxShape.circle,
     ),
-    child: const Icon(Icons.image, color: Colors.white, size: 40),
+    child: Icon(
+      Icons.image,
+      color: theme.colorScheme.onSurfaceVariant,
+      size: 40,
+    ),
   );
 }

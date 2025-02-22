@@ -28,6 +28,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../ui/settings/settings_view_model.dart';
+
 class AppRouterConfig {
   static GoRouter configureRouter(
     BuildContext context,
@@ -84,8 +86,14 @@ class AppRouterConfig {
           },
         ),
         GoRoute(
-            path: AppRouter.settingsRoute,
-            builder: (_, __) => const SettingsScreen()),
+          path: AppRouter.settingsRoute,
+          builder: (context, state) {
+            return ChangeNotifierProvider(
+              create: (_) => SettingsViewModel(),
+              child: const SettingsScreen(),
+            );
+          },
+        ),
         GoRoute(
           path: AppRouter.settingsCollectionsRoute,
           builder: (context, state) {

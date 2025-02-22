@@ -8,11 +8,14 @@ import 'create_collection_view_model.dart';
 
 class CreateCollectionScreen extends StatelessWidget {
   const CreateCollectionScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<CreateCollectionViewModel>();
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: theme.colorScheme.surface,
       appBar: const CloseableAppBar(),
       body: SafeArea(
         child: Padding(
@@ -23,12 +26,15 @@ class CreateCollectionScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const HeaderText(
+                  // Title Section
+                  HeaderText(
                     title: 'Create a Collection',
                     subtitle:
                         'Fill in the details to start your new collection.',
                   ),
                   const SizedBox(height: 24),
+
+                  // Collection Name Input
                   CustomTextInput(
                     label: 'Collection Name',
                     hint: 'Enter collection name',
@@ -36,12 +42,16 @@ class CreateCollectionScreen extends StatelessWidget {
                     validator: viewModel.validateCollectionName,
                   ),
                   const SizedBox(height: 16),
+
+                  // Description Input
                   CustomTextInput(
                     label: 'Description',
                     hint: 'Enter collection description',
                     onSaved: viewModel.setDescription,
                   ),
                   const SizedBox(height: 16),
+
+                  // Category Dropdown
                   ValueListenableBuilder<List<String>>(
                     valueListenable: viewModel.fetchCategoriesCommand,
                     builder: (context, categories, _) {
@@ -54,6 +64,8 @@ class CreateCollectionScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 24),
+
+                  // Image Upload
                   ValueListenableBuilder<File?>(
                     valueListenable: viewModel.uploadImageCommand,
                     builder: (context, image, _) {
@@ -70,9 +82,10 @@ class CreateCollectionScreen extends StatelessWidget {
           ),
         ),
       ),
+
+      // Save Button
       bottomNavigationBar: BottomActionButton(
         title: 'Save Collection',
-        color: Colors.blue,
         isExecuting: viewModel.saveCollectionCommand.isExecuting,
         onPressed: () async {
           await viewModel.saveCollectionCommand.executeWithFuture();

@@ -14,24 +14,28 @@ class ItemLibraryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<ItemLibraryViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text('Library', style: TextStyle(color: Colors.white)),
+        backgroundColor: theme.colorScheme.surface,
+        title: Text(
+          'Library',
+          style: TextStyle(color: theme.colorScheme.onSurface),
+        ),
       ),
       body: SafeArea(
         child: Column(
           children: [
-            _buildCategoryDropdown(context, viewModel),
+            _buildCategoryDropdown(context, viewModel, theme),
             Expanded(
               child: StreamBuilder<List<ItemUIModel>>(
                 stream: viewModel.itemsStream,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return _buildLoadingState();
+                    return _buildLoadingState(theme);
                   }
                   if (snapshot.hasError) {
                     return buildErrorState(snapshot.error.toString());
@@ -39,6 +43,7 @@ class ItemLibraryScreen extends StatelessWidget {
                   final items = snapshot.data ?? [];
                   return items.isEmpty
                       ? buildEmptyState(
+                          context: context,
                           title: 'No items found',
                           description: 'Create a new item to get started',
                           onActionPressed: () =>
@@ -52,12 +57,13 @@ class ItemLibraryScreen extends StatelessWidget {
           ],
         ),
       ),
-      floatingActionButton: _buildFloatingActionButton(viewModel, context),
+      floatingActionButton:
+          _buildFloatingActionButton(viewModel, context, theme),
     );
   }
 
-  Widget _buildCategoryDropdown(
-      BuildContext context, ItemLibraryViewModel viewModel) {
+  Widget _buildCategoryDropdown(BuildContext context,
+      ItemLibraryViewModel viewModel, ThemeData theme) {
     return ValueListenableBuilder<List<String>>(
       valueListenable: viewModel.fetchCategoriesCommand,
       builder: (context, categories, _) {
@@ -70,8 +76,10 @@ class ItemLibraryScreen extends StatelessWidget {
             items: uniqueCategories.map((category) {
               return DropdownMenuItem<String>(
                 value: category,
-                child:
-                    Text(category, style: const TextStyle(color: Colors.white)),
+                child: Text(
+                  category,
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                ),
               );
             }).toList(),
             onChanged: (newCategory) {
@@ -80,13 +88,13 @@ class ItemLibraryScreen extends StatelessWidget {
             },
             decoration: InputDecoration(
               filled: true,
-              fillColor: Colors.grey[800],
+              fillColor: theme.colorScheme.surfaceContainerHighest,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
             ),
-            dropdownColor: Colors.grey[900],
+            dropdownColor: theme.colorScheme.surfaceContainerHighest,
           ),
         );
       },
@@ -126,27 +134,30 @@ class ItemLibraryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLoadingState() {
+  Widget _buildLoadingState(ThemeData theme) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(),
+          CircularProgressIndicator(color: theme.colorScheme.primary),
           const SizedBox(height: 12),
-          const Text("Loading items...", style: TextStyle(color: Colors.white)),
+          Text(
+            "Loading items...",
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildFloatingActionButton(
-      ItemLibraryViewModel viewModel, BuildContext context) {
+  Widget _buildFloatingActionButton(ItemLibraryViewModel viewModel,
+      BuildContext context, ThemeData theme) {
     return AnimatedSlide(
       offset: viewModel.isScrollingDown ? const Offset(0, 2) : Offset.zero,
       duration: const Duration(milliseconds: 300),
       child: FloatingActionButton.extended(
-        backgroundColor: Colors.blueGrey[800],
-        foregroundColor: Colors.white,
+        backgroundColor: theme.colorScheme.primaryContainer,
+        foregroundColor: theme.colorScheme.onPrimaryContainer,
         onPressed: () => _navigateToAddNewItemScreen(context),
         icon: const Icon(Icons.add),
         label: const Text('Create Item'),

@@ -8,31 +8,32 @@ class OnboardingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Example card
+              // Collection Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[800],
+                  color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Curated Collection',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
+                      style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -51,25 +52,29 @@ class OnboardingScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
+
+              // Title
+              Text(
                 'Track Your Collection',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
+                style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+
+              // Subtitle
+              Text(
                 'Effortlessly manage and track your collections with Accollect, '
                 'tailored for collectors seeking an organized way to monitor their items.',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                   height: 1.4,
                 ),
               ),
               const Spacer(),
+
+              // Start Button
               CustomButton(
                 text: 'Start Tracking',
                 onPressed: () {

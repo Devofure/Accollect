@@ -1,5 +1,4 @@
 import 'package:accollect/domain/models/item_ui_model.dart';
-import 'package:accollect/ui/widgets/common.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -19,6 +18,8 @@ class ItemPortraitTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return GestureDetector(
       onTap: onTap,
       child: Stack(
@@ -26,14 +27,14 @@ class ItemPortraitTile extends StatelessWidget {
           Container(
             margin: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.grey[850],
+              color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               border: isSelected
-                  ? Border.all(color: Colors.blueAccent, width: 3)
+                  ? Border.all(color: theme.colorScheme.primary, width: 3)
                   : null,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
+                  color: theme.shadowColor.withValues(alpha: 0.1),
                   blurRadius: 6,
                   offset: const Offset(2, 4),
                 ),
@@ -49,8 +50,9 @@ class ItemPortraitTile extends StatelessWidget {
                     child: CachedNetworkImage(
                       imageUrl: item.firstImageUrl ?? '',
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => imagePlaceholder(),
-                      errorWidget: (context, url, error) => imagePlaceholder(),
+                      placeholder: (context, url) => _buildPlaceholder(theme),
+                      errorWidget: (context, url, error) =>
+                          _buildPlaceholder(theme),
                     ),
                   ),
                 ),
@@ -62,10 +64,9 @@ class ItemPortraitTile extends StatelessWidget {
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
+                    style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -77,16 +78,28 @@ class ItemPortraitTile extends StatelessWidget {
               top: 8,
               right: 8,
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.blueAccent,
+                  color: theme.colorScheme.primary,
                 ),
                 padding: const EdgeInsets.all(4),
-                child: const Icon(Icons.check, color: Colors.white, size: 18),
+                child: Icon(Icons.check,
+                    color: theme.colorScheme.onPrimary, size: 18),
               ),
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPlaceholder(ThemeData theme) {
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      child: Icon(Icons.image,
+          color: theme.colorScheme.onSurfaceVariant, size: 30),
     );
   }
 }

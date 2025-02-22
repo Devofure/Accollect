@@ -8,6 +8,7 @@ class StepAdditionalAttributesWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<MultiStepCreateItemViewModel>();
 
     return FutureBuilder<CategoryAttributesModel?>(
@@ -17,9 +18,11 @@ class StepAdditionalAttributesWidget extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data == null) {
-          return const Text(
+          return Text(
             'No additional attributes for this category.',
-            style: TextStyle(color: Colors.white, fontSize: 16),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           );
         }
 
@@ -27,26 +30,39 @@ class StepAdditionalAttributesWidget extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Additional Attributes',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 12),
             ...attributes.attributes.map((entry) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: TextFormField(
-                  style: const TextStyle(color: Colors.white),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
                   decoration: InputDecoration(
                     labelText: entry.label,
-                    labelStyle: const TextStyle(color: Colors.grey),
+                    labelStyle: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                     filled: true,
-                    fillColor: Colors.grey[900],
+                    fillColor: theme.colorScheme.surfaceContainerHighest,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: theme.colorScheme.primary,
+                        width: 2,
+                      ),
+                    ),
                   ),
                   onChanged: (value) {
                     viewModel.setAdditionalAttribute(entry.field, value);

@@ -17,29 +17,35 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<MultiStepCreateItemViewModel>();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Upload Item Images',
-          style: TextStyle(color: Colors.white, fontSize: 16),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 12),
-        _buildImageGrid(viewModel),
+        _buildImageGrid(viewModel, theme),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           'Tap to upload an image. Long-press and drag to reorder.',
-          style: TextStyle(color: Colors.grey, fontSize: 14),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildImageGrid(MultiStepCreateItemViewModel viewModel) {
+  Widget _buildImageGrid(
+      MultiStepCreateItemViewModel viewModel, ThemeData theme) {
     final currentCount = viewModel.uploadedImages.length;
-    // If not at max, allow one extra slot for a placeholder.
     final maxSlots = currentCount < _maxSlots ? currentCount + 1 : _maxSlots;
     final slots = (maxSlots < _initialSlots) ? _initialSlots : maxSlots;
 
@@ -73,13 +79,13 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
                   ),
                   child: Opacity(
                     opacity: 0.8,
-                    child: _buildImageTile(viewModel, imageFile, index),
+                    child: _buildImageTile(viewModel, theme, imageFile, index),
                   ),
                 ),
               ),
               childWhenDragging: Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[800],
+                  color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -101,10 +107,11 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
                   return Container(
                     decoration: BoxDecoration(
                       border: isHighlighted
-                          ? Border.all(color: Colors.blueAccent, width: 2)
+                          ? Border.all(
+                              color: theme.colorScheme.primary, width: 2)
                           : null,
                     ),
-                    child: _buildImageTile(viewModel, imageFile, index),
+                    child: _buildImageTile(viewModel, theme, imageFile, index),
                   );
                 },
               ),
@@ -117,6 +124,7 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
 
   Widget _buildImageTile(
     MultiStepCreateItemViewModel viewModel,
+    ThemeData theme,
     File? imageFile,
     int index,
   ) {
@@ -125,7 +133,7 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: Colors.grey[900],
+          color: theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
           image: (imageFile != null)
               ? DecorationImage(
@@ -134,17 +142,19 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
                 )
               : null,
           border: Border.all(
-            color: (imageFile == null) ? Colors.white30 : Colors.transparent,
+            color: (imageFile == null)
+                ? theme.colorScheme.onSurfaceVariant
+                : Colors.transparent,
             width: 1.5,
           ),
         ),
         child: Stack(
           children: [
             if (imageFile == null)
-              const Center(
+              Center(
                 child: Icon(
                   Icons.add_photo_alternate,
-                  color: Colors.white70,
+                  color: theme.colorScheme.onSurfaceVariant,
                   size: 32,
                 ),
               ),
@@ -154,14 +164,14 @@ class _StepImagesWidgetState extends State<StepImagesWidget> {
                 child: GestureDetector(
                   onTap: () => _removeImage(viewModel, index),
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.black54,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       shape: BoxShape.circle,
                     ),
                     padding: const EdgeInsets.all(6),
-                    child: const Icon(
+                    child: Icon(
                       Icons.close,
-                      color: Colors.white,
+                      color: theme.colorScheme.onPrimary,
                       size: 16,
                     ),
                   ),

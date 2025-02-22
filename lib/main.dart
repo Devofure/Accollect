@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:provider/provider.dart';
 
+import 'core/utils/theme_provider.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final firebaseService = FirebaseService();
@@ -21,6 +23,7 @@ void main() async {
         Provider<ICategoryRepository>.value(value: CategoryRepository()),
         Provider<ICollectionRepository>.value(value: CollectionRepository()),
         Provider<IItemRepository>.value(value: ItemRepository()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: MyApp(firebaseService: firebaseService),
     ),
@@ -36,10 +39,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final router = AppRouterConfig.configureRouter(context, firebaseService);
 
-    return MaterialApp.router(
-      routerConfig: router,
-      title: 'Accollect',
-      theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: Colors.black),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        debugPrint("Current Theme Mode: ${themeProvider.themeMode}");
+        return MaterialApp.router(
+          routerConfig: router,
+          title: 'Accollect',
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: themeProvider.themeMode,
+        );
+      },
     );
   }
 }

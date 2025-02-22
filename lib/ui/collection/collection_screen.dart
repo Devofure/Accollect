@@ -14,21 +14,22 @@ class CollectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final viewModel = context.watch<CollectionViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: _buildAppBar(context),
+      backgroundColor: theme.colorScheme.surface,
+      appBar: _buildAppBar(context, theme),
       body: SafeArea(
         child: Column(
           children: [
-            _buildCollectionHeader(viewModel),
+            _buildCollectionHeader(viewModel, theme),
             Expanded(
               child: StreamBuilder<List<ItemUIModel>>(
                 stream: viewModel.itemsStream,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return _buildLoadingGrid();
+                    return _buildLoadingGrid(theme);
                   }
                   if (snapshot.hasError) {
                     return buildErrorState(snapshot.error.toString());
@@ -36,10 +37,11 @@ class CollectionScreen extends StatelessWidget {
                   final items = snapshot.data ?? [];
                   return items.isEmpty
                       ? buildEmptyState(
+                          context: context,
                           title: 'No items in your collection.',
                           description: 'Start by adding your first item!',
                         )
-                      : _buildItemGrid(items, viewModel);
+                      : _buildItemGrid(items, viewModel, theme);
                 },
               ),
             ),
@@ -47,23 +49,28 @@ class CollectionScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: theme.colorScheme.primary,
         onPressed: () => _navigateToAddOrSelectItemScreen(context, viewModel),
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text("Add Item", style: TextStyle(color: Colors.white)),
+        icon: Icon(Icons.add, color: theme.colorScheme.onPrimary),
+        label: Text("Add Item",
+            style: TextStyle(color: theme.colorScheme.onPrimary)),
       ),
     );
   }
 
-  Widget _buildCollectionHeader(CollectionViewModel viewModel) {
+  Widget _buildCollectionHeader(
+      CollectionViewModel viewModel, ThemeData theme) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 8)
+          BoxShadow(
+            color: theme.shadowColor.withValues(alpha: 0.1),
+            blurRadius: 8,
+          ),
         ],
       ),
       child: Row(
@@ -76,9 +83,7 @@ class CollectionScreen extends StatelessWidget {
               children: [
                 Text(
                   viewModel.collection.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
+                  style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -86,7 +91,9 @@ class CollectionScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   viewModel.collection.category ?? "No category",
-                  style: TextStyle(color: Colors.grey[400], fontSize: 16),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -97,8 +104,8 @@ class CollectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemGrid(
-      List<ItemUIModel> items, CollectionViewModel viewModel) {
+  Widget _buildItemGrid(List<ItemUIModel> items, CollectionViewModel viewModel,
+      ThemeData theme) {
     return RefreshIndicator(
       onRefresh: () async {
         await viewModel.refreshData();
@@ -124,7 +131,7 @@ class CollectionScreen extends StatelessWidget {
                 value: 'remove',
                 child: const Text('Remove from collection'),
                 onTap: () {
-                  _confirmRemoveItem(context, viewModel, item.key);
+                  _confirmRemoveItem(context, viewModel, item.key, theme);
                 },
               ),
             ],
@@ -134,7 +141,7 @@ class CollectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLoadingGrid() {
+  Widget _buildLoadingGrid(ThemeData theme) {
     return GridView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -146,7 +153,7 @@ class CollectionScreen extends StatelessWidget {
       itemCount: 6,
       itemBuilder: (_, __) => Container(
         decoration: BoxDecoration(
-          color: Colors.grey[850],
+          color: theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         margin: const EdgeInsets.all(8),
@@ -154,21 +161,24 @@ class CollectionScreen extends StatelessWidget {
     );
   }
 
-  void _confirmRemoveItem(
-      BuildContext context, CollectionViewModel viewModel, String itemKey) {
+  void _confirmRemoveItem(BuildContext context, CollectionViewModel viewModel,
+      String itemKey, ThemeData theme) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[850],
-        title: const Text("Remove Item", style: TextStyle(color: Colors.white)),
-        content: const Text(
+        backgroundColor: theme.colorScheme.surface,
+        title: Text("Remove Item", style: theme.textTheme.titleMedium),
+        content: Text(
           "Are you sure you want to remove this item from the collection?",
-          style: TextStyle(color: Colors.white70),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel", style: TextStyle(color: Colors.white)),
+            child: Text("Cancel",
+                style: TextStyle(color: theme.colorScheme.primary)),
           ),
           TextButton(
             onPressed: () {
@@ -176,10 +186,11 @@ class CollectionScreen extends StatelessWidget {
               Navigator.pop(context);
             },
             style: TextButton.styleFrom(
-              backgroundColor: Colors.redAccent,
+              backgroundColor: theme.colorScheme.error,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             ),
-            child: const Text("Remove", style: TextStyle(color: Colors.white)),
+            child: Text("Remove",
+                style: TextStyle(color: theme.colorScheme.onError)),
           ),
         ],
       ),
@@ -194,12 +205,12 @@ class CollectionScreen extends StatelessWidget {
     );
   }
 
-  AppBar _buildAppBar(BuildContext context) {
+  AppBar _buildAppBar(BuildContext context, ThemeData theme) {
     return AppBar(
-      backgroundColor: Colors.black,
-      title: const Text('Collection', style: TextStyle(color: Colors.white)),
+      backgroundColor: theme.colorScheme.surface,
+      title: Text('Collection', style: theme.textTheme.titleMedium),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
         onPressed: () {
           context.go(AppRouter.homeRoute);
         },

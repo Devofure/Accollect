@@ -1,7 +1,6 @@
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class LatestAddedItemTile extends StatelessWidget {
   final ItemUIModel item;
@@ -20,41 +19,65 @@ class LatestAddedItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final borderColor = isSelected ? Colors.blue : Colors.transparent;
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final borderColor =
+        isSelected ? theme.colorScheme.primary : Colors.transparent;
+    final tileColor = isDarkMode
+        ? theme.colorScheme.surface
+        : theme.colorScheme.surfaceContainerHighest;
+
     double screenWidth = MediaQuery.of(context).size.width;
     double imageSize = screenWidth * 0.18;
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 4),
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.blueGrey[800] : Colors.grey[850],
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: borderColor, width: 2),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Hero(
-              tag: 'item-${item.key}',
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: _buildItemImage(imageSize),
-              ),
+      child: Stack(
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+            decoration: BoxDecoration(
+              color: tileColor,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: borderColor, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.shadowColor.withValues(alpha: 0.08),
+                  blurRadius: 6,
+                  offset: const Offset(2, 2),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Expanded(child: _buildItemDetails(theme)),
-            if (isSelected) const Icon(Icons.check_circle, color: Colors.blue),
-            if (menuOptions != null) _buildPopupMenu(),
-          ],
-        ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Hero(
+                  tag: 'item-${item.key}',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: _buildItemImage(imageSize, theme),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: _buildItemDetails(theme)),
+                if (isSelected)
+                  Icon(Icons.check_circle, color: theme.colorScheme.primary),
+                if (menuOptions != null) _buildPopupMenu(theme),
+              ],
+            ),
+          ),
+          if (item.category?.isNotEmpty == true)
+            Positioned(
+              top: 6,
+              right: 6,
+              child: _buildCategoryChip(theme),
+            ),
+        ],
       ),
     );
   }
 
-  Widget _buildItemImage(double size) {
+  Widget _buildItemImage(double size, ThemeData theme) {
     final imageUrl = item.firstImageUrl;
     return imageUrl != null
         ? CachedNetworkImage(
@@ -62,33 +85,35 @@ class LatestAddedItemTile extends StatelessWidget {
             width: size,
             height: size,
             fit: BoxFit.cover,
-            placeholder: (context, url) => _buildPlaceholder(size),
-            errorWidget: (context, url, error) => _buildErrorImage(size),
+            placeholder: (context, url) => _buildPlaceholder(size, theme),
+            errorWidget: (context, url, error) => _buildErrorImage(size, theme),
           )
-        : _buildPlaceholder(size);
+        : _buildPlaceholder(size, theme);
   }
 
-  Widget _buildPlaceholder(double size) {
+  Widget _buildPlaceholder(double size, ThemeData theme) {
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Colors.grey[700],
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
       ),
-      child: const Icon(Icons.photo, color: Colors.white, size: 30),
+      child: Icon(Icons.image,
+          color: theme.colorScheme.onSurfaceVariant, size: 26),
     );
   }
 
-  Widget _buildErrorImage(double size) {
+  Widget _buildErrorImage(double size, ThemeData theme) {
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Colors.grey[700],
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
+        color: theme.colorScheme.errorContainer.withValues(alpha: 0.5),
       ),
-      child: const Icon(Icons.broken_image, color: Colors.white, size: 30),
+      child:
+          Icon(Icons.broken_image, color: theme.colorScheme.onError, size: 26),
     );
   }
 
@@ -100,39 +125,52 @@ class LatestAddedItemTile extends StatelessWidget {
           item.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: Colors.white,
+          style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 3),
         Text(
-          item.description ?? 'No description',
+          item.collectionName ?? 'Unknown Collection',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: Colors.blueGrey[300],
-            fontStyle: FontStyle.italic,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w500,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 3),
         Text(
-          'Added on: ${_formatDate(item.addedOn)}',
-          style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
+          item.description ?? 'No description available',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontStyle: FontStyle.italic,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildPopupMenu() {
-    return PopupMenuButton(
-      icon: const Icon(Icons.more_vert, color: Colors.white),
-      itemBuilder: (context) => menuOptions!,
+  Widget _buildCategoryChip(ThemeData theme) {
+    return Chip(
+      label: Text(
+        item.category!,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onPrimaryContainer,
+        ),
+      ),
+      backgroundColor: theme.colorScheme.primaryContainer,
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      visualDensity: VisualDensity.compact,
     );
   }
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return "Unknown date";
-    return DateFormat('MMM dd, yyyy').format(date);
+  Widget _buildPopupMenu(ThemeData theme) {
+    return PopupMenuButton(
+      icon: Icon(Icons.more_vert, color: theme.iconTheme.color),
+      itemBuilder: (context) => menuOptions!,
+    );
   }
 }
