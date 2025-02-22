@@ -1,4 +1,5 @@
 import 'package:accollect/ui/create/item/multi_step_create_item_view_model.dart';
+import 'package:accollect/ui/widgets/create_common_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -21,52 +22,54 @@ class StepCategoryWidget extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        ValueListenableBuilder<List<String>>(
-          valueListenable: viewModel.fetchCategoriesCommand,
-          builder: (context, categories, _) {
-            final uniqueCats = categories.toSet().toList();
-            return Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: uniqueCats.map((cat) {
-                final isSelected = cat == viewModel.selectedCategory;
-                return GestureDetector(
-                  onTap: () => viewModel.setCategory(cat),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? theme.colorScheme.primaryContainer
-                          : theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : Colors.transparent,
-                        width: 2,
-                      ),
-                    ),
-                    child: Text(
-                      cat,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected
-                            ? theme.colorScheme.onPrimaryContainer
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+
+        // Category Picker Button
+        GestureDetector(
+          onTap: () {
+            showCategoryPickerDialog(
+              context: context,
+              categories: viewModel.fetchCategoriesCommand.value,
+              selectedCategory: viewModel.selectedCategory,
+              onCategorySelected: viewModel.setCategory,
+              getPlaceholderPath: (category) =>
+                  viewModel.placeholderAsset(category),
             );
           },
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: theme.colorScheme.outline),
+            ),
+            child: Row(
+              children: [
+                Image.asset(
+                  viewModel.placeholderAsset(viewModel.selectedCategory),
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    viewModel.selectedCategory,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                Icon(Icons.arrow_drop_down,
+                    color: theme.colorScheme.onSurfaceVariant),
+              ],
+            ),
+          ),
         ),
+
         const SizedBox(height: 16),
+
         Text(
-          'Tap a category to select it.',
+          'Tap to select a category.',
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

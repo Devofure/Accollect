@@ -62,27 +62,25 @@ class CollectionScreen extends StatelessWidget {
                     size: 45,
                     placeholderAsset: placeholderPath,
                   ),
-                  const SizedBox(width: 6),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                  const SizedBox(width: 8),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        viewModel.collection.name,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      if (viewModel.collection.category?.isNotEmpty == true)
                         Text(
-                          viewModel.collection.name,
+                          viewModel.collection.category!,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleSmall
+                              ?.copyWith(color: theme.colorScheme.onSurface),
                         ),
-                        if (viewModel.collection.category?.isNotEmpty == true)
-                          Text(
-                            viewModel.collection.category!,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleMedium,
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
                 ],
               ),

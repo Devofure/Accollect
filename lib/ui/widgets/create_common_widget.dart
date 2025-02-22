@@ -106,6 +106,94 @@ class CustomTextInput extends StatelessWidget {
   }
 }
 
+void showCategoryPickerDialog({
+  required BuildContext context,
+  required List<String> categories,
+  required String? selectedCategory,
+  required void Function(String) onCategorySelected,
+  required String Function(String) getPlaceholderPath,
+}) {
+  final theme = Theme.of(context);
+
+  showModalBottomSheet(
+    context: context,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (context) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Select a Category",
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3, // Adjust columns as needed
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1,
+              ),
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                final isSelected = category == selectedCategory;
+                final placeholderPath = getPlaceholderPath(category);
+
+                return GestureDetector(
+                  onTap: () {
+                    onCategorySelected(category);
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : Colors.transparent,
+                        width: isSelected ? 6 : 1,
+                      ),
+                      image: DecorationImage(
+                        image: AssetImage(placeholderPath),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color:
+                            Colors.black.withValues(alpha: 0.4), // Dark overlay
+                      ),
+                      alignment: Alignment.bottomCenter,
+                      padding: const EdgeInsets.all(8),
+                      child: Text(
+                        category,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 class CategoryDropdownField extends StatelessWidget {
   final List<String> categories;
   final String? selected;

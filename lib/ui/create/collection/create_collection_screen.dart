@@ -48,11 +48,61 @@ class CreateCollectionScreen extends StatelessWidget {
                   ValueListenableBuilder<List<String>>(
                     valueListenable: viewModel.fetchCategoriesCommand,
                     builder: (context, categories, _) {
-                      return CategoryDropdownField(
-                        categories: categories,
-                        selected:
-                            categories.isNotEmpty ? categories.first : null,
-                        onChanged: viewModel.setCategory,
+                      return GestureDetector(
+                        onTap: () {
+                          showCategoryPickerDialog(
+                            context: context,
+                            categories: categories,
+                            selectedCategory: viewModel.category,
+                            onCategorySelected: viewModel.setCategory,
+                            getPlaceholderPath: (category) =>
+                                viewModel.placeholderAsset(category),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 16, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: Theme.of(context).colorScheme.outline),
+                          ),
+                          child: Row(
+                            children: [
+                              Image.asset(
+                                viewModel.placeholderAsset(viewModel.category),
+                                width: 40,
+                                height: 40,
+                                fit: BoxFit.cover,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  viewModel.category ?? "Select a category",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: viewModel.category == null
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .onSurface,
+                                      ),
+                                ),
+                              ),
+                              Icon(Icons.arrow_drop_down,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant),
+                            ],
+                          ),
+                        ),
                       );
                     },
                   ),

@@ -87,6 +87,7 @@ class CreateCollectionViewModel extends ChangeNotifier {
   void setCategory(String? selectedCategory) {
     if (selectedCategory != null) {
       category = selectedCategory;
+      notifyListeners();
     }
   }
 
@@ -95,5 +96,20 @@ class CreateCollectionViewModel extends ChangeNotifier {
       return 'Please enter a collection name';
     }
     return null;
+  }
+
+  placeholderAsset(String? category) {
+    switch (category) {
+      case 'Lego':
+        return 'assets/images/category_lego.png';
+      case "Funko Pop!":
+        return 'assets/images/category_funko_pop.png';
+      case "Hot Wheels":
+        return 'assets/images/category_hot_wheels.png';
+      case "Wine":
+        return 'assets/images/category_wine.png';
+      default:
+        return 'assets/images/category_other.png';
+    }
   }
 }
