@@ -124,7 +124,7 @@ class LatestAddedItemTile extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          item.title,
+          item.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.titleSmall?.copyWith(

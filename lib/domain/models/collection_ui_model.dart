@@ -7,7 +7,7 @@ class CollectionUIModel {
   final DateTime lastUpdated;
   final String? category;
   final bool? isFavorite;
-  final String? visibility; // "public" or "private"
+  final String? visibility;
 
   CollectionUIModel({
     required this.key,
@@ -23,7 +23,6 @@ class CollectionUIModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'key': key,
       'name': name,
       'description': description,
       'itemsCount': itemsCount,
@@ -35,15 +34,16 @@ class CollectionUIModel {
     };
   }
 
-  factory CollectionUIModel.fromJson(Map<String, dynamic> json) {
+  factory CollectionUIModel.fromJson(Map<String, dynamic> json, String key) {
     return CollectionUIModel(
-      key: json['key'],
-      name: json['name'],
+      key: key,
+      name: json['name'] ?? "Untitled",
       description: json['description'],
-      itemsCount: json['itemsCount'],
+      itemsCount: json['itemsCount'] ?? 0,
       imageUrl: json['imageUrl'],
-      lastUpdated: DateTime.parse(
-          json['lastUpdated'] ?? DateTime.now().toIso8601String()),
+      lastUpdated: json['lastUpdated'] != null
+          ? DateTime.parse(json['lastUpdated'])
+          : DateTime.now(),
       category: json['category'] ?? "Other",
       isFavorite: json['isFavorite'] ?? false,
       visibility: json['visibility'] ?? "private",

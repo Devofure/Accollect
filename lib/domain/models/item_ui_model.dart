@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ItemUIModel {
   final String key;
-  final String title;
+  final String name;
   final String? description;
   final String? collectionName;
   final String? category;
@@ -15,7 +15,7 @@ class ItemUIModel {
 
   ItemUIModel({
     required this.key,
-    required this.title,
+    required this.name,
     required this.description,
     required this.category,
     required this.addedOn,
@@ -27,10 +27,37 @@ class ItemUIModel {
     this.additionalAttributes,
   });
 
+  ItemUIModel copyWith({
+    String? key,
+    String? name,
+    String? description,
+    String? collectionName,
+    String? category,
+    DateTime? addedOn,
+    List<String>? imageUrls,
+    String? collectionKey,
+    String? notes,
+    String? originalPrice,
+    Map<String, dynamic>? additionalAttributes,
+  }) {
+    return ItemUIModel(
+      key: key ?? this.key,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      collectionName: collectionName ?? this.collectionName,
+      category: category ?? this.category,
+      addedOn: addedOn ?? this.addedOn,
+      imageUrls: imageUrls ?? this.imageUrls,
+      collectionKey: collectionKey ?? this.collectionKey,
+      notes: notes ?? this.notes,
+      originalPrice: originalPrice ?? this.originalPrice,
+      additionalAttributes: additionalAttributes ?? this.additionalAttributes,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
-      'key': key,
-      'title': title,
+      'name': name,
       'description': description,
       'category': category,
       'addedOn': Timestamp.fromDate(addedOn),
@@ -42,14 +69,14 @@ class ItemUIModel {
     };
   }
 
-  factory ItemUIModel.fromJson(Map<String, dynamic> json) {
+  factory ItemUIModel.fromJson(Map<String, dynamic> json, String id) {
     return ItemUIModel(
-      key: json['key'],
-      title: json['title'],
+      key: id,
+      name: json['name'] ?? "Untitled",
       description: json['description'],
       collectionName: json['collectionName'],
       category: json['category'],
-      addedOn: (json['addedOn'] as Timestamp).toDate(),
+      addedOn: (json['addedOn'] as Timestamp?)?.toDate() ?? DateTime.now(),
       imageUrls: (json['imageUrls'] as List?)?.map((e) => e as String).toList(),
       collectionKey: json['collectionKey'],
       notes: json['notes'],

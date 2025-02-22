@@ -28,7 +28,9 @@ class CollectionRepository implements ICollectionRepository {
   Future<CollectionUIModel> fetchCollectionDetails(String collectionKey) async {
     final doc = await _collectionRef.doc(collectionKey).get();
     if (!doc.exists) throw Exception('Collection not found');
-    return CollectionUIModel.fromJson(doc.data() as Map<String, dynamic>);
+
+    final data = doc.data() as Map<String, dynamic>;
+    return CollectionUIModel.fromJson(data, doc.id);
   }
 
   @override
@@ -38,8 +40,8 @@ class CollectionRepository implements ICollectionRepository {
 
     return _collectionRef.where('ownerId', isEqualTo: user.uid).snapshots().map(
         (snapshot) => snapshot.docs
-            .map((doc) =>
-                CollectionUIModel.fromJson(doc.data() as Map<String, dynamic>))
+            .map((doc) => CollectionUIModel.fromJson(
+                doc.data() as Map<String, dynamic>, doc.id))
             .toList());
   }
 
@@ -52,8 +54,10 @@ class CollectionRepository implements ICollectionRepository {
         .where('sharedWith', arrayContains: user.uid)
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) =>
-                CollectionUIModel.fromJson(doc.data() as Map<String, dynamic>))
+            .map((doc) => CollectionUIModel.fromJson(
+                  doc.data() as Map<String, dynamic>,
+                  doc.id,
+                ))
             .toList());
   }
 
@@ -63,18 +67,24 @@ class CollectionRepository implements ICollectionRepository {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception("User not authenticated.");
 
+    final newDocRef = _collectionRef.doc();
     String? imageUrl;
+
     if (image != null) {
-      imageUrl = await _uploadCollectionImage(collection.key, image);
+      imageUrl = await _uploadCollectionImage(newDocRef.id, image);
     }
 
-    final data = collection.toJson();
-    data['ownerId'] = user.uid;
-    data['sharedWith'] = [];
-    data['itemsCount'] = 0;
-    data['imageUrl'] = imageUrl;
-
-    await _collectionRef.doc(collection.key).set(data);
+    final data = {
+      'name': collection.name,
+      'description': collection.description,
+      'category': collection.category,
+      'ownerId': user.uid,
+      'sharedWith': [],
+      'itemsCount': 0,
+      'imageUrl': imageUrl,
+      'createdAt': FieldValue.serverTimestamp(),
+    };
+    await newDocRef.set(data);
   }
 
   Future<String> _uploadCollectionImage(

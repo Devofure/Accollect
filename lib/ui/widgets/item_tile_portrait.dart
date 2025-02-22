@@ -60,7 +60,7 @@ class ItemPortraitTile extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   child: Text(
-                    item.title,
+                    item.name,
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

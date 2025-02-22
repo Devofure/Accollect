@@ -50,7 +50,7 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
 
         final newItem = ItemUIModel(
           key: DateTime.now().millisecondsSinceEpoch.toString(),
-          title: title!,
+          name: title!,
           description: description ?? '',
           category: selectedCategory,
           addedOn: DateTime.now(),

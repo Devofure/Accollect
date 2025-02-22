@@ -11,19 +11,12 @@ abstract class IItemRepository {
 
   Stream<List<ItemUIModel>> fetchItemsFromCollectionStream(
       String collectionKey);
-
   Stream<List<ItemUIModel>> fetchLatestItemsStream();
-
   Stream<ItemUIModel?> fetchItemStream(String itemKey);
-
   Future<ItemUIModel> createItem(ItemUIModel item, List<File> images);
-
   Future<void> removeItemFromCollection(String collectionKey, String itemKey);
-
   Future<void> addItemToCollection(String collectionKey, String itemKey);
-
   Future<void> deleteItem(String itemKey);
-
   Future<void> deleteAllItems();
 }
 
@@ -36,7 +29,8 @@ class ItemRepository implements IItemRepository {
   Stream<ItemUIModel?> fetchItemStream(String itemKey) {
     return _itemsRef.doc(itemKey).snapshots().map((snapshot) {
       if (!snapshot.exists) return null;
-      return ItemUIModel.fromJson(snapshot.data() as Map<String, dynamic>);
+      return ItemUIModel.fromJson(
+          snapshot.data() as Map<String, dynamic>, snapshot.id);
     });
   }
 
@@ -47,29 +41,27 @@ class ItemRepository implements IItemRepository {
       query = query.where('category', isEqualTo: categoryFilter);
     }
     return query.snapshots().map((snapshot) => snapshot.docs
-        .map((doc) => ItemUIModel.fromJson(doc.data() as Map<String, dynamic>))
+        .map((doc) =>
+            ItemUIModel.fromJson(doc.data() as Map<String, dynamic>, doc.id))
         .toList());
   }
 
   @override
   Stream<List<ItemUIModel>> fetchItemsFromCollectionStream(
-    String collectionKey,
-  ) {
+      String collectionKey) {
     return _itemsRef
         .where('collectionIds', arrayContains: collectionKey)
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) =>
-                ItemUIModel.fromJson(doc.data() as Map<String, dynamic>))
+            .map((doc) => ItemUIModel.fromJson(
+                doc.data() as Map<String, dynamic>, doc.id))
             .toList());
   }
 
   @override
   Stream<List<ItemUIModel>> fetchLatestItemsStream() {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw Exception("User not authenticated.");
-    }
+    if (user == null) throw Exception("User not authenticated.");
 
     return _itemsRef
         .where('ownerId', isEqualTo: user.uid)
@@ -77,8 +69,8 @@ class ItemRepository implements IItemRepository {
         .limit(10)
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) =>
-                ItemUIModel.fromJson(doc.data() as Map<String, dynamic>))
+            .map((doc) => ItemUIModel.fromJson(
+                doc.data() as Map<String, dynamic>, doc.id))
             .toList());
   }
 
@@ -87,29 +79,42 @@ class ItemRepository implements IItemRepository {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception("User not authenticated.");
 
-    final imageUrls = await _uploadImagesToFirebase(images);
+    // Let Firestore generate the item ID
+    final newDocRef = _itemsRef.doc();
+    final itemId = newDocRef.id;
 
-    final itemData = item.toJson();
-    itemData['ownerId'] = user.uid;
-    itemData['imageUrls'] = imageUrls;
+    final itemData = {
+      'title': item.name,
+      'description': item.description,
+      'category': item.category,
+      'collectionKey': item.collectionKey,
+      'ownerId': user.uid,
+      'imageUrls': [], // Empty for now, images uploaded separately
+      'addedOn': FieldValue.serverTimestamp(),
+    };
+    await newDocRef.set(itemData);
+    if (images.isNotEmpty) {
+      final imageUrls = await _uploadImagesToFirebase(itemId, images);
+      await newDocRef.update({'imageUrls': imageUrls});
+    }
 
-    await _itemsRef.doc(item.key).set(itemData);
-    return item;
+    return item.copyWith(
+        key: itemId,
+        imageUrls: images.isNotEmpty ? images.map((_) => "").toList() : []);
   }
 
-  Future<List<String>> _uploadImagesToFirebase(List<File> images) async {
+  Future<List<String>> _uploadImagesToFirebase(
+      String itemId, List<File> images) async {
     List<String> imageUrls = [];
     try {
       for (var image in images) {
-        final ref = _storage
-            .ref()
-            .child('items/${DateTime.now().millisecondsSinceEpoch}.jpg');
+        final ref = _storage.ref().child(
+            'items/$itemId/${DateTime.now().millisecondsSinceEpoch}.jpg');
         await ref.putFile(image);
         final url = await ref.getDownloadURL();
         imageUrls.add(url);
       }
     } catch (e) {
-      // TODO silently fail for now because Storage cost
       debugPrint('Error uploading images: $e');
     }
     return imageUrls;
@@ -140,11 +145,9 @@ class ItemRepository implements IItemRepository {
   Future<void> deleteAllItems() async {
     final querySnapshot = await _itemsRef.get();
     final batch = FirebaseFirestore.instance.batch();
-
     for (var doc in querySnapshot.docs) {
       batch.delete(doc.reference);
     }
-
     await batch.commit();
   }
 

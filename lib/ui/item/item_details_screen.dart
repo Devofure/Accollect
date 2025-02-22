@@ -62,7 +62,7 @@ class ItemDetailScreen extends StatelessWidget {
         children: [
           _buildImageCarousel(item.imageUrls ?? [], theme),
           const SizedBox(height: 20),
-          _buildDetailRow('Name', item.title, theme),
+          _buildDetailRow('Name', item.name, theme),
           _buildDetailRow('Category', item.category ?? 'No category', theme),
           _buildDetailRow('Added On', _formatDate(item.addedOn), theme),
           if (item.description?.isNotEmpty == true)
