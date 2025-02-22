@@ -74,16 +74,13 @@ class CollectionRepository implements ICollectionRepository {
       imageUrl = await _uploadCollectionImage(newDocRef.id, image);
     }
 
-    final data = {
-      'name': collection.name,
-      'description': collection.description,
-      'category': collection.category,
-      'ownerId': user.uid,
-      'sharedWith': [],
-      'itemsCount': 0,
-      'imageUrl': imageUrl,
-      'createdAt': FieldValue.serverTimestamp(),
-    };
+    final data = collection.toJson()
+      ..addAll({
+        'ownerId': user.uid,
+        if (imageUrl != null) 'imageUrl': imageUrl,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
     await newDocRef.set(data);
   }
 

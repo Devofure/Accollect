@@ -12,26 +12,27 @@ class CollectionUIModel {
   CollectionUIModel({
     required this.key,
     required this.name,
-    required this.description,
-    required this.itemsCount,
+    this.description,
+    this.itemsCount,
     this.imageUrl,
     required this.lastUpdated,
-    required this.category,
+    this.category,
     this.isFavorite = false,
     this.visibility = "private",
   });
 
   Map<String, dynamic> toJson() {
-    return {
+    final Map<String, dynamic> json = {
       'name': name,
-      'description': description,
-      'itemsCount': itemsCount,
-      'imageUrl': imageUrl,
       'lastUpdated': lastUpdated.toIso8601String(),
-      'category': category,
-      'isFavorite': isFavorite,
-      'visibility': visibility,
+      if (description != null) 'description': description,
+      if (itemsCount != null) 'itemsCount': itemsCount,
+      if (imageUrl != null) 'imageUrl': imageUrl,
+      if (category != null) 'category': category,
+      if (isFavorite != null) 'isFavorite': isFavorite,
+      if (visibility != null) 'visibility': visibility,
     };
+    return json;
   }
 
   factory CollectionUIModel.fromJson(Map<String, dynamic> json, String key) {
