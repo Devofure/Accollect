@@ -152,6 +152,8 @@ Widget _circularImagePlaceholder(double size, BuildContext context) {
 }
 
 Widget buildCategoryChip(ThemeData theme, String text) {
+  final isDarkMode = theme.brightness == Brightness.dark;
+
   return Chip(
     label: Text(
       text,
@@ -159,7 +161,10 @@ Widget buildCategoryChip(ThemeData theme, String text) {
         color: theme.colorScheme.onPrimaryContainer,
       ),
     ),
-    backgroundColor: theme.colorScheme.secondaryContainer,
+    backgroundColor: isDarkMode
+        ? theme.colorScheme.secondaryContainer
+            .withValues(alpha: 0.3) // Darker in dark mode
+        : theme.colorScheme.secondaryContainer, // Default for light mode
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
     visualDensity: VisualDensity.compact,
   );
