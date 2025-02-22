@@ -20,7 +20,7 @@ class CreateCollectionViewModel extends ChangeNotifier {
 
   String? collectionName;
   String? description;
-  String? category;
+  String? selectedCategory;
   File? uploadedImage;
 
   CreateCollectionViewModel({
@@ -34,7 +34,6 @@ class CreateCollectionViewModel extends ChangeNotifier {
     fetchCategoriesCommand = Command.createAsyncNoParam<List<String>>(
       () async {
         final categories = await categoryRepository.fetchAllCategories();
-        category = categories.firstOrNull;
         return categories;
       },
       initialValue: [],
@@ -42,20 +41,22 @@ class CreateCollectionViewModel extends ChangeNotifier {
 
     saveCollectionCommand = Command.createAsyncNoParam<void>(
       () async {
-        if (formKey.currentState!.validate()) {
-          formKey.currentState!.save();
-          final newCollection = CollectionUIModel(
-            key: DateTime.now().millisecondsSinceEpoch.toString(),
-            name: collectionName!,
-            description: description,
-            itemsCount: 0,
-            imageUrl: null,
-            lastUpdated: DateTime.now(),
-            category: category,
-          );
-          await collectionRepository.createCollection(
-              newCollection, uploadedImage);
+        if (!formKey.currentState!.validate()) {
+          return;
         }
+        formKey.currentState!.save();
+        final newCollection = CollectionUIModel(
+          key: DateTime.now().millisecondsSinceEpoch.toString(),
+          name: collectionName!,
+          description: description,
+          itemsCount: 0,
+          imageUrl: null,
+          lastUpdated: DateTime.now(),
+          category: selectedCategory,
+        );
+
+        await collectionRepository.createCollection(
+            newCollection, uploadedImage);
       },
       initialValue: null,
     );
@@ -86,19 +87,19 @@ class CreateCollectionViewModel extends ChangeNotifier {
 
   void setCategory(String? selectedCategory) {
     if (selectedCategory != null) {
-      category = selectedCategory;
+      this.selectedCategory = selectedCategory;
       notifyListeners();
     }
   }
 
   String? validateCollectionName(String? value) {
-    if (value == null || value.isEmpty) {
+    if (value == null || value.trim().isEmpty) {
       return 'Please enter a collection name';
     }
     return null;
   }
 
-  placeholderAsset(String? category) {
+  String placeholderAsset(String? category) {
     switch (category) {
       case 'Lego':
         return 'assets/images/category_lego.png';

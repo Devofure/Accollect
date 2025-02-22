@@ -53,7 +53,7 @@ class CreateCollectionScreen extends StatelessWidget {
                           showCategoryPickerDialog(
                             context: context,
                             categories: categories,
-                            selectedCategory: viewModel.category,
+                            selectedCategory: viewModel.selectedCategory,
                             onCategorySelected: viewModel.setCategory,
                             getPlaceholderPath: (category) =>
                                 viewModel.placeholderAsset(category),
@@ -73,7 +73,8 @@ class CreateCollectionScreen extends StatelessWidget {
                           child: Row(
                             children: [
                               Image.asset(
-                                viewModel.placeholderAsset(viewModel.category),
+                                viewModel.placeholderAsset(
+                                    viewModel.selectedCategory),
                                 width: 40,
                                 height: 40,
                                 fit: BoxFit.cover,
@@ -81,18 +82,20 @@ class CreateCollectionScreen extends StatelessWidget {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  viewModel.category ?? "Select a category",
+                                  viewModel.selectedCategory ??
+                                      "Select a category",
                                   style: Theme.of(context)
                                       .textTheme
-                                      .bodyMedium
+                                      .bodyLarge
                                       ?.copyWith(
-                                        color: viewModel.category == null
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .onSurfaceVariant
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .onSurface,
+                                        color:
+                                            viewModel.selectedCategory == null
+                                                ? Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurfaceVariant
+                                                : Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface,
                                       ),
                                 ),
                               ),
@@ -127,7 +130,10 @@ class CreateCollectionScreen extends StatelessWidget {
         title: 'Save Collection',
         isExecuting: viewModel.saveCollectionCommand.isExecuting,
         onPressed: () async {
-          await viewModel.saveCollectionCommand.executeWithFuture();
+          if (viewModel.formKey.currentState!.validate()) {
+            viewModel.formKey.currentState!.save();
+            await viewModel.saveCollectionCommand.executeWithFuture();
+          }
         },
       ),
     );
