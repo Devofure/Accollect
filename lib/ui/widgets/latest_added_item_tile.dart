@@ -53,12 +53,9 @@ class LatestAddedItemTile extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Hero(
-                  tag: 'item-${item.key}',
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: _buildItemImage(imageSize, theme),
-                  ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: _buildItemImage(imageSize, theme),
                 ),
                 const SizedBox(width: 12),
                 Expanded(child: _buildItemDetails(theme)),

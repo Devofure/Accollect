@@ -133,6 +133,8 @@ class CreateCollectionScreen extends StatelessWidget {
           if (viewModel.formKey.currentState!.validate()) {
             viewModel.formKey.currentState!.save();
             await viewModel.saveCollectionCommand.executeWithFuture();
+          } else {
+            debugPrint("Form validation failed, blocking save.");
           }
         },
       ),

@@ -41,7 +41,8 @@ class CreateCollectionViewModel extends ChangeNotifier {
 
     saveCollectionCommand = Command.createAsyncNoParam<void>(
       () async {
-        if (!formKey.currentState!.validate()) {
+        if (formKey.currentState == null || !formKey.currentState!.validate()) {
+          debugPrint("Validation failed: Collection name is required.");
           return;
         }
         formKey.currentState!.save();

@@ -182,6 +182,7 @@ class CollectionScreen extends StatelessWidget {
       BuildContext context, CollectionViewModel viewModel, ThemeData theme) {
     return FloatingActionButton.extended(
       backgroundColor: theme.colorScheme.primary,
+      heroTag: 'add_item',
       onPressed: () => _navigateToAddOrSelectItemScreen(context, viewModel),
       icon: Icon(Icons.add, color: theme.colorScheme.onPrimary),
       label: Text("Add Item",

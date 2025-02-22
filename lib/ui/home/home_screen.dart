@@ -150,6 +150,7 @@ class HomeScreen extends StatelessWidget {
     return FloatingActionButton(
       backgroundColor: theme.colorScheme.secondary,
       foregroundColor: theme.colorScheme.onSecondary,
+      heroTag: 'item_library',
       elevation: 4,
       onPressed: () => context.push(AppRouter.itemLibraryRoute),
       child: const Icon(Icons.library_books),

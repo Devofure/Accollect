@@ -47,6 +47,7 @@ class ItemDetailScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: theme.colorScheme.error,
         foregroundColor: theme.colorScheme.onError,
+        heroTag: 'delete_item',
         onPressed: () => _confirmDelete(context, viewModel, theme),
         icon: const Icon(Icons.delete),
         label: const Text('Delete Item'),

@@ -62,8 +62,8 @@ class ItemLibraryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryDropdown(BuildContext context,
-      ItemLibraryViewModel viewModel, ThemeData theme) {
+  Widget _buildCategoryDropdown(
+      BuildContext context, ItemLibraryViewModel viewModel, ThemeData theme) {
     return ValueListenableBuilder<List<String>>(
       valueListenable: viewModel.fetchCategoriesCommand,
       builder: (context, categories, _) {
@@ -150,14 +150,15 @@ class ItemLibraryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFloatingActionButton(ItemLibraryViewModel viewModel,
-      BuildContext context, ThemeData theme) {
+  Widget _buildFloatingActionButton(
+      ItemLibraryViewModel viewModel, BuildContext context, ThemeData theme) {
     return AnimatedSlide(
       offset: viewModel.isScrollingDown ? const Offset(0, 2) : Offset.zero,
       duration: const Duration(milliseconds: 300),
       child: FloatingActionButton.extended(
         backgroundColor: theme.colorScheme.primaryContainer,
         foregroundColor: theme.colorScheme.onPrimaryContainer,
+        heroTag: 'create_item',
         onPressed: () => _navigateToAddNewItemScreen(context),
         icon: const Icon(Icons.add),
         label: const Text('Create Item'),
