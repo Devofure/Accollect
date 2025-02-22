@@ -32,6 +32,9 @@ class CollectionScreen extends StatelessWidget {
 
   Widget _buildSliverAppBar(
       BuildContext context, ThemeData theme, CollectionViewModel viewModel) {
+    final placeholderPath =
+        viewModel.placeholderAsset(viewModel.collection.category);
+
     return SliverAppBar(
       pinned: true,
       expandedHeight: 150,
@@ -39,23 +42,11 @@ class CollectionScreen extends StatelessWidget {
       actions: [
         IconButton(
           icon: Icon(Icons.more_vert, color: theme.colorScheme.onSurface),
-          onPressed: () {
-            // Handle your "More" action here:
-            showModalBottomSheet(
-              context: context,
-              builder: (context) => _buildMoreMenu(context, viewModel, theme),
-            );
-          },
+          onPressed: () => _showMoreMenu(context, viewModel, theme),
         ),
       ],
       flexibleSpace: LayoutBuilder(
         builder: (context, constraints) {
-          var imageUrl = viewModel.collection.imageUrl;
-          var title = viewModel.collection.name;
-          var subTitle = viewModel.collection.category;
-          var imageSize = 48.0;
-          var titleFontSize = 18.0;
-          var subTitleFontSize = 14.0;
           return FlexibleSpaceBar(
             collapseMode: CollapseMode.pin,
             centerTitle: false,
@@ -64,8 +55,9 @@ class CollectionScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 circularImageWidget(
-                  imageUrl,
-                  size: imageSize,
+                  viewModel.collection.imageUrl,
+                  size: 55,
+                  placeholderAsset: placeholderPath,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -74,23 +66,17 @@ class CollectionScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title,
+                        viewModel.collection.name,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontSize: titleFontSize,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: theme.textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      if (subTitle != null && subTitle.isNotEmpty) ...[
-                        const SizedBox(height: 4),
+                      if (viewModel.collection.category?.isNotEmpty == true)
                         Text(
-                          subTitle,
+                          viewModel.collection.category!,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontSize: subTitleFontSize,
-                          ),
+                          style: theme.textTheme.titleSmall,
                         ),
-                      ],
                     ],
                   ),
                 ),
@@ -102,28 +88,28 @@ class CollectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMoreMenu(
-    BuildContext context,
-    CollectionViewModel viewModel,
-    ThemeData theme,
-  ) {
-    return Wrap(
-      children: [
-        ListTile(
-          leading: Icon(Icons.edit, color: theme.colorScheme.onSurface),
-          title: const Text('Edit collection'),
-          onTap: () {
-            // ...
-          },
-        ),
-        ListTile(
-          leading: Icon(Icons.delete, color: theme.colorScheme.onSurface),
-          title: const Text('Delete collection'),
-          onTap: () {
-            // ...
-          },
-        ),
-      ],
+  void _showMoreMenu(
+      BuildContext context, CollectionViewModel viewModel, ThemeData theme) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Wrap(
+        children: [
+          ListTile(
+            leading: Icon(Icons.edit, color: theme.colorScheme.onSurface),
+            title: const Text('Edit collection'),
+            onTap: () {
+              viewModel.editCollectionCommand.execute();
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.delete, color: theme.colorScheme.onSurface),
+            title: const Text('Delete collection'),
+            onTap: () {
+              viewModel.deleteCollectionCommand.execute();
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -167,21 +153,12 @@ class CollectionScreen extends StatelessWidget {
           return ItemPortraitTile(
             item: item,
             onTap: () => context.push(AppRouter.itemDetailsRoute, extra: item),
-            menuOptions: [
-              PopupMenuItem(
-                value: 'remove',
-                child: const Text('Remove from collection'),
-                onTap: () =>
-                    _confirmRemoveItem(context, viewModel, item.key, theme),
-              ),
-            ],
           );
         },
       ),
     );
   }
 
-  /// Builds the loading grid
   Widget _buildLoadingGrid(ThemeData theme) {
     return GridView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -210,42 +187,6 @@ class CollectionScreen extends StatelessWidget {
       icon: Icon(Icons.add, color: theme.colorScheme.onPrimary),
       label: Text("Add Item",
           style: TextStyle(color: theme.colorScheme.onPrimary)),
-    );
-  }
-
-  void _confirmRemoveItem(BuildContext context, CollectionViewModel viewModel,
-      String itemKey, ThemeData theme) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface,
-        title: Text("Remove Item", style: theme.textTheme.titleMedium),
-        content: Text(
-          "Are you sure you want to remove this item from the collection?",
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel",
-                style: TextStyle(color: theme.colorScheme.primary)),
-          ),
-          TextButton(
-            onPressed: () {
-              viewModel.removeItemFromCollection(itemKey);
-              Navigator.pop(context);
-            },
-            style: TextButton.styleFrom(
-              backgroundColor: theme.colorScheme.error,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            ),
-            child: Text("Remove",
-                style: TextStyle(color: theme.colorScheme.onError)),
-          ),
-        ],
-      ),
     );
   }
 

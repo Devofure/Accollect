@@ -3,6 +3,7 @@ import 'package:accollect/data/item_repository.dart';
 import 'package:accollect/domain/models/collection_ui_model.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_command/flutter_command.dart';
 
 class CollectionViewModel extends ChangeNotifier {
   final ICollectionRepository collectionRepository;
@@ -17,6 +18,8 @@ class CollectionViewModel extends ChangeNotifier {
   String? _errorMessage;
 
   String? get errorMessage => _errorMessage;
+  late Command<void, void> editCollectionCommand;
+  late Command<void, void> deleteCollectionCommand;
 
   CollectionViewModel({
     required this.collectionRepository,
@@ -25,6 +28,18 @@ class CollectionViewModel extends ChangeNotifier {
   }) : collection = initialCollection {
     _itemsStream = _createItemsStream();
     _fetchLatestCollection();
+    _setupCommands();
+  }
+
+  void _setupCommands() {
+    editCollectionCommand = Command.createAsyncNoParam<void>(() async {
+      debugPrint('Editing collection: ${collection.key}');
+    }, initialValue: null);
+
+    deleteCollectionCommand = Command.createAsyncNoParam<void>(() async {
+      debugPrint('Deleting collection: ${collection.key}');
+      await collectionRepository.deleteCollection(collection.key);
+    }, initialValue: null);
   }
 
   Stream<List<ItemUIModel>> _createItemsStream() {
@@ -61,5 +76,20 @@ class CollectionViewModel extends ChangeNotifier {
     _errorMessage = message;
     debugPrint('$message: $error\n$stackTrace');
     notifyListeners();
+  }
+
+  placeholderAsset(String? category) {
+    switch (category) {
+      case 'Lego':
+        return 'assets/images/category_funko_pop.png';
+      case "Funko Pop!":
+        return 'assets/images/category_funko_pop.png';
+      case "Hot Wheels":
+        return 'assets/images/category_hot_wheels.png';
+      case "Wine":
+        return 'assets/images/category_wine.png';
+      default:
+        return 'assets/images/category_other.png';
+    }
   }
 }
