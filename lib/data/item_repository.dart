@@ -11,12 +11,19 @@ abstract class IItemRepository {
 
   Stream<List<ItemUIModel>> fetchItemsFromCollectionStream(
       String collectionKey);
+
   Stream<List<ItemUIModel>> fetchLatestItemsStream();
+
   Stream<ItemUIModel?> fetchItemStream(String itemKey);
+
   Future<ItemUIModel> createItem(ItemUIModel item, List<File> images);
+
   Future<void> removeItemFromCollection(String collectionKey, String itemKey);
+
   Future<void> addItemToCollection(String collectionKey, String itemKey);
+
   Future<void> deleteItem(String itemKey);
+
   Future<void> deleteAllItems();
 }
 
@@ -79,28 +86,23 @@ class ItemRepository implements IItemRepository {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception("User not authenticated.");
 
-    // Let Firestore generate the item ID
     final newDocRef = _itemsRef.doc();
     final itemId = newDocRef.id;
 
-    final itemData = {
-      'title': item.name,
-      'description': item.description,
-      'category': item.category,
-      'collectionKey': item.collectionKey,
-      'ownerId': user.uid,
-      'imageUrls': [], // Empty for now, images uploaded separately
-      'addedOn': FieldValue.serverTimestamp(),
-    };
+    final Map<String, dynamic> itemData = item.toJson()
+      ..removeWhere((key, value) => value == null);
+
+    itemData['ownerId'] = user.uid;
+    itemData['addedOn'] = FieldValue.serverTimestamp();
+
     await newDocRef.set(itemData);
+
     if (images.isNotEmpty) {
       final imageUrls = await _uploadImagesToFirebase(itemId, images);
       await newDocRef.update({'imageUrls': imageUrls});
     }
 
-    return item.copyWith(
-        key: itemId,
-        imageUrls: images.isNotEmpty ? images.map((_) => "").toList() : []);
+    return item.copyWith(key: itemId, imageUrls: images.isNotEmpty ? [""] : []);
   }
 
   Future<List<String>> _uploadImagesToFirebase(
