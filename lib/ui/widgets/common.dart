@@ -119,28 +119,21 @@ Widget circularImageWidget(String? imageUrl, {double size = 90}) {
   return Builder(
     builder: (context) {
       final theme = Theme.of(context);
-      // If the imageUrl is null or empty, just show placeholder
       if (imageUrl == null || imageUrl.trim().isEmpty) {
         return _buildPlaceholder(size, theme);
       }
-
-      // Otherwise, show the network image with a loading builder + error builder
       return ClipOval(
         child: Image.network(
           imageUrl,
           width: size,
           height: size,
           fit: BoxFit.cover,
-
-          // Show a subtle placeholder or progress indicator while loading
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) {
-              return child; // Image is fully loaded
+              return child;
             }
             return _buildPlaceholder(size, theme);
           },
-
-          // If an error occurs, show the placeholder
           errorBuilder: (context, error, stackTrace) {
             return _buildPlaceholder(size, theme);
           },
