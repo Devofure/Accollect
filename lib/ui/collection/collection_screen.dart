@@ -202,7 +202,6 @@ class CollectionScreen extends StatelessWidget {
     );
   }
 
-  /// Builds the floating action button for adding items
   Widget _buildFloatingActionButton(
       BuildContext context, CollectionViewModel viewModel, ThemeData theme) {
     return FloatingActionButton.extended(
@@ -214,7 +213,6 @@ class CollectionScreen extends StatelessWidget {
     );
   }
 
-  /// Confirmation dialog before removing an item
   void _confirmRemoveItem(BuildContext context, CollectionViewModel viewModel,
       String itemKey, ThemeData theme) {
     showDialog(

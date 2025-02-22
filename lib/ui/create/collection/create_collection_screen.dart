@@ -26,15 +26,12 @@ class CreateCollectionScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title Section
                   HeaderText(
                     title: 'Create a Collection',
                     subtitle:
                         'Fill in the details to start your new collection.',
                   ),
                   const SizedBox(height: 24),
-
-                  // Collection Name Input
                   CustomTextInput(
                     label: 'Collection Name',
                     hint: 'Enter collection name',
@@ -42,16 +39,12 @@ class CreateCollectionScreen extends StatelessWidget {
                     validator: viewModel.validateCollectionName,
                   ),
                   const SizedBox(height: 16),
-
-                  // Description Input
                   CustomTextInput(
                     label: 'Description',
                     hint: 'Enter collection description',
                     onSaved: viewModel.setDescription,
                   ),
                   const SizedBox(height: 16),
-
-                  // Category Dropdown
                   ValueListenableBuilder<List<String>>(
                     valueListenable: viewModel.fetchCategoriesCommand,
                     builder: (context, categories, _) {
@@ -64,8 +57,6 @@ class CreateCollectionScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 24),
-
-                  // Image Upload
                   ValueListenableBuilder<File?>(
                     valueListenable: viewModel.uploadImageCommand,
                     builder: (context, image, _) {
@@ -82,8 +73,6 @@ class CreateCollectionScreen extends StatelessWidget {
           ),
         ),
       ),
-
-      // Save Button
       bottomNavigationBar: BottomActionButton(
         title: 'Save Collection',
         isExecuting: viewModel.saveCollectionCommand.isExecuting,

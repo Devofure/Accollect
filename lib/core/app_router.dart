@@ -23,12 +23,11 @@ import 'package:accollect/ui/onboarding/onboarding_screen.dart';
 import 'package:accollect/ui/settings/settings_collection_management_screen.dart';
 import 'package:accollect/ui/settings/settings_collection_management_view_model.dart';
 import 'package:accollect/ui/settings/settings_screen.dart';
+import 'package:accollect/ui/settings/settings_view_model.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-
-import '../ui/settings/settings_view_model.dart';
 
 class AppRouterConfig {
   static GoRouter configureRouter(

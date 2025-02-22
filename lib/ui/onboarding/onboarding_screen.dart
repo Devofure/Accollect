@@ -18,7 +18,6 @@ class OnboardingScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Collection Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -52,8 +51,6 @@ class OnboardingScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Title
               Text(
                 'Track Your Collection',
                 style: theme.textTheme.headlineSmall?.copyWith(
@@ -62,8 +59,6 @@ class OnboardingScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-
-              // Subtitle
               Text(
                 'Effortlessly manage and track your collections with Accollect, '
                 'tailored for collectors seeking an organized way to monitor their items.',
