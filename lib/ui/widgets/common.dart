@@ -150,3 +150,17 @@ Widget _circularImagePlaceholder(double size, BuildContext context) {
     ),
   );
 }
+
+Widget buildCategoryChip(ThemeData theme, String text) {
+  return Chip(
+    label: Text(
+      text,
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.onPrimaryContainer,
+      ),
+    ),
+    backgroundColor: theme.colorScheme.secondaryContainer,
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    visualDensity: VisualDensity.compact,
+  );
+}

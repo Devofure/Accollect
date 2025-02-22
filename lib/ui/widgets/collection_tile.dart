@@ -52,7 +52,7 @@ class CollectionTile extends StatelessWidget {
             Positioned(
               top: 8,
               right: 8,
-              child: _buildCategoryChip(theme),
+              child: buildCategoryChip(theme, collection.category!),
             ),
         ],
       ),
@@ -156,20 +156,6 @@ class CollectionTile extends StatelessWidget {
 
   Widget _buildCollectionImage(ThemeData theme, {double size = 90}) {
     return circularImageWidget(collection.imageUrl, size: size);
-  }
-
-  Widget _buildCategoryChip(ThemeData theme) {
-    return Chip(
-      label: Text(
-        collection.category!,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onPrimaryContainer,
-        ),
-      ),
-      backgroundColor: theme.colorScheme.secondaryContainer,
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      visualDensity: VisualDensity.compact,
-    );
   }
 
   Widget _buildFavoriteIcon(ThemeData theme) {

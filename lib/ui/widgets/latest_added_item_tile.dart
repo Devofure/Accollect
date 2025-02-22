@@ -2,6 +2,8 @@ import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import 'common.dart';
+
 class LatestAddedItemTile extends StatelessWidget {
   final ItemUIModel item;
   final VoidCallback? onTap;
@@ -70,7 +72,7 @@ class LatestAddedItemTile extends StatelessWidget {
             Positioned(
               top: 6,
               right: 6,
-              child: _buildCategoryChip(theme),
+              child: buildCategoryChip(theme, item.category!),
             ),
         ],
       ),
@@ -150,20 +152,6 @@ class LatestAddedItemTile extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildCategoryChip(ThemeData theme) {
-    return Chip(
-      label: Text(
-        item.category!,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onPrimaryContainer,
-        ),
-      ),
-      backgroundColor: theme.colorScheme.primaryContainer,
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      visualDensity: VisualDensity.compact,
     );
   }
 
