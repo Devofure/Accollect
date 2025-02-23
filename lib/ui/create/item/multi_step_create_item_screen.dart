@@ -19,7 +19,7 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
   bool _isSaving = false;
 
   final List<Map<String, dynamic>> _steps = [
-    {'title': 'Details', 'widget': const StepDetailsWidget()},
+    {'title': 'Details', 'widget': StepDetailsWidget()},
     {'title': 'Images', 'widget': const StepImagesWidget()},
     {'title': 'Category', 'widget': const StepCategoryWidget()},
   ];

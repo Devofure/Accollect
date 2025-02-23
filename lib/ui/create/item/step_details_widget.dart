@@ -1,10 +1,13 @@
 import 'package:accollect/ui/create/item/multi_step_create_item_view_model.dart';
 import 'package:accollect/ui/widgets/create_common_widget.dart';
+import 'package:accollect/ui/widgets/loading_border_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class StepDetailsWidget extends StatelessWidget {
-  const StepDetailsWidget({super.key});
+  StepDetailsWidget({super.key});
+
+  final ValueNotifier<bool> _isInputNotEmpty = ValueNotifier<bool>(false);
 
   @override
   Widget build(BuildContext context) {
@@ -18,25 +21,17 @@ class StepDetailsWidget extends StatelessWidget {
         const SizedBox(height: 8),
         _buildBarcodeInput(context, viewModel, theme),
         const SizedBox(height: 16),
-        _buildItemNameInput(viewModel),
+        _buildCustomTextInput(
+            'Item Name', 'Enter item name', viewModel.setTitle),
         const SizedBox(height: 16),
-        CustomTextInput(
-          label: 'Description',
-          hint: 'Enter item description',
-          onSaved: viewModel.setDescription,
-        ),
+        _buildCustomTextInput(
+            'Description', 'Enter item description', viewModel.setDescription),
         const SizedBox(height: 16),
-        CustomTextInput(
-          label: 'Original Price',
-          hint: 'Enter original price',
-          onSaved: viewModel.setOriginalPrice,
-        ),
+        _buildCustomTextInput('Original Price', 'Enter original price',
+            viewModel.setOriginalPrice),
         const SizedBox(height: 16),
-        CustomTextInput(
-          label: 'Notes',
-          hint: 'Enter additional notes',
-          onSaved: viewModel.setNotes,
-        ),
+        _buildCustomTextInput(
+            'Notes', 'Enter additional notes', viewModel.setNotes),
       ],
     );
   }
@@ -63,48 +58,71 @@ class StepDetailsWidget extends StatelessWidget {
       children: [
         Expanded(
           child: TextField(
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Barcode',
               hintText: 'Enter barcode digits',
               border: OutlineInputBorder(),
             ),
-            onChanged: (value) => viewModel.barcode = value,
+            onChanged: (value) {
+              viewModel.barcode = value;
+              _isInputNotEmpty.value = value.isNotEmpty;
+            },
           ),
         ),
         const SizedBox(width: 8),
-        SizedBox(
-          height: 48,
-          child: ElevatedButton(
-            onPressed: () async {
-              if (viewModel.barcode != null && viewModel.barcode!.isNotEmpty) {
-                var products = await viewModel.fetchItemByBarcodeCommand
-                    .executeWithFuture();
-                if (products.isNotEmpty) {
-                  if (products.length == 1) {
-                    _showConfirmationDialog(context, viewModel, products.first);
-                  } else {
-                    // Handle multiple suggestions (dropdown)
-                  }
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.colorScheme.secondary,
-              foregroundColor: theme.colorScheme.onSecondary,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-            child: const Text('Search'),
-          ),
-        ),
+        _buildSearchButton(context, viewModel, theme),
       ],
     );
   }
 
-  Widget _buildItemNameInput(MultiStepCreateItemViewModel viewModel) {
+  Widget _buildSearchButton(BuildContext context,
+      MultiStepCreateItemViewModel viewModel, ThemeData theme) {
+    return SizedBox(
+      height: 48,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _isInputNotEmpty,
+        builder: (context, isNotEmpty, child) {
+          return ValueListenableBuilder<bool>(
+            valueListenable: viewModel.fetchItemByBarcodeCommand.isExecuting,
+            builder: (context, isExecuting, child) {
+              final isDisabled = !isNotEmpty || isExecuting;
+              return LoadingBorderButton(
+                title: 'Search',
+                color: isDisabled
+                    ? theme.colorScheme.surfaceContainerHighest
+                    : theme.colorScheme.primary,
+                isExecuting: ValueNotifier(isExecuting),
+                onPressed:
+                    isDisabled ? null : () => _handleSearch(context, viewModel),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _handleSearch(
+      BuildContext context, MultiStepCreateItemViewModel viewModel) async {
+    if (viewModel.barcode != null && viewModel.barcode!.isNotEmpty) {
+      var products =
+          await viewModel.fetchItemByBarcodeCommand.executeWithFuture();
+      if (products.isNotEmpty) {
+        if (products.length == 1) {
+          _showConfirmationDialog(context, viewModel, products.first);
+        } else {
+          // Handle multiple suggestions (dropdown)
+        }
+      }
+    }
+  }
+
+  Widget _buildCustomTextInput(
+      String label, String hint, Function(String?) onSaved) {
     return CustomTextInput(
-      label: 'Item Name',
-      hint: 'Enter item name',
-      onSaved: viewModel.setTitle,
+      label: label,
+      hint: hint,
+      onSaved: onSaved,
     );
   }
 
