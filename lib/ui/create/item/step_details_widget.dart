@@ -91,7 +91,7 @@ class StepDetailsWidget extends StatelessWidget {
                 color: isDisabled
                     ? theme.colorScheme.surfaceContainerHighest
                     : theme.colorScheme.primary,
-                isExecuting: ValueNotifier(isExecuting),
+                isExecuting: viewModel.fetchItemByBarcodeCommand.isExecuting,
                 onPressed:
                     isDisabled ? null : () => _handleSearch(context, viewModel),
               );
