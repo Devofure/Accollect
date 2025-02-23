@@ -11,6 +11,7 @@ import 'package:accollect/ui/create/collection/create_collection_screen.dart';
 import 'package:accollect/ui/create/collection/create_collection_view_model.dart';
 import 'package:accollect/ui/create/item/barcode/barcode_scanner_screen.dart';
 import 'package:accollect/ui/create/item/barcode/barcode_scanner_view_model.dart';
+import 'package:accollect/ui/create/item/barcode/confirm_product_screen.dart';
 import 'package:accollect/ui/create/item/multi_step_create_item_screen.dart';
 import 'package:accollect/ui/create/item/multi_step_create_item_view_model.dart';
 import 'package:accollect/ui/home/home_screen.dart';
@@ -159,14 +160,25 @@ class AppRouterConfig {
           },
         ),
         GoRoute(
+          path: AppRouter.createNewItemRoute,
+          builder: (context, state) {
+            return ConfirmProductScreen(
+              product: state.extra as Map<String, dynamic>,
+              onAddToCollection: () {},
+            );
+          },
+        ),
+        GoRoute(
           path: AppRouter.addItemBarcodeScannerRoute,
           builder: (context, state) {
             return ChangeNotifierProvider(
               create: (_) => BarcodeScannerViewModel(),
               child: BarcodeScannerScreen(
-                onBarcodeScanned: (barcode) {
-                  debugPrint('Scanned Barcode: $barcode');
-                  // You can now fetch product details with barcode
+                onProductFetched: (product) {
+                  context.push(
+                    AppRouter.productConfirmationRoute,
+                    extra: product,
+                  );
                 },
               ),
             );
@@ -221,6 +233,7 @@ class AppRouter {
   static const String itemDetailsRoute = '/item-details';
   static const String itemLibraryRoute = '/item-library';
   static const String onboardingRoute = '/';
+  static const String productConfirmationRoute = '/product-confirmation';
   static const String profileRoute = '/profile';
   static const String settingsCollectionsRoute = '/settings/collections';
   static const String settingsRoute = '/settings';

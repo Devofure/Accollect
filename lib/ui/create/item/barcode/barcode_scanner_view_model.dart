@@ -1,15 +1,21 @@
+import 'dart:convert';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'package:http/http.dart' as http;
 
 class BarcodeScannerViewModel extends ChangeNotifier {
   late Command<void, String?> startScanningCommand;
+  late Command<String, Map<String, dynamic>> fetchProductDetailsCommand;
+
   CameraController? cameraController;
   BarcodeScanner? _barcodeScanner;
   bool _isScanning = false;
   String? scannedBarcode;
+  Map<String, dynamic>? productDetails;
 
   BarcodeScannerViewModel() {
     _setupCommands();
@@ -18,6 +24,12 @@ class BarcodeScannerViewModel extends ChangeNotifier {
   void _setupCommands() {
     startScanningCommand =
         Command.createAsyncNoParam<String?>(_startScanning, initialValue: null);
+
+    fetchProductDetailsCommand =
+        Command.createAsync<String, Map<String, dynamic>>(
+      _fetchProductDetails,
+      initialValue: {},
+    );
   }
 
   Future<String?> _startScanning() async {
@@ -64,10 +76,30 @@ class BarcodeScannerViewModel extends ChangeNotifier {
         _isScanning = false;
         scannedBarcode = barcodes.first.rawValue;
         notifyListeners();
+
+        if (scannedBarcode != null) {
+          fetchProductDetailsCommand.execute(scannedBarcode!);
+        }
       }
     });
 
     return scannedBarcode;
+  }
+
+  Future<Map<String, dynamic>> _fetchProductDetails(String barcode) async {
+    final Uri url =
+        Uri.parse('https://api.upcitemdb.com/prod/trial/lookup?upc=$barcode');
+
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['items'] != null && data['items'].isNotEmpty) {
+        productDetails = data['items'][0];
+        notifyListeners();
+        return productDetails!;
+      }
+    }
+    return {};
   }
 
   void disposeScanner() {

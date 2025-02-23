@@ -7,9 +7,9 @@ import 'package:provider/provider.dart';
 import 'barcode_scanner_view_model.dart';
 
 class BarcodeScannerScreen extends StatelessWidget {
-  final Function(String) onBarcodeScanned;
+  final Function(Map<String, dynamic>) onProductFetched;
 
-  const BarcodeScannerScreen({super.key, required this.onBarcodeScanned});
+  const BarcodeScannerScreen({super.key, required this.onProductFetched});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +30,18 @@ class BarcodeScannerScreen extends StatelessWidget {
             builder: (context, barcode, _) {
               if (barcode != null) {
                 Future.delayed(Duration.zero, () {
-                  onBarcodeScanned(barcode);
+                  viewModel.fetchProductDetailsCommand.execute(barcode);
+                });
+              }
+              return Container();
+            },
+          ),
+          ValueListenableBuilder<Map<String, dynamic>>(
+            valueListenable: viewModel.fetchProductDetailsCommand,
+            builder: (context, product, _) {
+              if (product.isNotEmpty) {
+                Future.delayed(Duration.zero, () {
+                  onProductFetched(product);
                   context.pop();
                 });
               }
