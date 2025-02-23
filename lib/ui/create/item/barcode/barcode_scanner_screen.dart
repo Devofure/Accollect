@@ -7,14 +7,36 @@ import 'package:provider/provider.dart';
 
 import 'barcode_scanner_view_model.dart';
 
-class BarcodeScannerScreen extends StatelessWidget {
+class BarcodeScannerScreen extends StatefulWidget {
   final Function(Map<String, dynamic>) onProductFetched;
 
   const BarcodeScannerScreen({super.key, required this.onProductFetched});
 
   @override
+  BarcodeScannerScreenState createState() => BarcodeScannerScreenState();
+}
+
+class BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
+  late BarcodeScannerViewModel viewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      viewModel = Provider.of<BarcodeScannerViewModel>(context, listen: false);
+      viewModel.startScanningCommand.execute();
+    });
+  }
+
+  @override
+  void dispose() {
+    viewModel.disposeScanner();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<BarcodeScannerViewModel>();
+    viewModel = context.watch<BarcodeScannerViewModel>();
 
     return Scaffold(
       appBar: CloseableAppBar(title: 'Scan Barcode'),
@@ -35,11 +57,11 @@ class BarcodeScannerScreen extends StatelessWidget {
             valueListenable: viewModel.fetchProductDetailsCommand,
             builder: (context, product, _) {
               if (product.isNotEmpty) {
+                // Use a delayed callback to ensure the UI is updated before popping the screen.
                 Future.delayed(Duration.zero, () {
-                  onProductFetched(product);
+                  widget.onProductFetched(product);
                   context.pop();
                 });
-
                 return Column(
                   children: [
                     CachedNetworkImage(
