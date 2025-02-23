@@ -46,17 +46,29 @@ class _StepDetailsWidgetState extends State<StepDetailsWidget> {
         const SizedBox(height: 8),
         _buildBarcodeInput(context, viewModel, theme),
         const SizedBox(height: 16),
-        _buildCustomTextInput('Item Name', 'Enter item name', _nameController,
-            viewModel.setTitle),
+        CustomTextInput(
+            label: 'Item Name',
+            hint: 'Enter item name',
+            controller: _nameController,
+            onSaved: viewModel.setTitle),
         const SizedBox(height: 16),
-        _buildCustomTextInput('Description', 'Enter item description',
-            _descriptionController, viewModel.setDescription),
+        CustomTextInput(
+            label: 'Description',
+            hint: 'Enter item description',
+            controller: _descriptionController,
+            onSaved: viewModel.setDescription),
         const SizedBox(height: 16),
-        _buildCustomTextInput('Original Price', 'Enter original price',
-            _priceController, viewModel.setOriginalPrice),
+        CustomTextInput(
+            label: 'Original Price',
+            hint: 'Enter original price',
+            controller: _priceController,
+            onSaved: viewModel.setOriginalPrice),
         const SizedBox(height: 16),
-        _buildCustomTextInput('Notes', 'Enter additional notes',
-            _notesController, viewModel.setNotes),
+        CustomTextInput(
+            label: 'Notes',
+            hint: 'Enter additional notes',
+            controller: _notesController,
+            onSaved: viewModel.setNotes),
       ],
     );
   }
@@ -155,21 +167,6 @@ class _StepDetailsWidgetState extends State<StepDetailsWidget> {
           );
         },
       ),
-    );
-  }
-
-  Widget _buildCustomTextInput(
-    String label,
-    String hint,
-    TextEditingController controller,
-    Function(String?) onSaved,
-  ) {
-    return CustomTextInput(
-      label: label,
-      hint: hint,
-      controller: controller,
-      onChanged: onSaved,
-      onSaved: onSaved,
     );
   }
 
