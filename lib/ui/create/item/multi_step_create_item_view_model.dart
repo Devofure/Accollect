@@ -22,8 +22,9 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
   late Command<void, List<Map<String, dynamic>>> fetchItemByBarcodeCommand;
 
   String? barcode;
-  String? title;
+  String? name;
   String? description;
+  List<String>? onlineImages;
   String selectedCategory = 'Other';
   String? originalPrice;
   String? notes;
@@ -50,13 +51,13 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
         final currentState = formKey.currentState!;
         currentState.save();
 
-        if (title == null || title!.isEmpty) {
+        if (name == null || name!.isEmpty) {
           throw Exception('Item title cannot be empty');
         }
 
         final newItem = ItemUIModel(
           key: DateTime.now().millisecondsSinceEpoch.toString(),
-          name: title!,
+          name: name!,
           description: description ?? '',
           category: selectedCategory,
           addedOn: DateTime.now(),
@@ -67,7 +68,7 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
               additionalAttributes.isNotEmpty ? additionalAttributes : null,
         );
 
-        await itemRepository.createItem(newItem, uploadedImages);
+        await itemRepository.createItem(newItem, uploadedImages, onlineImages);
       },
       initialValue: null,
     );
@@ -90,7 +91,7 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
     return categoryRepository.fetchCategoryAttributes(selectedCategory);
   }
 
-  void setTitle(String? value) => title = value;
+  void setTitle(String? value) => name = value;
 
   void setDescription(String? value) => description = value;
 
@@ -165,27 +166,23 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
 
   void selectSuggestion(Map<String, dynamic> suggestion) {
     barcode = suggestion['ean'];
-    title = suggestion['title'];
+    name = suggestion['title'];
     description = suggestion['description'];
-    selectedCategory = suggestion['category'];
-    originalPrice = suggestion['originalPrice'];
     notifyListeners();
   }
 
   void fillItemDetails(Map<String, dynamic> product) {
     barcode = product['ean'];
-    title = product['title'];
+    name = product['title'];
     description = product['description'];
-    selectedCategory = product['category'];
     originalPrice = product['originalPrice'];
-
+    onlineImages = product['images']?.cast<String>() ?? [];
     additionalAttributes = {
       'Brand': product['brand'] ?? '',
       'Release Year': product['releaseYear'] ?? '',
       'Material': product['material'] ?? '',
       'Dimensions': product['dimensions'] ?? '',
     };
-
     notifyListeners();
   }
 

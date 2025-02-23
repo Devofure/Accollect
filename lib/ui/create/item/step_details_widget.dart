@@ -166,13 +166,13 @@ class StepDetailsWidget extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.pop(),
             child: const Text("Cancel"),
           ),
           TextButton(
             onPressed: () {
               viewModel.fillItemDetails(product);
-              Navigator.of(context).pop();
+              context.pop();
             },
             child: const Text("OK"),
           ),
