@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:accollect/core/app_router.dart';
 import 'package:accollect/ui/widgets/create_common_widget.dart';
 import 'package:camera/camera.dart';
@@ -17,36 +15,43 @@ class BarcodeScannerScreen extends StatefulWidget {
 }
 
 class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   CameraController? _cameraController;
   final BarcodeScanner _barcodeScanner = BarcodeScanner();
   bool _isCameraReady = false;
   bool _isProcessing = false;
   bool _foundBarcode = false;
   String? _errorMessage;
+  bool _isFlashOn = false;
+
+  // Animation controller for the scanning line
+  late final AnimationController _lineAnimationController;
+  late final Animation<double> _lineAnimation;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeCamera();
     _disableScreenSleep();
+    _initializeCamera();
+
+    _lineAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+    _lineAnimation =
+        Tween<double>(begin: 0, end: 200).animate(_lineAnimationController);
   }
 
-  /// Prevents screen from sleeping while scanning
   Future<void> _disableScreenSleep() async {
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
 
   Future<void> _initializeCamera() async {
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-        setState(() {
-          _errorMessage = "No available camera.";
-        });
+        setState(() => _errorMessage = "No available camera.");
         return;
       }
 
@@ -63,75 +68,57 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
 
       await _cameraController!.initialize();
       await _cameraController!
-          .lockCaptureOrientation(); // ✅ Fixes landscape issue
+          .lockCaptureOrientation(DeviceOrientation.portraitUp);
 
       if (!mounted) return;
-
-      setState(() {
-        _isCameraReady = true;
-      });
-
+      setState(() => _isCameraReady = true);
       _startImageStream();
     } catch (e) {
-      setState(() {
-        _errorMessage = "Error initializing camera: $e";
-      });
+      setState(() => _errorMessage = "Error initializing camera: $e");
     }
   }
 
-  /// ✅ Start continuous scanning from the camera stream
   void _startImageStream() {
     if (!_isCameraReady || _cameraController == null) return;
 
     _cameraController!.startImageStream((CameraImage image) async {
-      if (_isProcessing || _foundBarcode)
-        return; // ✅ Avoid processing multiple frames at once
+      if (_isProcessing || _foundBarcode) return;
 
-      setState(() {
-        _isProcessing = true;
-      });
-
+      setState(() => _isProcessing = true);
       try {
-        final InputImage inputImage = _convertCameraImage(image);
+        final inputImage = _convertCameraImage(image);
         final barcodes = await _barcodeScanner.processImage(inputImage);
 
         if (barcodes.isNotEmpty) {
+          debugPrint("Found barcode: ${barcodes.first.rawValue}");
           _foundBarcode = true;
-          HapticFeedback.mediumImpact(); // ✅ Adds haptic feedback
-          _showToast("Scanned: ${barcodes.first.rawValue}"); // ✅ Show toast
+          HapticFeedback.mediumImpact();
+          _showToast("Scanned: ${barcodes.first.rawValue}");
           _returnResult(barcodes.first.rawValue);
         }
       } catch (e) {
         debugPrint("Error scanning barcode: $e");
       } finally {
-        setState(() {
-          _isProcessing = false;
-        });
+        setState(() => _isProcessing = false);
       }
     });
   }
 
-  /// ✅ Convert `CameraImage` to `InputImage` for processing
   InputImage _convertCameraImage(CameraImage image) {
-    final WriteBuffer allBytes = WriteBuffer();
-    for (final Plane plane in image.planes) {
-      allBytes.putUint8List(plane.bytes);
-    }
-    final Uint8List bytes = allBytes.done().buffer.asUint8List();
-
+    final bytes = Uint8List.fromList(
+      image.planes.expand((plane) => plane.bytes).toList(),
+    );
     return InputImage.fromBytes(
       bytes: bytes,
       metadata: InputImageMetadata(
         size: Size(image.width.toDouble(), image.height.toDouble()),
         rotation: InputImageRotation.rotation90deg,
-        // ✅ Ensures portrait mode is handled
         format: InputImageFormat.yuv420,
-        bytesPerRow: image.planes[0].bytesPerRow,
+        bytesPerRow: image.planes.first.bytesPerRow,
       ),
     );
   }
 
-  /// ✅ Show a toast with the barcode
   void _showToast(String message) {
     Fluttertoast.showToast(
       msg: message,
@@ -144,12 +131,9 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
   }
 
   void _returnResult(String? barcodeValue) {
-    if (!mounted) return;
-
-    if (barcodeValue != null && barcodeValue.isNotEmpty) {
-      _cameraController?.stopImageStream();
-      context.pop(Result(content: barcodeValue, status: Status.ok));
-    }
+    if (!mounted || barcodeValue == null || barcodeValue.isEmpty) return;
+    _cameraController?.stopImageStream();
+    context.pop(Result(content: barcodeValue, status: Status.ok));
   }
 
   @override
@@ -157,6 +141,7 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
     WidgetsBinding.instance.removeObserver(this);
     _cameraController?.dispose();
     _barcodeScanner.close();
+    _lineAnimationController.dispose();
     super.dispose();
   }
 
@@ -170,83 +155,132 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
     }
   }
 
+  Widget _buildCameraPreview() {
+    if (!_isCameraReady) {
+      return _errorMessage != null
+          ? Center(
+              child: Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red, fontSize: 16),
+              ),
+            )
+          : const Center(child: CircularProgressIndicator());
+    }
+    return RotatedBox(
+      quarterTurns: 1,
+      child: CameraPreview(_cameraController!),
+    );
+  }
+
+  Widget _buildSquareOverlay() {
+    return IgnorePointer(
+      child: Center(
+        child: Container(
+          width: 200,
+          height: 200,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.white, width: 3),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Stack(
+            children: [
+              // Animated scanning line
+              AnimatedBuilder(
+                animation: _lineAnimationController,
+                builder: (context, child) {
+                  return Positioned(
+                    top: _lineAnimation.value,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 2,
+                      color: Colors.redAccent,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInstructionText() {
+    return Positioned(
+      bottom: 100,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: Text(
+          "Align barcode within the frame",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFlashToggle() {
+    return Positioned(
+      top: 40,
+      right: 20,
+      child: IconButton(
+        icon: Icon(
+          _isFlashOn ? Icons.flash_on : Icons.flash_off,
+          color: Colors.white,
+          size: 28,
+        ),
+        onPressed: () async {
+          if (_cameraController == null) return;
+          _isFlashOn = !_isFlashOn;
+          await _cameraController!
+              .setFlashMode(_isFlashOn ? FlashMode.torch : FlashMode.off);
+          setState(() {});
+        },
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Positioned(
+      bottom: 20,
+      left: 20,
+      right: 20,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        onPressed: () {
+          _cameraController?.stopImageStream();
+          context.pop(Result(status: Status.fail));
+        },
+        child: const Text(
+          "Cancel",
+          style: TextStyle(fontSize: 16),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CloseableAppBar(title: 'Scan Barcode'),
       body: Stack(
         children: [
-          // Camera preview with correct orientation
-          Positioned.fill(
-            child: _isCameraReady
-                ? OrientationBuilder(
-                    builder: (context, orientation) {
-                      return Transform.rotate(
-                        angle: orientation == Orientation.portrait
-                            ? 0
-                            : math.pi / 2,
-                        // ✅ Rotate preview
-                        child: CameraPreview(_cameraController!),
-                      );
-                    },
-                  )
-                : _errorMessage != null
-                    ? Center(
-                        child: Text(_errorMessage!,
-                            style: TextStyle(color: Colors.red, fontSize: 16)),
-                      )
-                    : const Center(child: CircularProgressIndicator()),
-          ),
-
-          // Overlay with square scan box
-          Positioned.fill(
-            child: _buildSquareOverlay(),
-          ),
-
-          // Bottom Action Buttons
-          Positioned(
-            bottom: 20,
-            left: 20,
-            right: 20,
-            child: _buildActionButtons(),
-          ),
+          Positioned.fill(child: _buildCameraPreview()),
+          Positioned.fill(child: _buildSquareOverlay()),
+          _buildFlashToggle(),
+          _buildInstructionText(),
+          _buildActionButtons(),
         ],
       ),
-    );
-  }
-
-  Widget _buildSquareOverlay() {
-    return IgnorePointer(
-      child: Container(
-        color: Colors.black.withValues(alpha: 0.5),
-        child: Center(
-          child: Container(
-            width: 200, // ✅ Now a perfect square
-            height: 200, // ✅ Square scan area
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.white, width: 3),
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.transparent,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(height: 10),
-        TextButton(
-          onPressed: () {
-            _cameraController?.stopImageStream();
-            context.pop(Result(status: Status.fail)); // ✅ User manually exits
-          },
-          child: const Text("Cancel"),
-        ),
-      ],
     );
   }
 }
