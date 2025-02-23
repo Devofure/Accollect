@@ -1,7 +1,9 @@
+import 'package:accollect/core/app_router.dart';
 import 'package:accollect/ui/create/item/multi_step_create_item_view_model.dart';
 import 'package:accollect/ui/widgets/create_common_widget.dart';
 import 'package:accollect/ui/widgets/loading_border_button.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class StepDetailsWidget extends StatelessWidget {
@@ -17,7 +19,7 @@ class StepDetailsWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildBarcodeScannerButton(viewModel, theme),
+        _buildBarcodeScannerButton(context, viewModel, theme),
         const SizedBox(height: 8),
         _buildBarcodeInput(context, viewModel, theme),
         const SizedBox(height: 16),
@@ -36,20 +38,22 @@ class StepDetailsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildBarcodeScannerButton(
-      MultiStepCreateItemViewModel viewModel, ThemeData theme) {
-    return Center(
-      child: ElevatedButton.icon(
-        onPressed: viewModel.scanBarcode,
-        icon: Icon(Icons.qr_code_scanner, color: theme.colorScheme.onPrimary),
-        label: const Text('Scan Barcode'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: theme.colorScheme.primary,
-          foregroundColor: theme.colorScheme.onPrimary,
+  Widget _buildBarcodeScannerButton(BuildContext context,
+      MultiStepCreateItemViewModel viewModel,
+      ThemeData theme,) =>
+      Center(
+        child: ElevatedButton.icon(
+          onPressed: () {
+            context.push(AppRouter.addItemBarcodeScannerRoute);
+          },
+          icon: Icon(Icons.qr_code_scanner, color: theme.colorScheme.onPrimary),
+          label: const Text('Scan Barcode'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
+          ),
         ),
-      ),
-    );
-  }
+      );
 
   Widget _buildBarcodeInput(BuildContext context,
       MultiStepCreateItemViewModel viewModel, ThemeData theme) {
