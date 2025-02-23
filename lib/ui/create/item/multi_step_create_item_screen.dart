@@ -2,6 +2,7 @@ import 'package:accollect/ui/create/item/multi_step_create_item_view_model.dart'
 import 'package:accollect/ui/create/item/step_category_widget.dart';
 import 'package:accollect/ui/create/item/step_details_widget.dart';
 import 'package:accollect/ui/create/item/step_images_widget.dart';
+import 'package:accollect/ui/widgets/create_common_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -24,13 +25,7 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: theme.colorScheme.surface,
-        title: Text(
-          'Create Item',
-          style: TextStyle(color: theme.colorScheme.onSurface),
-        ),
-      ),
+      appBar: const CloseableAppBar(title: 'Create Item'),
       body: Form(
         key: viewModel.formKey,
         child: Column(

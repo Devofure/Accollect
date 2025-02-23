@@ -170,10 +170,11 @@ class AppRouterConfig {
           },
         ),
         GoRoute(
-          path: AppRouter.addOrSelectItemRoute,
+          path: AppRouter.addItemLibraryRoute,
           builder: (context, state) {
-            final collectionKey = state.pathParameters['key'];
-            final collectionName = state.pathParameters['name'];
+            final collection = state.extra as CollectionUIModel;
+            final collectionKey = collection.key;
+            final collectionName = collection.name;
             final itemRepo = context.read<IItemRepository>();
 
             return ChangeNotifierProvider(
@@ -194,16 +195,18 @@ class AppRouterConfig {
 }
 
 class AppRouter {
-  static const String onboardingRoute = '/';
-  static const String signInRoute = '/sign-in';
-  static const String profileRoute = '/profile';
-  static const String homeRoute = '/home';
-  static const String settingsRoute = '/settings';
-  static const String settingsCollectionsRoute = '/settings/collections';
-  static const String createCollectionRoute = '/create-collection';
-  static const String addOrSelectItemRoute = '/add-or-select-item/:key/:name';
-  static const String itemLibraryRoute = '/item-library';
-  static const String createNewItemRoute = '/add-new-item';
+  static const String addItemAiScannerRoute = '/aiScanner';
+  static const String addItemBarcodeScannerRoute = '/barcodeScanner';
+  static const String addItemLibraryRoute = '/add-or-select-item/:key/:name';
   static const String collectionRoute = '/collection';
+  static const String createCollectionRoute = '/create-collection';
+  static const String createNewItemRoute = '/add-new-item';
+  static const String homeRoute = '/home';
   static const String itemDetailsRoute = '/item-details';
+  static const String itemLibraryRoute = '/item-library';
+  static const String onboardingRoute = '/';
+  static const String profileRoute = '/profile';
+  static const String settingsCollectionsRoute = '/settings/collections';
+  static const String settingsRoute = '/settings';
+  static const String signInRoute = '/sign-in';
 }

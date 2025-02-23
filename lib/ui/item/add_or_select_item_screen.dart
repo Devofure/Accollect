@@ -2,6 +2,7 @@ import 'package:accollect/core/app_router.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/item/add_or_select_item_view_model.dart';
 import 'package:accollect/ui/widgets/common.dart';
+import 'package:accollect/ui/widgets/create_common_widget.dart';
 import 'package:accollect/ui/widgets/empty_state.dart';
 import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
@@ -25,13 +26,7 @@ class AddOrSelectItemScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: theme.colorScheme.surface,
-        title: Text(
-          'Add to Collection',
-          style: TextStyle(color: theme.colorScheme.onSurface),
-        ),
-      ),
+      appBar: const CloseableAppBar(title: 'Add to Collection'),
       body: SafeArea(
         child: Stack(
           children: [
@@ -218,21 +213,6 @@ class AddOrSelectItemScreen extends StatelessWidget {
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                foregroundColor: theme.colorScheme.onSurfaceVariant,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: theme.colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
@@ -244,7 +224,7 @@ class AddOrSelectItemScreen extends StatelessWidget {
                 viewModel.addSelectedItemsCommand();
                 Navigator.pop(context, true);
               },
-              child: const Text('Add Items'),
+              child: const Text('Add'),
             ),
           ),
         ],
