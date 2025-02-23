@@ -9,6 +9,8 @@ import 'package:accollect/ui/collection/collection_screen.dart';
 import 'package:accollect/ui/collection/collection_view_model.dart';
 import 'package:accollect/ui/create/collection/create_collection_screen.dart';
 import 'package:accollect/ui/create/collection/create_collection_view_model.dart';
+import 'package:accollect/ui/create/item/barcode/barcode_scanner_screen.dart';
+import 'package:accollect/ui/create/item/barcode/barcode_scanner_view_model.dart';
 import 'package:accollect/ui/create/item/multi_step_create_item_screen.dart';
 import 'package:accollect/ui/create/item/multi_step_create_item_view_model.dart';
 import 'package:accollect/ui/home/home_screen.dart';
@@ -153,6 +155,20 @@ class AppRouterConfig {
                 itemRepository: context.read<IItemRepository>(),
               ),
               child: const MultiStepCreateItemScreen(),
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRouter.addItemBarcodeScannerRoute,
+          builder: (context, state) {
+            return ChangeNotifierProvider(
+              create: (_) => BarcodeScannerViewModel(),
+              child: BarcodeScannerScreen(
+                onBarcodeScanned: (barcode) {
+                  debugPrint('Scanned Barcode: $barcode');
+                  // You can now fetch product details with barcode
+                },
+              ),
             );
           },
         ),
