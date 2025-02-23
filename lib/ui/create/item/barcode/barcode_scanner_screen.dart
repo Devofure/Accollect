@@ -21,10 +21,11 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
   bool _isCameraReady = false;
   bool _isProcessing = false;
   bool _foundBarcode = false;
-  String? _errorMessage;
   bool _isFlashOn = false;
+  String? _errorMessage;
+  int _sensorOrientation = 0;
 
-  // Animation controller for the scanning line
+  // Animation for scanning line
   late final AnimationController _lineAnimationController;
   late final Animation<double> _lineAnimation;
 
@@ -60,6 +61,8 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
         orElse: () => cameras.first,
       );
 
+      _sensorOrientation = camera.sensorOrientation;
+
       _cameraController = CameraController(
         camera,
         ResolutionPreset.medium,
@@ -72,6 +75,7 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
 
       if (!mounted) return;
       setState(() => _isCameraReady = true);
+
       _startImageStream();
     } catch (e) {
       setState(() => _errorMessage = "Error initializing camera: $e");
@@ -83,8 +87,8 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
 
     _cameraController!.startImageStream((CameraImage image) async {
       if (_isProcessing || _foundBarcode) return;
+      _isProcessing = true; // ✅ Prevents multiple scans at once
 
-      setState(() => _isProcessing = true);
       try {
         final inputImage = _convertCameraImage(image);
         final barcodes = await _barcodeScanner.processImage(inputImage);
@@ -99,24 +103,47 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
       } catch (e) {
         debugPrint("Error scanning barcode: $e");
       } finally {
-        setState(() => _isProcessing = false);
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _isProcessing = false; // ✅ Ensure new scans are allowed
+        });
       }
     });
   }
 
+  /// ✅ Fixing Rotation for Image Processing
   InputImage _convertCameraImage(CameraImage image) {
-    final bytes = Uint8List.fromList(
-      image.planes.expand((plane) => plane.bytes).toList(),
-    );
+    final WriteBuffer buffer = WriteBuffer();
+    for (final Plane plane in image.planes) {
+      buffer.putUint8List(plane.bytes);
+    }
+    final Uint8List bytes = buffer.done().buffer.asUint8List();
+
     return InputImage.fromBytes(
       bytes: bytes,
       metadata: InputImageMetadata(
         size: Size(image.width.toDouble(), image.height.toDouble()),
-        rotation: InputImageRotation.rotation90deg,
+        rotation: _getImageRotation(),
+        // ✅ Ensures correct barcode scanning rotation
         format: InputImageFormat.yuv420,
         bytesPerRow: image.planes.first.bytesPerRow,
       ),
     );
+  }
+
+  /// ✅ Determines the Correct Image Rotation for Barcode Scanning
+  InputImageRotation _getImageRotation() {
+    switch (_sensorOrientation) {
+      case 0:
+        return InputImageRotation.rotation0deg;
+      case 90:
+        return InputImageRotation.rotation90deg;
+      case 180:
+        return InputImageRotation.rotation180deg;
+      case 270:
+        return InputImageRotation.rotation270deg;
+      default:
+        return InputImageRotation.rotation0deg;
+    }
   }
 
   void _showToast(String message) {
@@ -146,13 +173,19 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused) {
-      _cameraController?.dispose();
-    } else if (state == AppLifecycleState.resumed) {
-      _initializeCamera();
-    }
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: CloseableAppBar(title: 'Scan Barcode'),
+      body: Stack(
+        children: [
+          Positioned.fill(child: _buildCameraPreview()),
+          Positioned.fill(child: _buildSquareOverlay()),
+          _buildFlashToggle(),
+          _buildInstructionText(),
+          _buildActionButtons(),
+        ],
+      ),
+    );
   }
 
   Widget _buildCameraPreview() {
@@ -166,8 +199,13 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
             )
           : const Center(child: CircularProgressIndicator());
     }
+
     return RotatedBox(
-      quarterTurns: 1,
+      quarterTurns: _sensorOrientation == 90
+          ? 1
+          : _sensorOrientation == 270
+              ? 3
+              : 0,
       child: CameraPreview(_cameraController!),
     );
   }
@@ -184,7 +222,6 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
           ),
           child: Stack(
             children: [
-              // Animated scanning line
               AnimatedBuilder(
                 animation: _lineAnimationController,
                 builder: (context, child) {
@@ -264,22 +301,6 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
           "Cancel",
           style: TextStyle(fontSize: 16),
         ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CloseableAppBar(title: 'Scan Barcode'),
-      body: Stack(
-        children: [
-          Positioned.fill(child: _buildCameraPreview()),
-          Positioned.fill(child: _buildSquareOverlay()),
-          _buildFlashToggle(),
-          _buildInstructionText(),
-          _buildActionButtons(),
-        ],
       ),
     );
   }
