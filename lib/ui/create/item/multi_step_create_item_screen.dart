@@ -38,21 +38,52 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
         key: viewModel.formKey,
         child: Column(
           children: [
+            _buildScrollableStepper(theme),
             Expanded(
-              child: Stepper(
-                type: StepperType.horizontal,
-                currentStep: _currentStep,
-                onStepTapped: (step) => setState(() => _currentStep = step),
-                steps: _steps.asMap().entries.map((entry) {
-                  return _buildStep(theme, entry.key);
-                }).toList(),
-                controlsBuilder: (context, details) => const SizedBox.shrink(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: _steps[_currentStep]
+                    ['widget'], // Render current step's content
               ),
             ),
           ],
         ),
       ),
       bottomNavigationBar: _buildBottomBar(context, viewModel, theme),
+    );
+  }
+
+  /// Updated _buildScrollableStepper():
+  /// We set a fixed per‑step width (120.0) and compute the total width.
+  /// This ensures that if the total width exceeds the screen width, horizontal scrolling is enabled.
+  Widget _buildScrollableStepper(ThemeData theme) {
+    const double stepWidth = 120.0; // Adjust this value as needed
+    final totalWidth = _steps.length * stepWidth;
+
+    return SizedBox(
+      height: 90, // Limit the height of the stepper.
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(
+          width: totalWidth,
+          // Provide a fixed width to avoid unbounded constraints.
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              canvasColor: theme.colorScheme.surfaceContainerHighest,
+            ),
+            child: Stepper(
+              type: StepperType.horizontal,
+              currentStep: _currentStep,
+              onStepTapped: (step) => setState(() => _currentStep = step),
+              steps: _steps.asMap().entries.map((entry) {
+                return _buildStep(theme, entry.key);
+              }).toList(),
+              controlsBuilder: (context, details) => const SizedBox.shrink(),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -64,7 +95,7 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
       ),
       isActive: _currentStep >= index,
       state: _stepState(index),
-      content: _steps[index]['widget'],
+      content: const SizedBox.shrink(), // Do not render step content here.
     );
   }
 
