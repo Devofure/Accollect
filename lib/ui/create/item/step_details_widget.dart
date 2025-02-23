@@ -10,11 +10,13 @@ class StepDetailsWidget extends StatelessWidget {
   StepDetailsWidget({super.key});
 
   final ValueNotifier<bool> _isInputNotEmpty = ValueNotifier<bool>(false);
+  final TextEditingController _barcodeController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final viewModel = context.watch<MultiStepCreateItemViewModel>();
+    _barcodeController.text = viewModel.barcode ?? "";
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +54,16 @@ class StepDetailsWidget extends StatelessWidget {
               result.content is String &&
               result.content!.trim().isNotEmpty) {
             viewModel.barcode = result.content;
-            viewModel.fetchItemByBarcodeCommand.execute();
+            _barcodeController.text = result.content!;
+            var products =
+                await viewModel.fetchItemByBarcodeCommand.executeWithFuture();
+            if (products.isNotEmpty) {
+              if (products.length == 1) {
+                _showConfirmationDialog(context, viewModel, products.first);
+              } else {
+                // Handle multiple products (dropdown selection)
+              }
+            }
           }
         },
         icon: Icon(Icons.qr_code_scanner, color: theme.colorScheme.onPrimary),
@@ -72,6 +83,7 @@ class StepDetailsWidget extends StatelessWidget {
       children: [
         Expanded(
           child: TextField(
+            controller: _barcodeController,
             decoration: const InputDecoration(
               labelText: 'Barcode',
               hintText: 'Enter barcode digits',
@@ -106,29 +118,26 @@ class StepDetailsWidget extends StatelessWidget {
                     ? theme.colorScheme.surfaceContainerHighest
                     : theme.colorScheme.primary,
                 isExecuting: viewModel.fetchItemByBarcodeCommand.isExecuting,
-                onPressed:
-                    isDisabled ? null : () => _handleSearch(context, viewModel),
+                onPressed: isDisabled
+                    ? null
+                    : () async {
+                        var products = await viewModel.fetchItemByBarcodeCommand
+                            .executeWithFuture();
+                        if (products.isNotEmpty) {
+                          if (products.length == 1) {
+                            _showConfirmationDialog(
+                                context, viewModel, products.first);
+                          } else {
+                            // Handle multiple products
+                          }
+                        }
+                      },
               );
             },
           );
         },
       ),
     );
-  }
-
-  Future<void> _handleSearch(
-      BuildContext context, MultiStepCreateItemViewModel viewModel) async {
-    if (viewModel.barcode != null && viewModel.barcode!.isNotEmpty) {
-      var products =
-          await viewModel.fetchItemByBarcodeCommand.executeWithFuture();
-      if (products.isNotEmpty) {
-        if (products.length == 1) {
-          _showConfirmationDialog(context, viewModel, products.first);
-        } else {
-          // Handle multiple suggestions (dropdown)
-        }
-      }
-    }
   }
 
   Widget _buildCustomTextInput(
