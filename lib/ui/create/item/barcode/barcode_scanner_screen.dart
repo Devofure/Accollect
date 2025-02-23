@@ -1,11 +1,10 @@
 import 'package:accollect/core/app_router.dart';
 import 'package:accollect/ui/widgets/create_common_widget.dart';
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class BarcodeScannerScreen extends StatefulWidget {
   const BarcodeScannerScreen({super.key});
@@ -15,163 +14,33 @@ class BarcodeScannerScreen extends StatefulWidget {
 }
 
 class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
-  CameraController? _cameraController;
-  final BarcodeScanner _barcodeScanner = BarcodeScanner();
-  bool _isCameraReady = false;
-  bool _isProcessing = false;
-  bool _foundBarcode = false;
-  bool _isFlashOn = false;
-  String? _errorMessage;
-  int _sensorOrientation = 0;
-
-  // Animation for scanning line
-  late final AnimationController _lineAnimationController;
-  late final Animation<double> _lineAnimation;
+    with WidgetsBindingObserver {
+  final MobileScannerController _mobileScannerController =
+      MobileScannerController();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _disableScreenSleep();
-    _initializeCamera();
-
-    _lineAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
-    _lineAnimation =
-        Tween<double>(begin: 0, end: 200).animate(_lineAnimationController);
   }
 
   Future<void> _disableScreenSleep() async {
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
 
-  Future<void> _initializeCamera() async {
-    try {
-      final cameras = await availableCameras();
-      if (cameras.isEmpty) {
-        setState(() => _errorMessage = "No available camera.");
-        return;
-      }
-
-      final camera = cameras.firstWhere(
-        (c) => c.lensDirection == CameraLensDirection.back,
-        orElse: () => cameras.first,
-      );
-
-      _sensorOrientation = camera.sensorOrientation;
-
-      _cameraController = CameraController(
-        camera,
-        ResolutionPreset.medium,
-        enableAudio: false,
-      );
-
-      await _cameraController!.initialize();
-      await _cameraController!
-          .lockCaptureOrientation(DeviceOrientation.portraitUp);
-
-      if (!mounted) return;
-      setState(() => _isCameraReady = true);
-
-      _startImageStream();
-    } catch (e) {
-      setState(() => _errorMessage = "Error initializing camera: $e");
-    }
+  @override
+  void dispose() {
+    _mobileScannerController.stop();
+    _mobileScannerController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
-  void _startImageStream() {
-    if (!_isCameraReady || _cameraController == null) return;
-
-    _cameraController!.startImageStream((CameraImage image) async {
-      if (_isProcessing || _foundBarcode) return;
-      _isProcessing = true;
-
-      try {
-        final inputImage = _convertCameraImage(image);
-        final barcodes = await _barcodeScanner.processImage(inputImage);
-
-        if (barcodes.isNotEmpty) {
-          debugPrint("Found barcode: ${barcodes.first.rawValue}");
-          _foundBarcode = true;
-          HapticFeedback.mediumImpact();
-          _showToast("Scanned: ${barcodes.first.rawValue}");
-          _returnResult(barcodes.first.rawValue);
-        }
-      } catch (e, s) {
-        debugPrint('Error scanning barcode: $e\nStacktrace: $s');
-      } finally {
-        Future.delayed(const Duration(milliseconds: 500), () {
-          _isProcessing = false;
-        });
-      }
-    });
-  }
-
-  InputImage _convertCameraImage(CameraImage image) {
-    final Uint8List nv21Bytes = convertYUV420ToNV21(image);
-
-    final Size imageSize =
-        Size(image.width.toDouble(), image.height.toDouble());
-    final InputImageRotation rotation = _getImageRotation();
-
-    final InputImageFormat format = InputImageFormat.nv21;
-
-    final int bytesPerRow = image.width;
-    debugPrint(
-        'Converted image to NV21 - size: $imageSize, rotation: $rotation, format: $format, bytesPerRow: $bytesPerRow');
-
-    final metadata = InputImageMetadata(
-      size: imageSize,
-      rotation: rotation,
-      format: format,
-      bytesPerRow: bytesPerRow,
-    );
-
-    return InputImage.fromBytes(bytes: nv21Bytes, metadata: metadata);
-  }
-
-  Uint8List convertYUV420ToNV21(CameraImage image) {
-    final int width = image.width;
-    final int height = image.height;
-    final int ySize = width * height;
-    final int uvSize = ySize ~/ 2;
-    final Uint8List nv21 = Uint8List(ySize + uvSize);
-
-    final Plane yPlane = image.planes[0];
-    for (int row = 0; row < height; row++) {
-      final int rowStart = row * yPlane.bytesPerRow;
-      nv21.setRange(row * width, row * width + width, yPlane.bytes, rowStart);
-    }
-    final Plane uPlane = image.planes[1];
-    final Plane vPlane = image.planes[2];
-    int uvOffset = ySize;
-    for (int row = 0; row < height ~/ 2; row++) {
-      final int uRowStart = row * uPlane.bytesPerRow;
-      final int vRowStart = row * vPlane.bytesPerRow;
-      for (int col = 0; col < width ~/ 2; col++) {
-        nv21[uvOffset++] = vPlane.bytes[vRowStart + col];
-        nv21[uvOffset++] = uPlane.bytes[uRowStart + col];
-      }
-    }
-    return nv21;
-  }
-
-  InputImageRotation _getImageRotation() {
-    switch (_sensorOrientation) {
-      case 0:
-        return InputImageRotation.rotation0deg;
-      case 90:
-        return InputImageRotation.rotation90deg;
-      case 180:
-        return InputImageRotation.rotation180deg;
-      case 270:
-        return InputImageRotation.rotation270deg;
-      default:
-        return InputImageRotation.rotation0deg;
-    }
+  void _returnResult(String? barcodeValue) {
+    if (!mounted || barcodeValue == null || barcodeValue.isEmpty) return;
+    _mobileScannerController.stop();
+    context.pop(Result(content: barcodeValue, status: Status.ok));
   }
 
   void _showToast(String message) {
@@ -185,149 +54,151 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
     );
   }
 
-  void _returnResult(String? barcodeValue) {
-    if (!mounted || barcodeValue == null || barcodeValue.isEmpty) return;
-    _cameraController?.stopImageStream();
-    context.pop(Result(content: barcodeValue, status: Status.ok));
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _cameraController?.dispose();
-    _barcodeScanner.close();
-    _lineAnimationController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CloseableAppBar(title: 'Scan Barcode'),
       body: Stack(
         children: [
-          Positioned.fill(child: _buildCameraPreview()),
-          Positioned.fill(child: _buildSquareOverlay()),
+          MobileScanner(
+            controller: _mobileScannerController,
+            onDetect: (BarcodeCapture barcodeCapture) {
+              final barcode = barcodeCapture.barcodes.first;
+              final code = barcode.rawValue;
+              if (code != null) {
+                HapticFeedback.mediumImpact();
+                _showToast("Scanned: $code");
+                _returnResult(code);
+              }
+            },
+            errorBuilder: (context, error, child) {
+              return Center(
+                child: Text('Camera error: ${error.errorCode}'),
+              );
+            },
+            fit: BoxFit.cover,
+          ),
+          _buildSquareOverlay(),
           _buildFlashToggle(),
           _buildInstructionText(),
-          _buildActionButtons(),
+          _buildCancelButton(),
         ],
       ),
     );
   }
 
-  Widget _buildCameraPreview() {
-    if (!_isCameraReady) {
-      return _errorMessage != null
-          ? Center(
-              child: Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red, fontSize: 16),
-              ),
-            )
-          : const Center(child: CircularProgressIndicator());
-    }
-
-    return RotatedBox(
-      quarterTurns: _sensorOrientation == 90
-          ? 1
-          : _sensorOrientation == 270
-              ? 3
-              : 0,
-      child: CameraPreview(_cameraController!),
-    );
-  }
-
   Widget _buildSquareOverlay() {
-    return IgnorePointer(
-      child: Center(
-        child: Container(
-          width: 200,
-          height: 200,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.white, width: 3),
-            borderRadius: BorderRadius.circular(12),
+    return Center(
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 260,
+            height: 260,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.white, width: 4),
+              borderRadius: BorderRadius.circular(16),
+              color: Colors.black
+                  .withValues(alpha: 0.3), // Semi-transparent background
+            ),
           ),
-          child: Stack(
-            children: [
-              AnimatedBuilder(
-                animation: _lineAnimationController,
-                builder: (context, child) {
-                  return Positioned(
-                    top: _lineAnimation.value,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 2,
-                      color: Colors.redAccent,
-                    ),
-                  );
-                },
-              ),
-            ],
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: 220),
+            duration: const Duration(seconds: 2),
+            curve: Curves.easeInOut,
+            builder: (context, value, child) {
+              return Positioned(
+                top: value,
+                left: 20,
+                right: 20,
+                child: Container(
+                  height: 3,
+                  color: Colors.redAccent,
+                ),
+              );
+            },
+            onEnd: () => setState(() {}),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildInstructionText() {
     return Positioned(
-      bottom: 100,
-      left: 0,
-      right: 0,
+      bottom: 140,
+      left: 20,
+      right: 20,
       child: Center(
-        child: Text(
-          "Align barcode within the frame",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+        child: TweenAnimationBuilder<double>(
+          tween: Tween<double>(begin: 0.5, end: 1.0),
+          duration: const Duration(seconds: 1),
+          curve: Curves.easeInOut,
+          builder: (context, value, child) {
+            return Opacity(
+              opacity: value,
+              child: child,
+            );
+          },
+          onEnd: () => setState(() {}),
+          child: const Text(
+            "Align the barcode inside the frame",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+            ),
           ),
         ),
       ),
     );
   }
 
+  bool _isFlashOn = false; // Track torch state manually
+
   Widget _buildFlashToggle() {
     return Positioned(
-      top: 40,
-      right: 20,
-      child: IconButton(
-        icon: Icon(
-          _isFlashOn ? Icons.flash_on : Icons.flash_off,
-          color: Colors.white,
-          size: 28,
+      bottom: 100,
+      child: Center(
+        child: FloatingActionButton(
+          backgroundColor: Colors.black54,
+          child: Icon(
+            _isFlashOn ? Icons.flash_on : Icons.flash_off,
+            color: Colors.yellowAccent,
+          ),
+          onPressed: () async {
+            await _mobileScannerController.toggleTorch();
+            HapticFeedback.mediumImpact();
+            setState(() {
+              _isFlashOn = !_isFlashOn;
+            });
+          },
         ),
-        onPressed: () async {
-          if (_cameraController == null) return;
-          _isFlashOn = !_isFlashOn;
-          await _cameraController!
-              .setFlashMode(_isFlashOn ? FlashMode.torch : FlashMode.off);
-          setState(() {});
-        },
       ),
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildCancelButton() {
     return Positioned(
       bottom: 20,
       left: 20,
       right: 20,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Colors.white, width: 2),
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         onPressed: () {
-          _cameraController?.stopImageStream();
+          _mobileScannerController.stop();
           context.pop(Result(status: Status.fail));
         },
         child: const Text(
           "Cancel",
-          style: TextStyle(fontSize: 16),
+          style: TextStyle(fontSize: 16, color: Colors.white),
         ),
       ),
     );
