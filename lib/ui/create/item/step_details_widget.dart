@@ -57,35 +57,35 @@ class StepDetailsWidget extends StatelessWidget {
   }
 
   Widget _buildBarcodeInput(BuildContext context,
-      MultiStepCreateItemViewModel viewModel, ThemeData theme) {
-    return Row(
-      children: [
-        Expanded(
-          child: CustomTextInput(
-            label: 'Barcode',
-            hint: 'Enter barcode digits',
-            onSaved: viewModel.setBarcode,
-            onChanged: viewModel.setBarcode,
+          MultiStepCreateItemViewModel viewModel, ThemeData theme) =>
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: CustomTextInput(
+              label: 'Barcode',
+              hint: 'Enter barcode digits',
+              onSaved: viewModel.setBarcode,
+              onChanged: viewModel.setBarcode,
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
-        ElevatedButton(
-          onPressed: () {
-            if (viewModel.barcode != null && viewModel.barcode!.isNotEmpty) {
-              viewModel.fetchItemByBarcodeCommand.execute(viewModel.barcode!);
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: theme.colorScheme.secondary,
-            foregroundColor: theme.colorScheme.onSecondary,
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: () {
+              if (viewModel.barcode != null && viewModel.barcode!.isNotEmpty) {
+                viewModel.fetchItemByBarcodeCommand.execute(viewModel.barcode!);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.secondary,
+              foregroundColor: theme.colorScheme.onSecondary,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            child: const Text('Search'),
           ),
-          child: const Text('Search'),
-        ),
-      ],
-    );
-  }
+        ],
+      );
 
-  /// **📝 Item Name Input**
   Widget _buildItemNameInput(MultiStepCreateItemViewModel viewModel) {
     return CustomTextInput(
       label: 'Item Name',
