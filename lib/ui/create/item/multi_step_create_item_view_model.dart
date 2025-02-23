@@ -200,4 +200,11 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
         return 'assets/images/category_other.png';
     }
   }
+
+  void removeOnlineImage(int index) {
+    if (index >= 0 && index < onlineImages!.length) {
+      onlineImages!.removeAt(index);
+      notifyListeners();
+    }
+  }
 }

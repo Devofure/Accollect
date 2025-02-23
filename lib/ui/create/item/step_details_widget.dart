@@ -6,17 +6,38 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-class StepDetailsWidget extends StatelessWidget {
-  StepDetailsWidget({super.key});
+class StepDetailsWidget extends StatefulWidget {
+  const StepDetailsWidget({super.key});
 
+  @override
+  State<StepDetailsWidget> createState() => _StepDetailsWidgetState();
+}
+
+class _StepDetailsWidgetState extends State<StepDetailsWidget> {
   final ValueNotifier<bool> _isInputNotEmpty = ValueNotifier<bool>(false);
   final TextEditingController _barcodeController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final viewModel = context.watch<MultiStepCreateItemViewModel>();
+
+    // ✅ Ensure text controllers reflect ViewModel data
+    _barcodeController.text = viewModel.barcode ?? "";
+    _nameController.text = viewModel.name ?? "";
+    _descriptionController.text = viewModel.description ?? "";
+    _priceController.text = viewModel.originalPrice ?? "";
+    _notesController.text = viewModel.notes ?? "";
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final viewModel = context.watch<MultiStepCreateItemViewModel>();
-    _barcodeController.text = viewModel.barcode ?? "";
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -25,17 +46,17 @@ class StepDetailsWidget extends StatelessWidget {
         const SizedBox(height: 8),
         _buildBarcodeInput(context, viewModel, theme),
         const SizedBox(height: 16),
-        _buildCustomTextInput(
-            'Item Name', 'Enter item name', viewModel.setTitle),
+        _buildCustomTextInput('Item Name', 'Enter item name', _nameController,
+            viewModel.setTitle),
         const SizedBox(height: 16),
-        _buildCustomTextInput(
-            'Description', 'Enter item description', viewModel.setDescription),
+        _buildCustomTextInput('Description', 'Enter item description',
+            _descriptionController, viewModel.setDescription),
         const SizedBox(height: 16),
         _buildCustomTextInput('Original Price', 'Enter original price',
-            viewModel.setOriginalPrice),
+            _priceController, viewModel.setOriginalPrice),
         const SizedBox(height: 16),
-        _buildCustomTextInput(
-            'Notes', 'Enter additional notes', viewModel.setNotes),
+        _buildCustomTextInput('Notes', 'Enter additional notes',
+            _notesController, viewModel.setNotes),
       ],
     );
   }
@@ -87,7 +108,6 @@ class StepDetailsWidget extends StatelessWidget {
             decoration: const InputDecoration(
               labelText: 'Barcode',
               hintText: 'Enter barcode digits',
-              border: OutlineInputBorder(),
             ),
             onChanged: (value) {
               viewModel.barcode = value;
@@ -140,11 +160,15 @@ class StepDetailsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildCustomTextInput(
-      String label, String hint, Function(String?) onSaved) {
+  Widget _buildCustomTextInput(String label,
+      String hint,
+      TextEditingController controller,
+      Function(String?) onSaved,) {
     return CustomTextInput(
       label: label,
       hint: hint,
+      controller: controller,
+      onChanged: onSaved,
       onSaved: onSaved,
     );
   }
@@ -172,6 +196,13 @@ class StepDetailsWidget extends StatelessWidget {
           TextButton(
             onPressed: () {
               viewModel.fillItemDetails(product);
+              _barcodeController.text = viewModel.barcode ?? "";
+              _nameController.text = viewModel.name ?? "";
+              _descriptionController.text = viewModel.description ?? "";
+              _priceController.text = viewModel.originalPrice ?? "";
+              _notesController.text = viewModel.notes ?? "";
+
+              setState(() {}); // ✅ Force UI update
               context.pop();
             },
             child: const Text("OK"),
