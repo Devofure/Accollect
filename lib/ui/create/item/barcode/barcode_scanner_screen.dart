@@ -87,7 +87,7 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
 
     _cameraController!.startImageStream((CameraImage image) async {
       if (_isProcessing || _foundBarcode) return;
-      _isProcessing = true; // ✅ Prevents multiple scans at once
+      _isProcessing = true;
 
       try {
         final inputImage = _convertCameraImage(image);
@@ -100,35 +100,63 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
           _showToast("Scanned: ${barcodes.first.rawValue}");
           _returnResult(barcodes.first.rawValue);
         }
-      } catch (e) {
-        debugPrint("Error scanning barcode: $e");
+      } catch (e, s) {
+        debugPrint('Error scanning barcode: $e\nStacktrace: $s');
       } finally {
         Future.delayed(const Duration(milliseconds: 500), () {
-          _isProcessing = false; // ✅ Ensure new scans are allowed
+          _isProcessing = false;
         });
       }
     });
   }
 
   InputImage _convertCameraImage(CameraImage image) {
-    final WriteBuffer allBytes = WriteBuffer();
-    for (final Plane plane in image.planes) {
-      allBytes.putUint8List(plane.bytes);
-    }
-    final Uint8List bytes = allBytes.done().buffer.asUint8List();
+    final Uint8List nv21Bytes = convertYUV420ToNV21(image);
 
     final Size imageSize =
         Size(image.width.toDouble(), image.height.toDouble());
     final InputImageRotation rotation = _getImageRotation();
-    final InputImageFormat format = InputImageFormat.yuv_420_888;
-    final int bytesPerRow = image.planes.first.bytesPerRow;
+
+    final InputImageFormat format = InputImageFormat.nv21;
+
+    final int bytesPerRow = image.width;
+    debugPrint(
+        'Converted image to NV21 - size: $imageSize, rotation: $rotation, format: $format, bytesPerRow: $bytesPerRow');
+
     final metadata = InputImageMetadata(
       size: imageSize,
       rotation: rotation,
       format: format,
       bytesPerRow: bytesPerRow,
     );
-    return InputImage.fromBytes(bytes: bytes, metadata: metadata);
+
+    return InputImage.fromBytes(bytes: nv21Bytes, metadata: metadata);
+  }
+
+  Uint8List convertYUV420ToNV21(CameraImage image) {
+    final int width = image.width;
+    final int height = image.height;
+    final int ySize = width * height;
+    final int uvSize = ySize ~/ 2;
+    final Uint8List nv21 = Uint8List(ySize + uvSize);
+
+    final Plane yPlane = image.planes[0];
+    for (int row = 0; row < height; row++) {
+      final int rowStart = row * yPlane.bytesPerRow;
+      nv21.setRange(row * width, row * width + width, yPlane.bytes, rowStart);
+    }
+    final Plane uPlane = image.planes[1];
+    final Plane vPlane = image.planes[2];
+    int uvOffset = ySize;
+    for (int row = 0; row < height ~/ 2; row++) {
+      final int uRowStart = row * uPlane.bytesPerRow;
+      final int vRowStart = row * vPlane.bytesPerRow;
+      for (int col = 0; col < width ~/ 2; col++) {
+        nv21[uvOffset++] = vPlane.bytes[vRowStart + col];
+        nv21[uvOffset++] = uPlane.bytes[uRowStart + col];
+      }
+    }
+    return nv21;
   }
 
   InputImageRotation _getImageRotation() {
