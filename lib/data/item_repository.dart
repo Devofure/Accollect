@@ -16,8 +16,7 @@ abstract class IItemRepository {
 
   Stream<ItemUIModel?> fetchItemStream(String itemKey);
 
-  Future<ItemUIModel> createItem(
-      ItemUIModel item, List<File>? images, List<String>? onlineImages);
+  Future<ItemUIModel> createItem(ItemUIModel item, List<File>? images);
 
   Future<void> removeItemFromCollection(String collectionKey, String itemKey);
 
@@ -86,7 +85,6 @@ class ItemRepository implements IItemRepository {
   Future<ItemUIModel> createItem(
     ItemUIModel item,
     List<File>? images,
-    List<String>? onlineImages,
   ) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception("User not authenticated.");

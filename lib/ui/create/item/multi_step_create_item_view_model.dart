@@ -63,12 +63,14 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
           addedOn: DateTime.now(),
           collectionKey: null,
           originalPrice: originalPrice,
+          onlineImageUrls: onlineImages,
           notes: notes,
-          additionalAttributes:
-              additionalAttributes.isNotEmpty ? additionalAttributes : null,
+          additionalAttributes: additionalAttributes.isNotEmpty
+              ? Map.of(additionalAttributes)
+              : null,
         );
 
-        await itemRepository.createItem(newItem, uploadedImages, onlineImages);
+        await itemRepository.createItem(newItem, uploadedImages);
       },
       initialValue: null,
     );
@@ -105,12 +107,6 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
   void setOriginalPrice(String? value) => originalPrice = value;
 
   void setNotes(String? value) => notes = value;
-
-  void setAdditionalAttribute(String field, dynamic value) {
-    if (value != null && value.toString().isNotEmpty) {
-      additionalAttributes[field] = value;
-    }
-  }
 
   String? validateTitle(String? value) {
     return (value == null || value.isEmpty)
@@ -184,6 +180,25 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
       'Dimensions': product['dimensions'] ?? '',
     };
     notifyListeners();
+  }
+
+  void setAdditionalAttribute(String field, dynamic value) {
+    if (value != null && value.toString().isNotEmpty) {
+      additionalAttributes = {
+        ...additionalAttributes,
+        field: value,
+      };
+      notifyListeners();
+    }
+  }
+
+  void removeAdditionalAttribute(String field) {
+    if (additionalAttributes.containsKey(field)) {
+      additionalAttributes = {
+        ...additionalAttributes..remove(field),
+      };
+      notifyListeners();
+    }
   }
 
   placeholderAsset(String? category) {
