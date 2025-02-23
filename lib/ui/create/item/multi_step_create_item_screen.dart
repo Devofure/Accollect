@@ -18,6 +18,12 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
   int _currentStep = 0;
   bool _isSaving = false;
 
+  final List<Map<String, dynamic>> _steps = [
+    {'title': 'Details', 'widget': const StepDetailsWidget()},
+    {'title': 'Images', 'widget': const StepImagesWidget()},
+    {'title': 'Category', 'widget': const StepCategoryWidget()},
+  ];
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -35,11 +41,9 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
                 type: StepperType.horizontal,
                 currentStep: _currentStep,
                 onStepTapped: (step) => setState(() => _currentStep = step),
-                steps: [
-                  _buildStep(theme, 'Images', 0, const StepImagesWidget()),
-                  _buildStep(theme, 'Details', 1, const StepDetailsWidget()),
-                  _buildStep(theme, 'Category', 2, const StepCategoryWidget()),
-                ],
+                steps: _steps.asMap().entries.map((entry) {
+                  return _buildStep(theme, entry.key);
+                }).toList(),
                 controlsBuilder: (context, details) => const SizedBox.shrink(),
               ),
             ),
@@ -50,16 +54,15 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
     );
   }
 
-  Step _buildStep(
-      ThemeData theme, String title, int stepIndex, Widget content) {
+  Step _buildStep(ThemeData theme, int index) {
     return Step(
       title: Text(
-        title,
+        _steps[index]['title'],
         style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
       ),
-      isActive: _currentStep >= stepIndex,
-      state: _stepState(stepIndex),
-      content: content,
+      isActive: _currentStep >= index,
+      state: _stepState(index),
+      content: _steps[index]['widget'],
     );
   }
 
@@ -82,7 +85,7 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
                 ),
                 child: const Text('Back'),
               ),
-            if (_currentStep < 2)
+            if (_currentStep < _steps.length - 1)
               ElevatedButton(
                 onPressed: () => setState(() => _currentStep++),
                 style: ElevatedButton.styleFrom(

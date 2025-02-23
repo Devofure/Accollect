@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/item_repository.dart';
+import 'package:accollect/data/item_suggestions_repository.dart';
 import 'package:accollect/domain/models/category_attributes_model.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:flutter/material.dart';
@@ -11,11 +13,13 @@ import 'package:image_picker/image_picker.dart';
 class MultiStepCreateItemViewModel extends ChangeNotifier {
   final ICategoryRepository categoryRepository;
   final IItemRepository itemRepository;
+  final IItemSuggestionRepository suggestionRepository;
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final ImagePicker _imagePicker = ImagePicker();
 
   late Command<void, List<String>> fetchCategoriesCommand;
   late Command<void, void> saveItemCommand;
+  late Command<String, List<Map<String, dynamic>>> fetchSuggestionsCommand;
 
   String? title;
   String? description;
@@ -25,10 +29,12 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
   Map<String, dynamic> additionalAttributes = {};
 
   final List<File> uploadedImages = [];
+  Timer? _debounceTimer;
 
   MultiStepCreateItemViewModel({
     required this.categoryRepository,
     required this.itemRepository,
+    required this.suggestionRepository,
   }) {
     _setupCommands();
   }
@@ -66,6 +72,12 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
       initialValue: null,
     );
 
+    fetchSuggestionsCommand =
+        Command.createAsync<String, List<Map<String, dynamic>>>(
+      suggestionRepository.fetchItemSuggestions,
+      initialValue: [],
+    );
+
     fetchCategoriesCommand.execute();
   }
 
@@ -73,7 +85,10 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
     return categoryRepository.fetchCategoryAttributes(selectedCategory);
   }
 
-  void setTitle(String? value) => title = value;
+  void setTitle(String? value) {
+    title = value;
+    _debounceSearch(value);
+  }
 
   void setDescription(String? value) => description = value;
 
@@ -140,6 +155,32 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
       }
       notifyListeners();
     }
+  }
+
+  void _debounceSearch(String? query) {
+    if (_debounceTimer != null) {
+      _debounceTimer!.cancel();
+    }
+
+    if (query != null && query.isNotEmpty) {
+      _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+        fetchSuggestionsCommand.execute(query);
+      });
+    }
+  }
+
+  void selectSuggestion(Map<String, dynamic> suggestion) {
+    title = suggestion['title'];
+    description = suggestion['description'];
+    selectedCategory = suggestion['category'];
+    originalPrice = suggestion['originalPrice'];
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
   }
 
   placeholderAsset(String? category) {

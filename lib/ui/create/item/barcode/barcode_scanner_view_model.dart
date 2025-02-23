@@ -12,7 +12,7 @@ class BarcodeScannerViewModel extends ChangeNotifier {
   late Command<String, Map<String, dynamic>> fetchProductDetailsCommand;
 
   CameraController? cameraController;
-  BarcodeScanner? _barcodeScanner;
+  late BarcodeScanner _barcodeScanner;
   bool _isScanning = false;
   String? scannedBarcode;
   Map<String, dynamic>? productDetails;
@@ -33,78 +33,90 @@ class BarcodeScannerViewModel extends ChangeNotifier {
   }
 
   Future<String?> _startScanning() async {
-    final cameras = await availableCameras();
-    final camera = cameras.firstWhere(
-      (c) => c.lensDirection == CameraLensDirection.back,
-      orElse: () => cameras.first,
-    );
-
-    cameraController = CameraController(camera, ResolutionPreset.medium);
-    await cameraController!.initialize();
-
-    _barcodeScanner = BarcodeScanner();
-    _isScanning = true;
-    notifyListeners();
-
-    return _scanBarcode();
-  }
-
-  Future<String?> _scanBarcode() async {
-    if (!_isScanning || cameraController == null) return null;
-
-    cameraController!.startImageStream((CameraImage image) async {
-      if (!_isScanning) return;
-
-      final WriteBuffer allBytes = WriteBuffer();
-      for (var plane in image.planes) {
-        allBytes.putUint8List(plane.bytes);
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        debugPrint("No available cameras.");
+        return null;
       }
-      final bytes = allBytes.done().buffer.asUint8List();
 
-      final InputImage inputImage = InputImage.fromBytes(
-        bytes: bytes,
-        metadata: InputImageMetadata(
-          size: Size(image.width.toDouble(), image.height.toDouble()),
-          rotation: InputImageRotation.rotation0deg,
-          format: InputImageFormat.nv21,
-          bytesPerRow: image.planes[0].bytesPerRow,
-        ),
+      final camera = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
       );
 
-      final barcodes = await _barcodeScanner!.processImage(inputImage);
+      cameraController =
+          CameraController(camera, ResolutionPreset.medium, enableAudio: false);
+      await cameraController!.initialize();
+      notifyListeners();
+
+      _barcodeScanner = BarcodeScanner();
+      _isScanning = true;
+
+      return null; // Wait for manual trigger (e.g. Button tap)
+    } catch (e) {
+      debugPrint("Error initializing camera: $e");
+      return null;
+    }
+  }
+
+  Future<void> scanBarcode() async {
+    if (!_isScanning || cameraController == null) return;
+
+    try {
+      final XFile file = await cameraController!.takePicture();
+
+      final inputImage = InputImage.fromFilePath(file.path);
+      final barcodes = await _barcodeScanner.processImage(inputImage);
+
       if (barcodes.isNotEmpty) {
         _isScanning = false;
         scannedBarcode = barcodes.first.rawValue;
         notifyListeners();
 
-        if (scannedBarcode != null) {
-          fetchProductDetailsCommand.execute(scannedBarcode!);
-        }
+        fetchProductDetailsCommand.execute(scannedBarcode!);
       }
-    });
-
-    return scannedBarcode;
+    } catch (e) {
+      debugPrint("Error scanning barcode: $e");
+    }
   }
 
   Future<Map<String, dynamic>> _fetchProductDetails(String barcode) async {
     final Uri url =
         Uri.parse('https://api.upcitemdb.com/prod/trial/lookup?upc=$barcode');
 
-    final response = await http.get(url);
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data['items'] != null && data['items'].isNotEmpty) {
-        productDetails = data['items'][0];
-        notifyListeners();
-        return productDetails!;
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['items'] != null && data['items'].isNotEmpty) {
+          final item = data['items'][0];
+
+          // Ensure a valid image URL is always present
+          String? imageUrl =
+              (item['images'] != null && (item['images'] as List).isNotEmpty)
+                  ? item['images'][0]
+                  : "https://your-app.com/default_image.png";
+
+          productDetails = {
+            ...item,
+            'image': imageUrl,
+          };
+
+          notifyListeners();
+          return productDetails!;
+        }
       }
+    } catch (e) {
+      debugPrint("Error fetching product details: $e");
     }
+
     return {};
   }
 
   void disposeScanner() {
-    cameraController?.dispose();
-    _barcodeScanner?.close();
     _isScanning = false;
+    cameraController?.dispose();
+    _barcodeScanner.close();
   }
 }

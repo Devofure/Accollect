@@ -2,6 +2,7 @@ import 'package:accollect/core/firebase_service.dart';
 import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/collection_repository.dart';
 import 'package:accollect/data/item_repository.dart';
+import 'package:accollect/data/item_suggestions_repository.dart';
 import 'package:accollect/domain/models/collection_ui_model.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/auth/sign_in_header.dart';
@@ -154,6 +155,7 @@ class AppRouterConfig {
               create: (_) => MultiStepCreateItemViewModel(
                 categoryRepository: context.read<ICategoryRepository>(),
                 itemRepository: context.read<IItemRepository>(),
+                suggestionRepository: context.read<IItemSuggestionRepository>(),
               ),
               child: const MultiStepCreateItemScreen(),
             );

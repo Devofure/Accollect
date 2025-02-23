@@ -1,4 +1,5 @@
 import 'package:accollect/ui/widgets/create_common_widget.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -25,16 +26,10 @@ class BarcodeScannerScreen extends StatelessWidget {
                 ? CameraPreview(viewModel.cameraController!)
                 : const Center(child: CircularProgressIndicator()),
           ),
-          ValueListenableBuilder<String?>(
-            valueListenable: viewModel.startScanningCommand,
-            builder: (context, barcode, _) {
-              if (barcode != null) {
-                Future.delayed(Duration.zero, () {
-                  viewModel.fetchProductDetailsCommand.execute(barcode);
-                });
-              }
-              return Container();
-            },
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: viewModel.scanBarcode,
+            child: const Text("Scan Barcode"),
           ),
           ValueListenableBuilder<Map<String, dynamic>>(
             valueListenable: viewModel.fetchProductDetailsCommand,
@@ -44,6 +39,26 @@ class BarcodeScannerScreen extends StatelessWidget {
                   onProductFetched(product);
                   context.pop();
                 });
+
+                return Column(
+                  children: [
+                    CachedNetworkImage(
+                      imageUrl: product['image'] ??
+                          "https://your-app.com/default_image.png",
+                      placeholder: (context, url) =>
+                          const CircularProgressIndicator(),
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.broken_image),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        product['title'] ?? "Unknown Item",
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                );
               }
               return Container();
             },
