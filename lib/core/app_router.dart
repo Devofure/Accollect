@@ -175,14 +175,7 @@ class AppRouterConfig {
           builder: (context, state) {
             return ChangeNotifierProvider(
               create: (_) => BarcodeScannerViewModel(),
-              child: BarcodeScannerScreen(
-                onProductFetched: (product) {
-                  context.push(
-                    AppRouter.productConfirmationRoute,
-                    extra: product,
-                  );
-                },
-              ),
+              child: BarcodeScannerScreen(),
             );
           },
         ),
@@ -241,3 +234,12 @@ class AppRouter {
   static const String settingsRoute = '/settings';
   static const String signInRoute = '/sign-in';
 }
+
+class Result {
+  final String? content;
+  final Status status;
+
+  Result({this.content, required this.status});
+}
+
+enum Status { ok, fail }

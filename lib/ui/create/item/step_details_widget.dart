@@ -39,21 +39,31 @@ class StepDetailsWidget extends StatelessWidget {
   }
 
   Widget _buildBarcodeScannerButton(BuildContext context,
-      MultiStepCreateItemViewModel viewModel,
-      ThemeData theme,) =>
-      Center(
-        child: ElevatedButton.icon(
-          onPressed: () {
-            context.push(AppRouter.addItemBarcodeScannerRoute);
-          },
-          icon: Icon(Icons.qr_code_scanner, color: theme.colorScheme.onPrimary),
-          label: const Text('Scan Barcode'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: theme.colorScheme.primary,
-            foregroundColor: theme.colorScheme.onPrimary,
-          ),
+      MultiStepCreateItemViewModel viewModel, ThemeData theme) {
+    return Center(
+      child: ElevatedButton.icon(
+        onPressed: () async {
+          final result =
+              await context.push<Result>(AppRouter.addItemBarcodeScannerRoute);
+
+          if (result != null &&
+              result.status == Status.ok &&
+              result.content != null &&
+              result.content is String &&
+              result.content!.trim().isNotEmpty) {
+            viewModel.barcode = result.content;
+            viewModel.fetchItemByBarcodeCommand.execute();
+          }
+        },
+        icon: Icon(Icons.qr_code_scanner, color: theme.colorScheme.onPrimary),
+        label: const Text('Scan Barcode'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
         ),
-      );
+      ),
+    );
+  }
 
   Widget _buildBarcodeInput(BuildContext context,
       MultiStepCreateItemViewModel viewModel, ThemeData theme) {
