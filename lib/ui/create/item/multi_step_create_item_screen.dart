@@ -1,7 +1,7 @@
 import 'package:accollect/ui/create/item/multi_step_create_item_view_model.dart';
-import 'package:accollect/ui/create/item/step_additional_attributes_attributes_widget.dart';
 import 'package:accollect/ui/create/item/step_category_widget.dart';
 import 'package:accollect/ui/create/item/step_details_widget.dart';
+import 'package:accollect/ui/create/item/step_extra_info_widget.dart';
 import 'package:accollect/ui/create/item/step_images_widget.dart';
 import 'package:accollect/ui/create/item/step_online_images_widget.dart';
 import 'package:accollect/ui/widgets/create_common_widget.dart';
@@ -25,7 +25,7 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
     {'title': 'Online Images', 'widget': const StepOnlineImagesWidget()},
     {'title': 'Images', 'widget': const StepImagesWidget()},
     {'title': 'Category', 'widget': const StepCategoryWidget()},
-    {'title': 'Online Info', 'widget': const StepAdditionalAttributesWidget()},
+    {'title': 'Extra Info', 'widget': const StepExtraInfoWidget()},
   ];
 
   @override
