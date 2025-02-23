@@ -14,14 +14,27 @@ class BarcodeScannerScreen extends StatefulWidget {
 }
 
 class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   final MobileScannerController _mobileScannerController =
       MobileScannerController();
+  late final AnimationController _lineAnimationController;
+  late final Animation<double> _lineAnimation;
+  bool _isFlashOn = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _lineAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _lineAnimation = Tween<double>(begin: 10, end: 250).animate(
+      CurvedAnimation(
+        parent: _lineAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
     _disableScreenSleep();
   }
 
@@ -31,7 +44,7 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
 
   @override
   void dispose() {
-    _mobileScannerController.stop();
+    _lineAnimationController.dispose();
     _mobileScannerController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -102,13 +115,11 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
                   .withValues(alpha: 0.3), // Semi-transparent background
             ),
           ),
-          TweenAnimationBuilder<double>(
-            tween: Tween<double>(begin: 0, end: 220),
-            duration: const Duration(seconds: 2),
-            curve: Curves.easeInOut,
-            builder: (context, value, child) {
+          AnimatedBuilder(
+            animation: _lineAnimation,
+            builder: (context, child) {
               return Positioned(
-                top: value,
+                top: _lineAnimation.value,
                 left: 20,
                 right: 20,
                 child: Container(
@@ -117,7 +128,6 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
                 ),
               );
             },
-            onEnd: () => setState(() {}),
           ),
         ],
       ),
@@ -140,7 +150,9 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
               child: child,
             );
           },
-          onEnd: () => setState(() {}),
+          onEnd: () {
+            if (mounted) setState(() {});
+          },
           child: const Text(
             "Align the barcode inside the frame",
             textAlign: TextAlign.center,
@@ -156,25 +168,35 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
     );
   }
 
-  bool _isFlashOn = false; // Track torch state manually
-
   Widget _buildFlashToggle() {
     return Positioned(
-      bottom: 100,
-      child: Center(
-        child: FloatingActionButton(
-          backgroundColor: Colors.black54,
-          child: Icon(
-            _isFlashOn ? Icons.flash_on : Icons.flash_off,
-            color: Colors.yellowAccent,
+      top: 16,
+      right: 16,
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.black54,
+          shape: BoxShape.circle,
+        ),
+        child: Tooltip(
+          message: _isFlashOn ? "Turn off flashlight" : "Turn on flashlight",
+          child: IconButton(
+            icon: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Icon(
+                _isFlashOn ? Icons.flash_on : Icons.flash_off,
+                key: ValueKey<bool>(_isFlashOn),
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            onPressed: () async {
+              await _mobileScannerController.toggleTorch();
+              HapticFeedback.mediumImpact();
+              setState(() {
+                _isFlashOn = !_isFlashOn;
+              });
+            },
           ),
-          onPressed: () async {
-            await _mobileScannerController.toggleTorch();
-            HapticFeedback.mediumImpact();
-            setState(() {
-              _isFlashOn = !_isFlashOn;
-            });
-          },
         ),
       ),
     );
