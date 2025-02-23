@@ -19,8 +19,9 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
 
   late Command<void, List<String>> fetchCategoriesCommand;
   late Command<void, void> saveItemCommand;
-  late Command<String, List<Map<String, dynamic>>> fetchSuggestionsCommand;
+  late Command<String, List<Map<String, dynamic>>> fetchItemByBarcodeCommand;
 
+  String? barcode;
   String? title;
   String? description;
   String selectedCategory = 'Other';
@@ -29,7 +30,6 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
   Map<String, dynamic> additionalAttributes = {};
 
   final List<File> uploadedImages = [];
-  Timer? _debounceTimer;
 
   MultiStepCreateItemViewModel({
     required this.categoryRepository,
@@ -72,9 +72,9 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
       initialValue: null,
     );
 
-    fetchSuggestionsCommand =
+    fetchItemByBarcodeCommand =
         Command.createAsync<String, List<Map<String, dynamic>>>(
-      suggestionRepository.fetchItemSuggestions,
+      suggestionRepository.fetchItemByBarcode,
       initialValue: [],
     );
 
@@ -85,10 +85,16 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
     return categoryRepository.fetchCategoryAttributes(selectedCategory);
   }
 
-  void setTitle(String? value) {
-    title = value;
-    _debounceSearch(value);
+  void setBarcode(String? value) {
+    barcode = value;
+    notifyListeners();
+
+    if (barcode != null && barcode!.isNotEmpty) {
+      fetchItemByBarcodeCommand.execute(barcode!);
+    }
   }
+
+  void setTitle(String? value) => title = value;
 
   void setDescription(String? value) => description = value;
 
@@ -157,19 +163,13 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
     }
   }
 
-  void _debounceSearch(String? query) {
-    if (_debounceTimer != null) {
-      _debounceTimer!.cancel();
-    }
-
-    if (query != null && query.isNotEmpty) {
-      _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-        fetchSuggestionsCommand.execute(query);
-      });
-    }
+  Future<void> scanBarcode() async {
+    // Implement barcode scanning functionality here.
+    debugPrint("Barcode scanning not implemented yet");
   }
 
   void selectSuggestion(Map<String, dynamic> suggestion) {
+    barcode = suggestion['ean'];
     title = suggestion['title'];
     description = suggestion['description'];
     selectedCategory = suggestion['category'];
@@ -179,7 +179,6 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    _debounceTimer?.cancel();
     super.dispose();
   }
 

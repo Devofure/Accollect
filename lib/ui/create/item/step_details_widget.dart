@@ -1,19 +1,10 @@
-import 'dart:async';
-
 import 'package:accollect/ui/create/item/multi_step_create_item_view_model.dart';
 import 'package:accollect/ui/widgets/create_common_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class StepDetailsWidget extends StatefulWidget {
+class StepDetailsWidget extends StatelessWidget {
   const StepDetailsWidget({super.key});
-
-  @override
-  State<StepDetailsWidget> createState() => _StepDetailsWidgetState();
-}
-
-class _StepDetailsWidgetState extends State<StepDetailsWidget> {
-  Timer? _debounceTimer;
 
   @override
   Widget build(BuildContext context) {
@@ -23,15 +14,11 @@ class _StepDetailsWidgetState extends State<StepDetailsWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildItemNameInput(context, viewModel, theme),
+        _buildBarcodeScannerButton(viewModel, theme),
         const SizedBox(height: 8),
-        ValueListenableBuilder<List<Map<String, dynamic>>>(
-          valueListenable: viewModel.fetchSuggestionsCommand,
-          builder: (context, suggestions, _) {
-            if (suggestions.isEmpty) return const SizedBox.shrink();
-            return _buildSuggestionsList(context, viewModel, suggestions);
-          },
-        ),
+        _buildBarcodeInput(context, viewModel, theme),
+        const SizedBox(height: 16),
+        _buildItemNameInput(viewModel),
         const SizedBox(height: 16),
         CustomTextInput(
           label: 'Description',
@@ -54,95 +41,56 @@ class _StepDetailsWidgetState extends State<StepDetailsWidget> {
     );
   }
 
-  /// 🏗 **Item Name Input with Debounced Search**
-  Widget _buildItemNameInput(BuildContext context,
+  Widget _buildBarcodeScannerButton(
       MultiStepCreateItemViewModel viewModel, ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Item Name',
-          style: theme.textTheme.labelMedium
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+    return Center(
+      child: ElevatedButton.icon(
+        onPressed: viewModel.scanBarcode,
+        icon: Icon(Icons.qr_code_scanner, color: theme.colorScheme.onPrimary),
+        label: const Text('Scan Barcode'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
         ),
-        const SizedBox(height: 8),
-        TextFormField(
-          style: TextStyle(color: theme.colorScheme.onSurface),
-          decoration: InputDecoration(
-            hintText: 'Enter item name',
-            hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-            filled: true,
-            fillColor: theme.colorScheme.surfaceContainerHighest,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  BorderSide(color: theme.colorScheme.primary, width: 2),
-            ),
+      ),
+    );
+  }
+
+  Widget _buildBarcodeInput(BuildContext context,
+      MultiStepCreateItemViewModel viewModel, ThemeData theme) {
+    return Row(
+      children: [
+        Expanded(
+          child: CustomTextInput(
+            label: 'Barcode',
+            hint: 'Enter barcode digits',
+            onSaved: viewModel.setBarcode,
+            onChanged: viewModel.setBarcode,
           ),
-          validator: viewModel.validateTitle,
-          onSaved: viewModel.setTitle,
-          onChanged: (value) {
-            _debounceSearch(viewModel, value);
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton(
+          onPressed: () {
+            if (viewModel.barcode != null && viewModel.barcode!.isNotEmpty) {
+              viewModel.fetchItemByBarcodeCommand.execute(viewModel.barcode!);
+            }
           },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.colorScheme.secondary,
+            foregroundColor: theme.colorScheme.onSecondary,
+          ),
+          child: const Text('Search'),
         ),
       ],
     );
   }
 
-  void _debounceSearch(MultiStepCreateItemViewModel viewModel, String query) {
-    if (_debounceTimer != null) {
-      _debounceTimer!.cancel();
-    }
-
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      if (query.isNotEmpty) {
-        viewModel.fetchSuggestionsCommand.execute(query);
-      }
-    });
-  }
-
-  /// 📋 **Suggestions List UI**
-  Widget _buildSuggestionsList(
-      BuildContext context,
-      MultiStepCreateItemViewModel viewModel,
-      List<Map<String, dynamic>> suggestions) {
-    final theme = Theme.of(context);
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: suggestions.take(5).map((item) {
-          return ListTile(
-            leading: item['images'] != null && item['images'].isNotEmpty
-                ? Image.network(item['images'][0],
-                    width: 40, height: 40, fit: BoxFit.cover)
-                : Icon(Icons.image_not_supported,
-                    color: theme.colorScheme.onSurfaceVariant),
-            title: Text(item['title'] ?? "Unknown Item",
-                style: theme.textTheme.bodyLarge),
-            subtitle: Text(item['brand'] ?? "No brand",
-                style: theme.textTheme.bodySmall),
-            onTap: () {
-              viewModel.selectSuggestion(item);
-            },
-          );
-        }).toList(),
-      ),
+  /// **📝 Item Name Input**
+  Widget _buildItemNameInput(MultiStepCreateItemViewModel viewModel) {
+    return CustomTextInput(
+      label: 'Item Name',
+      hint: 'Enter item name',
+      onSaved: viewModel.setTitle,
     );
-  }
-
-  @override
-  void dispose() {
-    _debounceTimer?.cancel();
-    super.dispose();
   }
 }

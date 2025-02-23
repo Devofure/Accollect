@@ -62,6 +62,7 @@ class HeaderText extends StatelessWidget {
 class CustomTextInput extends StatelessWidget {
   final String label;
   final String hint;
+  final ValueChanged<String>? onChanged;
   final FormFieldSetter<String> onSaved;
   final FormFieldValidator<String>? validator;
 
@@ -70,6 +71,7 @@ class CustomTextInput extends StatelessWidget {
     required this.label,
     required this.hint,
     required this.onSaved,
+    this.onChanged,
     this.validator,
   });
 
@@ -102,6 +104,7 @@ class CustomTextInput extends StatelessWidget {
           ),
           validator: validator,
           onSaved: onSaved,
+          onChanged: onChanged != null ? (value) => onChanged!(value) : null,
         ),
       ],
     );
