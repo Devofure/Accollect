@@ -1,5 +1,4 @@
 import 'package:accollect/ui/widgets/create_common_widget.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -45,7 +44,16 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
           Expanded(
             child: viewModel.cameraController != null &&
                     viewModel.cameraController!.value.isInitialized
-                ? CameraPreview(viewModel.cameraController!)
+                ? OrientationBuilder(
+                    builder: (context, orientation) {
+                      return orientation == Orientation.portrait
+                          ? RotatedBox(
+                              quarterTurns: 1,
+                              child: CameraPreview(viewModel.cameraController!),
+                            )
+                          : CameraPreview(viewModel.cameraController!);
+                    },
+                  )
                 : const Center(child: CircularProgressIndicator()),
           ),
           const SizedBox(height: 16),
@@ -57,21 +65,12 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
             valueListenable: viewModel.fetchProductDetailsCommand,
             builder: (context, product, _) {
               if (product.isNotEmpty) {
-                // Use a delayed callback to ensure the UI is updated before popping the screen.
                 Future.delayed(Duration.zero, () {
                   widget.onProductFetched(product);
                   context.pop();
                 });
                 return Column(
                   children: [
-                    CachedNetworkImage(
-                      imageUrl: product['image'] ??
-                          "https://your-app.com/default_image.png",
-                      placeholder: (context, url) =>
-                          const CircularProgressIndicator(),
-                      errorWidget: (context, url, error) =>
-                          const Icon(Icons.broken_image),
-                    ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
