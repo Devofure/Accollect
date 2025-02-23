@@ -10,13 +10,15 @@ abstract class IItemSuggestionRepository {
 }
 
 class ItemSuggestionRepository implements IItemSuggestionRepository {
-  static const String _baseUrlUpcItemDb =
+  static const String _baseUrlUpcItemDbLookup =
+      "https://api.upcitemdb.com/prod/trial/lookup";
+  static const String _baseUrlUpcItemDbSearch =
       "https://api.upcitemdb.com/prod/trial/search";
 
   @override
   Future<List<Map<String, dynamic>>> fetchItemSuggestions(String query) async {
-    final Uri url =
-        Uri.parse("$_baseUrlUpcItemDb?s=$query&match_mode=1&type=product");
+    final Uri url = Uri.parse(
+        "$_baseUrlUpcItemDbSearch?s=$query&match_mode=1&type=product");
 
     try {
       final response = await http.get(url);
@@ -38,7 +40,7 @@ class ItemSuggestionRepository implements IItemSuggestionRepository {
 
   @override
   Future<List<Map<String, dynamic>>> fetchItemByBarcode(String barcode) async {
-    final Uri url = Uri.parse("$_baseUrlUpcItemDb?upc=$barcode");
+    final Uri url = Uri.parse("$_baseUrlUpcItemDbLookup?upc=$barcode");
 
     try {
       final response = await http.get(url);
@@ -54,7 +56,6 @@ class ItemSuggestionRepository implements IItemSuggestionRepository {
     } catch (e) {
       debugPrint("Error fetching item by barcode: $e");
     }
-
     return [];
   }
 

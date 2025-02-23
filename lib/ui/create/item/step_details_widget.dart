@@ -57,23 +57,35 @@ class StepDetailsWidget extends StatelessWidget {
   }
 
   Widget _buildBarcodeInput(BuildContext context,
-          MultiStepCreateItemViewModel viewModel, ThemeData theme) =>
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: CustomTextInput(
-              label: 'Barcode',
-              hint: 'Enter barcode digits',
-              onSaved: viewModel.setBarcode,
-              onChanged: viewModel.setBarcode,
+      MultiStepCreateItemViewModel viewModel, ThemeData theme) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: TextField(
+            decoration: InputDecoration(
+              labelText: 'Barcode',
+              hintText: 'Enter barcode digits',
+              border: OutlineInputBorder(),
             ),
+            onChanged: (value) => viewModel.barcode = value,
           ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            onPressed: () {
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          height: 48,
+          child: ElevatedButton(
+            onPressed: () async {
               if (viewModel.barcode != null && viewModel.barcode!.isNotEmpty) {
-                viewModel.fetchItemByBarcodeCommand.execute(viewModel.barcode!);
+                var products = await viewModel.fetchItemByBarcodeCommand
+                    .executeWithFuture();
+                if (products.isNotEmpty) {
+                  if (products.length == 1) {
+                    _showConfirmationDialog(context, viewModel, products.first);
+                  } else {
+                    // Handle multiple suggestions (dropdown)
+                  }
+                }
               }
             },
             style: ElevatedButton.styleFrom(
@@ -83,14 +95,48 @@ class StepDetailsWidget extends StatelessWidget {
             ),
             child: const Text('Search'),
           ),
-        ],
-      );
+        ),
+      ],
+    );
+  }
 
   Widget _buildItemNameInput(MultiStepCreateItemViewModel viewModel) {
     return CustomTextInput(
       label: 'Item Name',
       hint: 'Enter item name',
       onSaved: viewModel.setTitle,
+    );
+  }
+
+  void _showConfirmationDialog(BuildContext context,
+      MultiStepCreateItemViewModel viewModel, Map<String, dynamic> product) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Is this the correct item?"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Name: ${product['title']}"),
+            Text("Category: ${product['category']}"),
+            Text("Price: \$${product['originalPrice']}"),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              viewModel.fillItemDetails(product);
+              Navigator.of(context).pop();
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      ),
     );
   }
 }

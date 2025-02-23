@@ -19,7 +19,7 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
 
   late Command<void, List<String>> fetchCategoriesCommand;
   late Command<void, void> saveItemCommand;
-  late Command<String, List<Map<String, dynamic>>> fetchItemByBarcodeCommand;
+  late Command<void, List<Map<String, dynamic>>> fetchItemByBarcodeCommand;
 
   String? barcode;
   String? title;
@@ -73,8 +73,13 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
     );
 
     fetchItemByBarcodeCommand =
-        Command.createAsync<String, List<Map<String, dynamic>>>(
-      suggestionRepository.fetchItemByBarcode,
+        Command.createAsyncNoParam<List<Map<String, dynamic>>>(
+      () async {
+        if (barcode == null || barcode!.isEmpty) return [];
+
+        var products = await suggestionRepository.fetchItemByBarcode(barcode!);
+        return products;
+      },
       initialValue: [],
     );
 
@@ -83,15 +88,6 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
 
   Future<CategoryAttributesModel?> getCategoryAttributes() async {
     return categoryRepository.fetchCategoryAttributes(selectedCategory);
-  }
-
-  void setBarcode(String? value) {
-    barcode = value;
-    notifyListeners();
-
-    if (barcode != null && barcode!.isNotEmpty) {
-      fetchItemByBarcodeCommand.execute(barcode!);
-    }
   }
 
   void setTitle(String? value) => title = value;
@@ -164,7 +160,6 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
   }
 
   Future<void> scanBarcode() async {
-    // Implement barcode scanning functionality here.
     debugPrint("Barcode scanning not implemented yet");
   }
 
@@ -177,9 +172,21 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  void fillItemDetails(Map<String, dynamic> product) {
+    barcode = product['ean'];
+    title = product['title'];
+    description = product['description'];
+    selectedCategory = product['category'];
+    originalPrice = product['originalPrice'];
+
+    additionalAttributes = {
+      'Brand': product['brand'] ?? '',
+      'Release Year': product['releaseYear'] ?? '',
+      'Material': product['material'] ?? '',
+      'Dimensions': product['dimensions'] ?? '',
+    };
+
+    notifyListeners();
   }
 
   placeholderAsset(String? category) {
