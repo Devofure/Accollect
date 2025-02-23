@@ -103,12 +103,10 @@ class _StepDetailsWidgetState extends State<StepDetailsWidget> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
-          child: TextField(
+          child: CustomTextInput(
             controller: _barcodeController,
-            decoration: const InputDecoration(
-              labelText: 'Barcode',
-              hintText: 'Enter barcode digits',
-            ),
+            label: 'Barcode',
+            hint: 'Enter barcode digits',
             onChanged: (value) {
               viewModel.barcode = value;
               _isInputNotEmpty.value = value.isNotEmpty;
@@ -160,10 +158,12 @@ class _StepDetailsWidgetState extends State<StepDetailsWidget> {
     );
   }
 
-  Widget _buildCustomTextInput(String label,
-      String hint,
-      TextEditingController controller,
-      Function(String?) onSaved,) {
+  Widget _buildCustomTextInput(
+    String label,
+    String hint,
+    TextEditingController controller,
+    Function(String?) onSaved,
+  ) {
     return CustomTextInput(
       label: label,
       hint: hint,

@@ -54,20 +54,18 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
     );
   }
 
-  /// Updated _buildScrollableStepper():
-  /// We set a fixed per‑step width (120.0) and compute the total width.
-  /// This ensures that if the total width exceeds the screen width, horizontal scrolling is enabled.
   Widget _buildScrollableStepper(ThemeData theme) {
-    const double stepWidth = 120.0; // Adjust this value as needed
-    final totalWidth = _steps.length * stepWidth;
+    const double stepWidth = 120.0; // Base width for each step.
+    const double stepSpacing = 16.0; // Spacing between steps.
+    final int count = _steps.length;
+    final double totalWidth = (count * stepWidth) + ((count - 1) * stepSpacing);
 
     return SizedBox(
-      height: 90, // Limit the height of the stepper.
+      height: 90,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: SizedBox(
           width: totalWidth,
-          // Provide a fixed width to avoid unbounded constraints.
           child: Theme(
             data: Theme.of(context).copyWith(
               canvasColor: theme.colorScheme.surfaceContainerHighest,
@@ -76,9 +74,7 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
               type: StepperType.horizontal,
               currentStep: _currentStep,
               onStepTapped: (step) => setState(() => _currentStep = step),
-              steps: _steps.asMap().entries.map((entry) {
-                return _buildStep(theme, entry.key);
-              }).toList(),
+              steps: List.generate(count, (index) => _buildStep(theme, index)),
               controlsBuilder: (context, details) => const SizedBox.shrink(),
             ),
           ),
@@ -87,15 +83,21 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
     );
   }
 
+  /// Each step's title now has right padding except for the last step.
   Step _buildStep(ThemeData theme, int index) {
+    const double stepSpacing = 16.0;
     return Step(
-      title: Text(
-        _steps[index]['title'],
-        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+      title: Padding(
+        padding: EdgeInsets.only(
+            right: index == _steps.length - 1 ? 0 : stepSpacing),
+        child: Text(
+          _steps[index]['title'],
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+        ),
       ),
       isActive: _currentStep >= index,
       state: _stepState(index),
-      content: const SizedBox.shrink(), // Do not render step content here.
+      content: const SizedBox.shrink(), // No content rendered here.
     );
   }
 

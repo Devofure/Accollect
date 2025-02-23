@@ -64,14 +64,14 @@ class CustomTextInput extends StatelessWidget {
   final String hint;
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
-  final FormFieldSetter<String> onSaved;
+  final FormFieldSetter<String>? onSaved;
   final FormFieldValidator<String>? validator;
 
   const CustomTextInput({
     super.key,
     required this.label,
     required this.hint,
-    required this.onSaved,
+    this.onSaved,
     this.controller,
     this.onChanged,
     this.validator,
