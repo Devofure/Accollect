@@ -110,27 +110,27 @@ class BarcodeScannerScreenState extends State<BarcodeScannerScreen>
     });
   }
 
-  /// ✅ Fixing Rotation for Image Processing
   InputImage _convertCameraImage(CameraImage image) {
-    final WriteBuffer buffer = WriteBuffer();
+    final WriteBuffer allBytes = WriteBuffer();
     for (final Plane plane in image.planes) {
-      buffer.putUint8List(plane.bytes);
+      allBytes.putUint8List(plane.bytes);
     }
-    final Uint8List bytes = buffer.done().buffer.asUint8List();
+    final Uint8List bytes = allBytes.done().buffer.asUint8List();
 
-    return InputImage.fromBytes(
-      bytes: bytes,
-      metadata: InputImageMetadata(
-        size: Size(image.width.toDouble(), image.height.toDouble()),
-        rotation: _getImageRotation(),
-        // ✅ Ensures correct barcode scanning rotation
-        format: InputImageFormat.yuv420,
-        bytesPerRow: image.planes.first.bytesPerRow,
-      ),
+    final Size imageSize =
+        Size(image.width.toDouble(), image.height.toDouble());
+    final InputImageRotation rotation = _getImageRotation();
+    final InputImageFormat format = InputImageFormat.yuv_420_888;
+    final int bytesPerRow = image.planes.first.bytesPerRow;
+    final metadata = InputImageMetadata(
+      size: imageSize,
+      rotation: rotation,
+      format: format,
+      bytesPerRow: bytesPerRow,
     );
+    return InputImage.fromBytes(bytes: bytes, metadata: metadata);
   }
 
-  /// ✅ Determines the Correct Image Rotation for Barcode Scanning
   InputImageRotation _getImageRotation() {
     switch (_sensorOrientation) {
       case 0:
