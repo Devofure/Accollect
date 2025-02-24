@@ -1,8 +1,12 @@
 import 'dart:typed_data';
 
+import 'package:accollect/ui/create/item/ai/multi_item_scanner_view_model.dart';
+import 'package:accollect/ui/widgets/create_common_widget.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'package:provider/provider.dart';
 
 class MultiItemScannerScreen extends StatefulWidget {
   const MultiItemScannerScreen({super.key});
@@ -55,7 +59,6 @@ class _MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
     }
   }
 
-  /// Processes camera frames and detects barcodes.
   Future<void> _processImage(CameraImage image) async {
     debugPrint("🔍 Processing Camera Image...");
     try {
@@ -64,9 +67,13 @@ class _MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
           await _barcodeScanner.processImage(inputImage);
       if (barcodes.isNotEmpty) {
         debugPrint("✅ Barcodes detected: ${barcodes.length}");
-        setState(() {
-          _scannedData = barcodes.map((b) => b.rawValue ?? "").join("\n");
-        });
+        final viewModel = context.read<MultiItemScannerViewModel>();
+        for (final barcode in barcodes) {
+          final String? rawValue = barcode.rawValue;
+          if (rawValue != null) {
+            viewModel.addBarcode(rawValue);
+          }
+        }
       } else {
         debugPrint("🚫 No barcodes detected.");
       }
@@ -77,7 +84,7 @@ class _MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
     }
   }
 
-  /// Converts a [CameraImage] (YUV420 format) to an [InputImage] using NV21 conversion.
+  /// Converts a [CameraImage] (YUV420) to an [InputImage] using NV21 conversion.
   InputImage _convertCameraImageToInputImage(CameraImage image) {
     final Uint8List nv21Bytes = convertYUV420ToNV21(image);
 
@@ -142,44 +149,73 @@ class _MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
     super.dispose();
   }
 
-  /// Builds a rotated preview based on the sensor orientation.
+  /// Builds a rotated preview so the user sees a portrait view.
   Widget _buildCameraPreview() {
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
       return const Center(child: CircularProgressIndicator());
     }
-    // Retrieve sensor orientation.
-    final int sensorOrientation = _cameras!.first.sensorOrientation;
-    int quarterTurns;
-    // For preview: if sensorOrientation is 90, rotate preview by 1 quarter turn;
-    // if 270, rotate by 3 quarter turns.
-    if (sensorOrientation == 90) {
-      quarterTurns = 1;
-    } else if (sensorOrientation == 270) {
-      quarterTurns = 3;
-    } else {
-      quarterTurns = 0;
-    }
+    // For this example, we assume the sensor orientation is 90° in portrait.
+    // Rotate preview by 1 quarter turn.
     return RotatedBox(
-      quarterTurns: quarterTurns,
+      quarterTurns: 1,
       child: CameraPreview(_cameraController!),
+    );
+  }
+
+  /// Builds an overlay list displaying each scanned item.
+  Widget _buildScannedItemsOverlay() {
+    final viewModel = context.watch<MultiItemScannerViewModel>();
+    if (viewModel.scannedItems.isEmpty) return const SizedBox.shrink();
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        color: Colors.black.withValues(alpha: 0.5),
+        height: 150,
+        child: ListView.builder(
+          itemCount: viewModel.scannedItems.length,
+          itemBuilder: (context, index) {
+            final item = viewModel.scannedItems[index];
+            return ListTile(
+              leading: const Icon(Icons.qr_code, color: Colors.white),
+              title: Text(
+                item.barcode,
+                style: const TextStyle(color: Colors.white),
+              ),
+              subtitle: Text(
+                item.details != null ? item.details!['title'] ?? "" : "",
+                style: const TextStyle(color: Colors.white70),
+              ),
+              onTap: () {
+                // Navigate to your multi-step create item screen, passing item details.
+                context.push('/create-item', extra: item);
+              },
+            );
+          },
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Multi-Item Scanner")),
-      body: Column(
+      appBar: CloseableAppBar(title: "Multi-Item Scanner"),
+      body: Stack(
         children: [
-          Expanded(child: _buildCameraPreview()),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              "Scanned Data:\n$_scannedData",
-              style: const TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
+          Column(
+            children: [
+              Expanded(child: _buildCameraPreview()),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  "Scanned Data:\n$_scannedData",
+                  style: const TextStyle(fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
           ),
+          _buildScannedItemsOverlay(),
         ],
       ),
     );
