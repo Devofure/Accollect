@@ -10,6 +10,7 @@ import 'package:accollect/ui/collection/collection_screen.dart';
 import 'package:accollect/ui/collection/collection_view_model.dart';
 import 'package:accollect/ui/create/collection/create_collection_screen.dart';
 import 'package:accollect/ui/create/collection/create_collection_view_model.dart';
+import 'package:accollect/ui/create/item/ai/multiItem_scanner_screen.dart';
 import 'package:accollect/ui/create/item/barcode/barcode_scanner_screen.dart';
 import 'package:accollect/ui/create/item/barcode/barcode_scanner_view_model.dart';
 import 'package:accollect/ui/create/item/barcode/confirm_product_screen.dart';
@@ -176,6 +177,15 @@ class AppRouterConfig {
             return ChangeNotifierProvider(
               create: (_) => BarcodeScannerViewModel(),
               child: BarcodeScannerScreen(),
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRouter.addItemAiScannerRoute,
+          builder: (context, state) {
+            return ChangeNotifierProvider(
+              create: (_) => BarcodeScannerViewModel(),
+              child: MultiItemScannerScreen(),
             );
           },
         ),
