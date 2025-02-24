@@ -18,8 +18,8 @@ class MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
   CameraController? _cameraController;
   List<CameraDescription>? _cameras;
   bool _isDetecting = false;
+  bool _isProcessing = false;
   final BarcodeScanner _barcodeScanner = BarcodeScanner();
-  final String _scannedData = "";
 
   @override
   void initState() {
@@ -31,6 +31,7 @@ class MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
     try {
       _cameras = await availableCameras();
       if (_cameras == null || _cameras!.isEmpty) {
+        debugPrint("No cameras found.");
         return;
       }
       _cameraController = CameraController(
@@ -44,6 +45,7 @@ class MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
       _cameraController!.startImageStream((CameraImage image) {
         if (!_isDetecting) {
           _isDetecting = true;
+          _setProcessingState(true);
           _processImage(image);
         }
       });
@@ -52,29 +54,48 @@ class MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
     }
   }
 
-  /// Processes camera frames and detects barcodes.
+  /// Processes camera frames and detects barcodes using ML Kit.
   Future<void> _processImage(CameraImage image) async {
-    debugPrint("🔍 Processing Camera Image...");
     try {
       final InputImage inputImage = convertCameraImageToInputImage(
-          image, _cameras!.first.sensorOrientation);
+        image,
+        _cameras!.first.sensorOrientation,
+      );
       final List<Barcode> barcodes =
           await _barcodeScanner.processImage(inputImage);
       if (barcodes.isNotEmpty) {
         final viewModel = context.read<MultiItemScannerViewModel>();
         for (final barcode in barcodes) {
           final String? rawValue = barcode.rawValue;
+          final String barcodeType = barcode.format.name; // Track barcode type
           if (rawValue != null) {
-            viewModel.addBarcode(rawValue);
+            await viewModel.addBarcode(rawValue, barcodeType);
           }
         }
-      } else {
-        debugPrint("🚫 No barcodes detected.");
       }
     } catch (e, s) {
       debugPrint("❌ Error processing image: $e, $s");
     } finally {
       _isDetecting = false;
+      _setProcessingState(false);
+    }
+  }
+
+  /// Ensures the "Scanning..." indicator stays visible for a moment.
+  void _setProcessingState(bool isProcessing) {
+    if (!mounted) return;
+    setState(() {
+      _isProcessing = isProcessing;
+    });
+
+    if (isProcessing) {
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          setState(() {
+            _isProcessing = false;
+          });
+        }
+      });
     }
   }
 
@@ -90,35 +111,72 @@ class MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     return RotatedBox(
-      quarterTurns: 1,
+      quarterTurns: 1, // **Restored original rotation**
       child: CameraPreview(_cameraController!),
     );
+  }
+
+  Widget _buildScanningIndicator() {
+    return _isProcessing
+        ? Positioned(
+            top: 20,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  "Scanning...",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          )
+        : const SizedBox.shrink();
   }
 
   Widget _buildScannedItemsOverlay() {
     final viewModel = context.watch<MultiItemScannerViewModel>();
     if (viewModel.scannedItems.isEmpty) return const SizedBox.shrink();
+
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
-        color: Colors.black.withValues(alpha: 0.5),
-        height: 150,
-        child: ListView.builder(
+        height: 220,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.transparent, Colors.black87],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: ListView.separated(
+          padding: const EdgeInsets.all(12),
           itemCount: viewModel.scannedItems.length,
+          separatorBuilder: (_, __) => const Divider(color: Colors.white38),
           itemBuilder: (context, index) {
             final item = viewModel.scannedItems[index];
             return ListTile(
               leading: const Icon(Icons.qr_code, color: Colors.white),
               title: Text(
                 item.barcode,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
               ),
               subtitle: Text(
-                item.details != null ? item.details!['title'] ?? "" : "",
+                "Type: ${item.barcodeType}\n" +
+                    (item.details != null
+                        ? item.details!['title'] ?? "No title"
+                        : "No details"),
                 style: const TextStyle(color: Colors.white70),
               ),
               onTap: () {
-                // Navigate to your multi-step create item screen, passing item details.
                 context.push('/create-item', extra: item);
               },
             );
@@ -128,28 +186,37 @@ class MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
     );
   }
 
+  Widget _buildClearButton() {
+    final viewModel = context.watch<MultiItemScannerViewModel>();
+    return viewModel.scannedItems.isNotEmpty
+        ? FloatingActionButton.extended(
+            onPressed: () => viewModel.clearAll(),
+            label: const Text("Clear Scans"),
+            icon: const Icon(Icons.delete_forever),
+            backgroundColor: Colors.redAccent,
+          )
+        : const SizedBox.shrink();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CloseableAppBar(title: "Multi-Item Scanner"),
-      body: Stack(
+      body: Column(
         children: [
-          Column(
-            children: [
-              Expanded(child: _buildCameraPreview()),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  "Scanned Data:\n$_scannedData",
-                  style: const TextStyle(fontSize: 16),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
-          _buildScannedItemsOverlay(),
+          Expanded(
+              flex: 7,
+              child: Stack(children: [
+                _buildCameraPreview(),
+                _buildScanningIndicator()
+              ])),
+          // **Restored camera layout**
+          Expanded(flex: 3, child: _buildScannedItemsOverlay()),
+          // 30% list overlay
         ],
       ),
+      floatingActionButton: _buildClearButton(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
