@@ -22,6 +22,12 @@ class ItemDetailScreen extends StatelessWidget {
         backgroundColor: theme.colorScheme.surface,
         title: Text('Item Details',
             style: TextStyle(color: theme.colorScheme.onSurface)),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.more_vert, color: theme.colorScheme.onSurface),
+            onPressed: () => _showMoreOptions(context, viewModel, theme),
+          ),
+        ],
       ),
       body: SafeArea(
         child: StreamBuilder<ItemUIModel?>(
@@ -40,16 +46,15 @@ class ItemDetailScreen extends StatelessWidget {
                 description: 'This item might have been deleted or moved.',
               );
             }
-            return _buildItemDetails(context, item, theme, viewModel);
+            return _buildItemDetails(context, item, theme);
           },
         ),
       ),
-      floatingActionButton: _buildFloatingButtons(context, viewModel, theme),
     );
   }
 
-  Widget _buildItemDetails(BuildContext context, ItemUIModel item,
-      ThemeData theme, ItemDetailViewModel viewModel) {
+  Widget _buildItemDetails(
+      BuildContext context, ItemUIModel item, ThemeData theme) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -186,27 +191,39 @@ class ItemDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFloatingButtons(
+  void _showMoreOptions(
       BuildContext context, ItemDetailViewModel viewModel, ThemeData theme) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        FloatingActionButton(
-          backgroundColor: theme.colorScheme.primary,
-          foregroundColor: theme.colorScheme.onPrimary,
-          heroTag: 'edit_item',
-          onPressed: () => _editItem(context, viewModel),
-          child: const Icon(Icons.edit),
-        ),
-        const SizedBox(width: 12),
-        FloatingActionButton(
-          backgroundColor: theme.colorScheme.error,
-          foregroundColor: theme.colorScheme.onError,
-          heroTag: 'delete_item',
-          onPressed: () => _confirmDelete(context, viewModel, theme),
-          child: const Icon(Icons.delete),
-        ),
-      ],
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.edit, color: theme.colorScheme.primary),
+                title: const Text('Edit Item'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _editItem(context, viewModel);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.delete, color: theme.colorScheme.error),
+                title: const Text('Delete Item'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmDelete(context, viewModel, theme);
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
