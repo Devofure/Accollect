@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 
 class ItemDetailScreen extends StatelessWidget {
@@ -53,8 +54,8 @@ class ItemDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemDetails(BuildContext context, ItemUIModel item,
-      ItemDetailViewModel viewModel) {
+  Widget _buildItemDetails(
+      BuildContext context, ItemUIModel item, ItemDetailViewModel viewModel) {
     final theme = Theme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -64,7 +65,7 @@ class ItemDetailScreen extends StatelessWidget {
           _buildImageCarousel(
             item.imageUrls ?? [],
             item.onlineImageUrls ?? [],
-            theme,
+            context,
             viewModel,
             item.key,
           ),
@@ -113,11 +114,13 @@ class ItemDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildImageCarousel(List<String> imageUrls,
+  Widget _buildImageCarousel(
+      List<String> imageUrls,
       List<String> onlineImageUrls,
-      ThemeData theme,
+      BuildContext context,
       ItemDetailViewModel viewModel,
       String itemKey) {
+    final theme = Theme.of(context);
     final allImages = [...imageUrls, ...onlineImageUrls];
     if (allImages.isEmpty) return _buildPlaceholder(theme);
 
@@ -132,7 +135,7 @@ class ItemDetailScreen extends StatelessWidget {
       items: allImages.map((imageUrl) {
         return Stack(
           children: [
-            _buildItemImage(imageUrl, theme),
+            _buildItemImage(context, imageUrl, theme),
             Positioned(
               top: 10,
               right: 10,
@@ -153,16 +156,29 @@ class ItemDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemImage(String imageUrl, ThemeData theme) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: CachedNetworkImage(
-        imageUrl: imageUrl,
-        width: double.infinity,
-        height: 300,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => _buildPlaceholder(theme),
-        errorWidget: (context, url, error) => _buildPlaceholder(theme),
+  void _openFullScreenImage(BuildContext context, String imageUrl) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FullScreenImageView(imageUrl: imageUrl),
+      ),
+    );
+  }
+
+  Widget _buildItemImage(
+      BuildContext context, String imageUrl, ThemeData theme) {
+    return GestureDetector(
+      onTap: () => _openFullScreenImage(context, imageUrl),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          width: double.infinity,
+          height: 300,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => _buildPlaceholder(theme),
+          errorWidget: (context, url, error) => _buildPlaceholder(theme),
+        ),
       ),
     );
   }
@@ -309,4 +325,37 @@ class ItemDetailScreen extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) => DateFormat('MMM dd, yyyy').format(date);
+}
+
+class FullScreenImageView extends StatelessWidget {
+  final String imageUrl;
+
+  const FullScreenImageView({super.key, required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Center(
+            child: PhotoView(
+              imageProvider: NetworkImage(imageUrl),
+              backgroundDecoration: const BoxDecoration(color: Colors.black),
+              minScale: PhotoViewComputedScale.contained,
+              maxScale: PhotoViewComputedScale.covered * 2,
+            ),
+          ),
+          Positioned(
+            top: 40,
+            right: 16,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
