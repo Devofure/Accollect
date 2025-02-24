@@ -40,89 +40,73 @@ class ItemDetailScreen extends StatelessWidget {
                 description: 'This item might have been deleted or moved.',
               );
             }
-            return _buildItemDetails(item, theme);
+            return _buildItemDetails(context, item, theme, viewModel);
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: theme.colorScheme.error,
-        foregroundColor: theme.colorScheme.onError,
-        heroTag: 'delete_item',
-        onPressed: () => _confirmDelete(context, viewModel, theme),
-        icon: const Icon(Icons.delete),
-        label: const Text('Delete Item'),
-      ),
+      floatingActionButton: _buildFloatingButtons(context, viewModel, theme),
     );
   }
 
-  Widget _buildItemDetails(ItemUIModel item, ThemeData theme) {
+  Widget _buildItemDetails(BuildContext context, ItemUIModel item,
+      ThemeData theme, ItemDetailViewModel viewModel) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildImageCarousel(item.imageUrls ?? [], theme),
-          const SizedBox(height: 20),
-          _buildDetailRow('Name', item.name, theme),
-          _buildDetailRow('Category', item.category ?? 'No category', theme),
-          _buildDetailRow('Added On', _formatDate(item.addedOn), theme),
+          _buildImageCarousel(
+              item.imageUrls ?? [], item.onlineImageUrls ?? [], theme),
+          const SizedBox(height: 24),
+          _buildSectionCard(theme, '📌 General Info', [
+            _buildDetailRow('Name', item.name, theme),
+            _buildDetailRow('Category', item.category ?? 'No category', theme),
+            _buildDetailRow('Added On', _formatDate(item.addedOn), theme),
+            if (item.originalPrice?.isNotEmpty == true)
+              _buildDetailRow('Original Price', item.originalPrice!, theme),
+            if (item.notes?.isNotEmpty == true)
+              _buildDetailRow('Notes', item.notes!, theme),
+            if (item.collectionName?.isNotEmpty == true)
+              _buildDetailRow('Collection', item.collectionName!, theme),
+          ]),
           if (item.description?.isNotEmpty == true)
-            _buildDetailRow('Description', item.description!, theme),
-          if (item.originalPrice?.isNotEmpty == true)
-            _buildDetailRow('Original Price', item.originalPrice!, theme),
-          if (item.notes?.isNotEmpty == true)
-            _buildDetailRow('Notes', item.notes!, theme),
-          if (item.collectionName?.isNotEmpty == true)
-            _buildDetailRow('Collection', item.collectionName!, theme),
-          const SizedBox(height: 20),
+            _buildSectionCard(theme, '📝 Description', [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child:
+                    Text(item.description!, style: theme.textTheme.bodyMedium),
+              ),
+            ]),
           _buildAdditionalAttributesSection(item, theme),
         ],
       ),
     );
   }
 
-  Widget _buildImageCarousel(List<String> imageUrls, ThemeData theme) {
-    if (imageUrls.isEmpty) {
-      return _buildItemImage(null, theme);
-    }
-    return Column(
-      children: [
-        CarouselSlider(
-          options: CarouselOptions(
-            height: 300,
-            enableInfiniteScroll: false,
-            enlargeCenterPage: true,
-            viewportFraction: 0.9,
-            autoPlay: true,
-          ),
-          items: imageUrls
-              .map((imageUrl) => _buildItemImage(imageUrl, theme))
-              .toList(),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: imageUrls.asMap().entries.map((entry) {
-            return Container(
-              width: 8,
-              height: 8,
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+  Widget _buildImageCarousel(
+      List<String> imageUrls, List<String> onlineImageUrls, ThemeData theme) {
+    final allImages = [...imageUrls, ...onlineImageUrls];
+    if (allImages.isEmpty) return _buildPlaceholder(theme);
+
+    return CarouselSlider(
+      options: CarouselOptions(
+        height: 300,
+        enableInfiniteScroll: true,
+        enlargeCenterPage: true,
+        viewportFraction: 0.9,
+        autoPlay: true,
+      ),
+      items: allImages
+          .map((imageUrl) => _buildItemImage(imageUrl, theme))
+          .toList(),
     );
   }
 
-  Widget _buildItemImage(String? imageUrl, ThemeData theme) {
+  Widget _buildItemImage(String imageUrl, ThemeData theme) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: CachedNetworkImage(
-        imageUrl: imageUrl ?? '',
+        imageUrl: imageUrl,
         width: double.infinity,
         height: 300,
         fit: BoxFit.cover,
@@ -134,14 +118,56 @@ class ItemDetailScreen extends StatelessWidget {
 
   Widget _buildPlaceholder(ThemeData theme) {
     return Container(
-      width: double.infinity,
-      height: 300,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
         color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
       ),
       child: Icon(Icons.image,
-          color: theme.colorScheme.onSurfaceVariant, size: 40),
+          color: theme.colorScheme.onSurfaceVariant, size: 30),
+    );
+  }
+
+  Widget _buildSectionCard(
+      ThemeData theme, String title, List<Widget> children) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold)),
+          Flexible(
+            child: Text(value,
+                style: theme.textTheme.bodyMedium,
+                textAlign: TextAlign.end,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1),
+          ),
+        ],
+      ),
     );
   }
 
@@ -150,96 +176,66 @@ class ItemDetailScreen extends StatelessWidget {
         item.additionalAttributes!.isEmpty) {
       return const SizedBox.shrink();
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return _buildSectionCard(
+      theme,
+      '🔎 Extra Information',
+      item.additionalAttributes!.entries
+          .map((entry) =>
+              _buildDetailRow(entry.key, entry.value.toString(), theme))
+          .toList(),
+    );
+  }
+
+  Widget _buildFloatingButtons(
+      BuildContext context, ItemDetailViewModel viewModel, ThemeData theme) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Text(
-          'Additional Information',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+        FloatingActionButton(
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: theme.colorScheme.onPrimary,
+          heroTag: 'edit_item',
+          onPressed: () => _editItem(context, viewModel),
+          child: const Icon(Icons.edit),
         ),
-        const SizedBox(height: 8),
-        ...item.additionalAttributes!.entries.map((entry) {
-          return _buildDetailRow(entry.key, entry.value.toString(), theme);
-        }),
+        const SizedBox(width: 12),
+        FloatingActionButton(
+          backgroundColor: theme.colorScheme.error,
+          foregroundColor: theme.colorScheme.onError,
+          heroTag: 'delete_item',
+          onPressed: () => _confirmDelete(context, viewModel, theme),
+          child: const Icon(Icons.delete),
+        ),
       ],
     );
   }
 
-  Widget _buildDetailRow(String label, String value, ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-        ],
-      ),
-    );
+  void _editItem(BuildContext context, ItemDetailViewModel viewModel) {
+    debugPrint("Edit feature not implemented yet.");
   }
 
   void _confirmDelete(
       BuildContext context, ItemDetailViewModel viewModel, ThemeData theme) {
     showDialog(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: theme.colorScheme.surface,
-          title: Text('Confirm Delete',
-              style: TextStyle(color: theme.colorScheme.onSurface)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Are you sure you want to delete this item?',
-                style: TextStyle(color: theme.colorScheme.onSurface),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'This action cannot be undone.',
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text('Cancel',
-                  style: TextStyle(color: theme.colorScheme.primary)),
-            ),
-            TextButton(
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Confirm Delete"),
+        content: const Text(
+            "Are you sure you want to delete this item? This action cannot be undone."),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text("Cancel")),
+          TextButton(
               onPressed: () async {
-                Navigator.of(dialogContext).pop();
+                Navigator.pop(dialogContext);
                 await viewModel.deleteItem();
               },
-              style: TextButton.styleFrom(
-                backgroundColor: theme.colorScheme.error,
-              ),
-              child: Text('Delete',
-                  style: TextStyle(color: theme.colorScheme.onError)),
-            ),
-          ],
-        );
-      },
+              child: const Text("Delete")),
+        ],
+      ),
     );
   }
 
-  String _formatDate(DateTime date) {
-    return DateFormat('MMM dd, yyyy').format(date);
-  }
+  String _formatDate(DateTime date) => DateFormat('MMM dd, yyyy').format(date);
 }
