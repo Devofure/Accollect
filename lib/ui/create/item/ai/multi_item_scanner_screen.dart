@@ -18,7 +18,6 @@ class MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
   CameraController? _cameraController;
   List<CameraDescription>? _cameras;
   bool _isDetecting = false;
-  bool _isProcessing = false;
   final BarcodeScanner _barcodeScanner = BarcodeScanner();
 
   @override
@@ -45,7 +44,6 @@ class MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
       _cameraController!.startImageStream((CameraImage image) {
         if (!_isDetecting) {
           _isDetecting = true;
-          _setProcessingState(true);
           _processImage(image);
         }
       });
@@ -77,25 +75,6 @@ class MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
       debugPrint("❌ Error processing image: $e, $s");
     } finally {
       _isDetecting = false;
-      _setProcessingState(false);
-    }
-  }
-
-  /// Ensures the "Scanning..." indicator stays visible for a moment.
-  void _setProcessingState(bool isProcessing) {
-    if (!mounted) return;
-    setState(() {
-      _isProcessing = isProcessing;
-    });
-
-    if (isProcessing) {
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          setState(() {
-            _isProcessing = false;
-          });
-        }
-      });
     }
   }
 
@@ -111,33 +90,9 @@ class MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     return RotatedBox(
-      quarterTurns: 1, // **Restored original rotation**
+      quarterTurns: 1,
       child: CameraPreview(_cameraController!),
     );
-  }
-
-  Widget _buildScanningIndicator() {
-    return _isProcessing
-        ? Positioned(
-            top: 20,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  "Scanning...",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          )
-        : const SizedBox.shrink();
   }
 
   Widget _buildScannedItemsOverlay() {
@@ -208,7 +163,6 @@ class MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
               flex: 7,
               child: Stack(children: [
                 _buildCameraPreview(),
-                _buildScanningIndicator()
               ])),
           // **Restored camera layout**
           Expanded(flex: 3, child: _buildScannedItemsOverlay()),
