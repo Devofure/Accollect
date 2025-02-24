@@ -2,6 +2,7 @@ import 'package:accollect/core/firebase_service.dart';
 import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/collection_repository.dart';
 import 'package:accollect/data/item_repository.dart';
+import 'package:accollect/data/item_suggestions_repository.dart';
 import 'package:accollect/domain/models/collection_ui_model.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/auth/sign_in_header.dart';
@@ -9,6 +10,9 @@ import 'package:accollect/ui/collection/collection_screen.dart';
 import 'package:accollect/ui/collection/collection_view_model.dart';
 import 'package:accollect/ui/create/collection/create_collection_screen.dart';
 import 'package:accollect/ui/create/collection/create_collection_view_model.dart';
+import 'package:accollect/ui/create/item/barcode/barcode_scanner_screen.dart';
+import 'package:accollect/ui/create/item/barcode/barcode_scanner_view_model.dart';
+import 'package:accollect/ui/create/item/barcode/confirm_product_screen.dart';
 import 'package:accollect/ui/create/item/multi_step_create_item_screen.dart';
 import 'package:accollect/ui/create/item/multi_step_create_item_view_model.dart';
 import 'package:accollect/ui/home/home_screen.dart';
@@ -151,8 +155,27 @@ class AppRouterConfig {
               create: (_) => MultiStepCreateItemViewModel(
                 categoryRepository: context.read<ICategoryRepository>(),
                 itemRepository: context.read<IItemRepository>(),
+                suggestionRepository: context.read<IItemSuggestionRepository>(),
               ),
               child: const MultiStepCreateItemScreen(),
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRouter.createNewItemRoute,
+          builder: (context, state) {
+            return ConfirmProductScreen(
+              product: state.extra as Map<String, dynamic>,
+              onAddToCollection: () {},
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRouter.addItemBarcodeScannerRoute,
+          builder: (context, state) {
+            return ChangeNotifierProvider(
+              create: (_) => BarcodeScannerViewModel(),
+              child: BarcodeScannerScreen(),
             );
           },
         ),
@@ -170,10 +193,11 @@ class AppRouterConfig {
           },
         ),
         GoRoute(
-          path: AppRouter.addOrSelectItemRoute,
+          path: AppRouter.addItemLibraryRoute,
           builder: (context, state) {
-            final collectionKey = state.pathParameters['key'];
-            final collectionName = state.pathParameters['name'];
+            final collection = state.extra as CollectionUIModel;
+            final collectionKey = collection.key;
+            final collectionName = collection.name;
             final itemRepo = context.read<IItemRepository>();
 
             return ChangeNotifierProvider(
@@ -194,16 +218,28 @@ class AppRouterConfig {
 }
 
 class AppRouter {
-  static const String onboardingRoute = '/';
-  static const String signInRoute = '/sign-in';
-  static const String profileRoute = '/profile';
-  static const String homeRoute = '/home';
-  static const String settingsRoute = '/settings';
-  static const String settingsCollectionsRoute = '/settings/collections';
-  static const String createCollectionRoute = '/create-collection';
-  static const String addOrSelectItemRoute = '/add-or-select-item/:key/:name';
-  static const String itemLibraryRoute = '/item-library';
-  static const String createNewItemRoute = '/add-new-item';
+  static const String addItemAiScannerRoute = '/aiScanner';
+  static const String addItemBarcodeScannerRoute = '/barcodeScanner';
+  static const String addItemLibraryRoute = '/add-or-select-item/:key/:name';
   static const String collectionRoute = '/collection';
+  static const String createCollectionRoute = '/create-collection';
+  static const String createNewItemRoute = '/add-new-item';
+  static const String homeRoute = '/home';
   static const String itemDetailsRoute = '/item-details';
+  static const String itemLibraryRoute = '/item-library';
+  static const String onboardingRoute = '/';
+  static const String productConfirmationRoute = '/product-confirmation';
+  static const String profileRoute = '/profile';
+  static const String settingsCollectionsRoute = '/settings/collections';
+  static const String settingsRoute = '/settings';
+  static const String signInRoute = '/sign-in';
 }
+
+class Result {
+  final String? content;
+  final Status status;
+
+  Result({this.content, required this.status});
+}
+
+enum Status { ok, fail }

@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:accollect/core/app_router.dart';
+import 'package:accollect/domain/models/collection_ui_model.dart';
 import 'package:accollect/ui/widgets/loading_border_button.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +20,7 @@ class CloseableAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       leading: IconButton(
         icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () => context.pop(),
       ),
       title: title != null
           ? Text(title!, style: TextStyle(color: theme.colorScheme.onSurface))
@@ -60,14 +62,18 @@ class HeaderText extends StatelessWidget {
 class CustomTextInput extends StatelessWidget {
   final String label;
   final String hint;
-  final FormFieldSetter<String> onSaved;
+  final TextEditingController? controller;
+  final ValueChanged<String>? onChanged;
+  final FormFieldSetter<String>? onSaved;
   final FormFieldValidator<String>? validator;
 
   const CustomTextInput({
     super.key,
     required this.label,
     required this.hint,
-    required this.onSaved,
+    this.onSaved,
+    this.controller,
+    this.onChanged,
     this.validator,
   });
 
@@ -77,11 +83,16 @@ class CustomTextInput extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: theme.textTheme.labelMedium
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        Text(
+          label,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
         const SizedBox(height: 8),
         TextFormField(
+          controller: controller,
+          // ✅ Now supports controllers
           style: TextStyle(color: theme.colorScheme.onSurface),
           decoration: InputDecoration(
             hintText: hint,
@@ -100,6 +111,7 @@ class CustomTextInput extends StatelessWidget {
           ),
           validator: validator,
           onSaved: onSaved,
+          onChanged: onChanged,
         ),
       ],
     );
@@ -313,4 +325,51 @@ class BottomActionButton extends StatelessWidget {
       ),
     );
   }
+}
+
+void showAddItemOptions(BuildContext context, CollectionUIModel collection) {
+  showModalBottomSheet(
+    context: context,
+    builder: (context) => Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Add item to ${collection.name}',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+          ),
+          const SizedBox(height: 12),
+          ListTile(
+            leading: const Icon(Icons.create),
+            title: const Text('Create Item Manually'),
+            onTap: () =>
+                context.push(AppRouter.createNewItemRoute, extra: collection),
+          ),
+          ListTile(
+            leading: const Icon(Icons.qr_code_scanner),
+            title: const Text('Scan Barcode'),
+            onTap: () => context.push(AppRouter.addItemBarcodeScannerRoute,
+                extra: collection),
+          ),
+          ListTile(
+            leading: const Icon(Icons.search),
+            title: const Text('Find in Item Library'),
+            onTap: () =>
+                context.push(AppRouter.addItemLibraryRoute, extra: collection),
+          ),
+          ListTile(
+            leading: const Icon(Icons.camera_alt),
+            title: const Text('Use AI Image Recognition'),
+            onTap: () => context.push(AppRouter.addItemAiScannerRoute,
+                extra: collection),
+          ),
+        ],
+      ),
+    ),
+  );
 }

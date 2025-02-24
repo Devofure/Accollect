@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/item_repository.dart';
+import 'package:accollect/data/item_suggestions_repository.dart';
 import 'package:accollect/domain/models/category_attributes_model.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:flutter/material.dart';
@@ -11,14 +13,18 @@ import 'package:image_picker/image_picker.dart';
 class MultiStepCreateItemViewModel extends ChangeNotifier {
   final ICategoryRepository categoryRepository;
   final IItemRepository itemRepository;
+  final IItemSuggestionRepository suggestionRepository;
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final ImagePicker _imagePicker = ImagePicker();
 
   late Command<void, List<String>> fetchCategoriesCommand;
   late Command<void, void> saveItemCommand;
+  late Command<void, List<Map<String, dynamic>>> fetchItemByBarcodeCommand;
 
-  String? title;
+  String? barcode;
+  String? name;
   String? description;
+  List<String>? onlineImages;
   String selectedCategory = 'Other';
   String? originalPrice;
   String? notes;
@@ -29,6 +35,7 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
   MultiStepCreateItemViewModel({
     required this.categoryRepository,
     required this.itemRepository,
+    required this.suggestionRepository,
   }) {
     _setupCommands();
   }
@@ -44,26 +51,39 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
         final currentState = formKey.currentState!;
         currentState.save();
 
-        if (title == null || title!.isEmpty) {
+        if (name == null || name!.isEmpty) {
           throw Exception('Item title cannot be empty');
         }
 
         final newItem = ItemUIModel(
           key: DateTime.now().millisecondsSinceEpoch.toString(),
-          name: title!,
+          name: name!,
           description: description ?? '',
           category: selectedCategory,
           addedOn: DateTime.now(),
           collectionKey: null,
           originalPrice: originalPrice,
+          onlineImageUrls: onlineImages,
           notes: notes,
-          additionalAttributes:
-              additionalAttributes.isNotEmpty ? additionalAttributes : null,
+          additionalAttributes: additionalAttributes.isNotEmpty
+              ? Map.of(additionalAttributes)
+              : null,
         );
 
         await itemRepository.createItem(newItem, uploadedImages);
       },
       initialValue: null,
+    );
+
+    fetchItemByBarcodeCommand =
+        Command.createAsyncNoParam<List<Map<String, dynamic>>>(
+      () async {
+        if (barcode == null || barcode!.isEmpty) return [];
+
+        var products = await suggestionRepository.fetchItemByBarcode(barcode!);
+        return products;
+      },
+      initialValue: [],
     );
 
     fetchCategoriesCommand.execute();
@@ -73,7 +93,7 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
     return categoryRepository.fetchCategoryAttributes(selectedCategory);
   }
 
-  void setTitle(String? value) => title = value;
+  void setTitle(String? value) => name = value;
 
   void setDescription(String? value) => description = value;
 
@@ -87,12 +107,6 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
   void setOriginalPrice(String? value) => originalPrice = value;
 
   void setNotes(String? value) => notes = value;
-
-  void setAdditionalAttribute(String field, dynamic value) {
-    if (value != null && value.toString().isNotEmpty) {
-      additionalAttributes[field] = value;
-    }
-  }
 
   String? validateTitle(String? value) {
     return (value == null || value.isEmpty)
@@ -142,6 +156,51 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> scanBarcode() async {
+    debugPrint("Barcode scanning not implemented yet");
+  }
+
+  void selectSuggestion(Map<String, dynamic> suggestion) {
+    barcode = suggestion['ean'];
+    name = suggestion['title'];
+    description = suggestion['description'];
+    notifyListeners();
+  }
+
+  void fillItemDetails(Map<String, dynamic> product) {
+    barcode = product['ean'];
+    name = product['title'];
+    description = product['description'];
+    originalPrice = product['originalPrice'];
+    onlineImages = product['images']?.cast<String>() ?? [];
+    additionalAttributes = {
+      'Brand': product['brand'] ?? '',
+      'Release Year': product['releaseYear'] ?? '',
+      'Material': product['material'] ?? '',
+      'Dimensions': product['dimensions'] ?? '',
+    };
+    notifyListeners();
+  }
+
+  void setAdditionalAttribute(String field, dynamic value) {
+    if (value != null && value.toString().isNotEmpty) {
+      additionalAttributes = {
+        ...additionalAttributes,
+        field: value,
+      };
+      notifyListeners();
+    }
+  }
+
+  void removeAdditionalAttribute(String field) {
+    if (additionalAttributes.containsKey(field)) {
+      additionalAttributes = {
+        ...additionalAttributes..remove(field),
+      };
+      notifyListeners();
+    }
+  }
+
   placeholderAsset(String? category) {
     switch (category) {
       case 'Lego':
@@ -154,6 +213,13 @@ class MultiStepCreateItemViewModel extends ChangeNotifier {
         return 'assets/images/category_wine.png';
       default:
         return 'assets/images/category_other.png';
+    }
+  }
+
+  void removeOnlineImage(int index) {
+    if (index >= 0 && index < onlineImages!.length) {
+      onlineImages!.removeAt(index);
+      notifyListeners();
     }
   }
 }

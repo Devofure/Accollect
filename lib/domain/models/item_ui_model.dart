@@ -8,6 +8,7 @@ class ItemUIModel {
   final String? category;
   final DateTime addedOn;
   final List<String>? imageUrls;
+  final List<String>? onlineImageUrls;
   final String? collectionKey;
   final String? notes;
   final String? originalPrice;
@@ -21,6 +22,7 @@ class ItemUIModel {
     this.category,
     required this.addedOn,
     this.imageUrls,
+    this.onlineImageUrls,
     this.collectionKey,
     this.notes,
     this.originalPrice,
@@ -35,6 +37,8 @@ class ItemUIModel {
       if (collectionName != null) 'collectionName': collectionName,
       if (category != null) 'category': category,
       if (imageUrls != null && imageUrls!.isNotEmpty) 'imageUrls': imageUrls,
+      if (onlineImageUrls != null && onlineImageUrls!.isNotEmpty)
+        'imageUrls': onlineImageUrls,
       if (collectionKey != null) 'collectionKey': collectionKey,
       if (notes != null) 'notes': notes,
       if (originalPrice != null) 'originalPrice': originalPrice,
@@ -53,6 +57,8 @@ class ItemUIModel {
       category: json['category'],
       addedOn: (json['addedOn'] as Timestamp?)?.toDate() ?? DateTime.now(),
       imageUrls: (json['imageUrls'] as List?)?.map((e) => e as String).toList(),
+      onlineImageUrls:
+          (json['onlineImageUrls'] as List?)?.map((e) => e as String).toList(),
       collectionKey: json['collectionKey'],
       notes: json['notes'],
       originalPrice: json['originalPrice'],
@@ -71,6 +77,7 @@ class ItemUIModel {
     String? category,
     DateTime? addedOn,
     List<String>? imageUrls,
+    List<String>? onlineImageUrls,
     String? collectionKey,
     String? notes,
     String? originalPrice,
@@ -84,6 +91,7 @@ class ItemUIModel {
       category: category ?? this.category,
       addedOn: addedOn ?? this.addedOn,
       imageUrls: imageUrls ?? this.imageUrls,
+      onlineImageUrls: onlineImageUrls ?? this.onlineImageUrls,
       collectionKey: collectionKey ?? this.collectionKey,
       notes: notes ?? this.notes,
       originalPrice: originalPrice ?? this.originalPrice,

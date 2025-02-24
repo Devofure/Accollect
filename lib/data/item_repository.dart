@@ -16,7 +16,7 @@ abstract class IItemRepository {
 
   Stream<ItemUIModel?> fetchItemStream(String itemKey);
 
-  Future<ItemUIModel> createItem(ItemUIModel item, List<File> images);
+  Future<ItemUIModel> createItem(ItemUIModel item, List<File>? images);
 
   Future<void> removeItemFromCollection(String collectionKey, String itemKey);
 
@@ -82,7 +82,10 @@ class ItemRepository implements IItemRepository {
   }
 
   @override
-  Future<ItemUIModel> createItem(ItemUIModel item, List<File> images) async {
+  Future<ItemUIModel> createItem(
+    ItemUIModel item,
+    List<File>? images,
+  ) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception("User not authenticated.");
 
@@ -97,12 +100,13 @@ class ItemRepository implements IItemRepository {
 
     await newDocRef.set(itemData);
 
-    if (images.isNotEmpty) {
-      final imageUrls = await _uploadImagesToFirebase(itemId, images);
+    if (images?.isNotEmpty == true) {
+      final imageUrls = await _uploadImagesToFirebase(itemId, images!);
       await newDocRef.update({'imageUrls': imageUrls});
     }
 
-    return item.copyWith(key: itemId, imageUrls: images.isNotEmpty ? [""] : []);
+    return item.copyWith(
+        key: itemId, imageUrls: images?.isNotEmpty == true ? [""] : []);
   }
 
   Future<List<String>> _uploadImagesToFirebase(

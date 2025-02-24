@@ -1,7 +1,7 @@
 import 'package:accollect/core/app_router.dart';
-import 'package:accollect/core/utils/extensions.dart';
 import 'package:accollect/domain/models/item_ui_model.dart';
 import 'package:accollect/ui/widgets/common.dart';
+import 'package:accollect/ui/widgets/create_common_widget.dart';
 import 'package:accollect/ui/widgets/item_tile_portrait.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -183,18 +183,10 @@ class CollectionScreen extends StatelessWidget {
     return FloatingActionButton.extended(
       backgroundColor: theme.colorScheme.primary,
       heroTag: 'add_item',
-      onPressed: () => _navigateToAddOrSelectItemScreen(context, viewModel),
+      onPressed: () => showAddItemOptions(context, viewModel.collection),
       icon: Icon(Icons.add, color: theme.colorScheme.onPrimary),
       label: Text("Add Item",
           style: TextStyle(color: theme.colorScheme.onPrimary)),
-    );
-  }
-
-  void _navigateToAddOrSelectItemScreen(
-      BuildContext context, CollectionViewModel viewModel) {
-    context.pushWithParams(
-      AppRouter.addOrSelectItemRoute,
-      [viewModel.collection.key, viewModel.collection.name],
     );
   }
 }

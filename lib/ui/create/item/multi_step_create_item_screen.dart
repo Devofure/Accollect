@@ -1,7 +1,10 @@
 import 'package:accollect/ui/create/item/multi_step_create_item_view_model.dart';
 import 'package:accollect/ui/create/item/step_category_widget.dart';
 import 'package:accollect/ui/create/item/step_details_widget.dart';
+import 'package:accollect/ui/create/item/step_extra_info_widget.dart';
 import 'package:accollect/ui/create/item/step_images_widget.dart';
+import 'package:accollect/ui/create/item/step_online_images_widget.dart';
+import 'package:accollect/ui/widgets/create_common_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -17,6 +20,14 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
   int _currentStep = 0;
   bool _isSaving = false;
 
+  final List<Map<String, dynamic>> _steps = [
+    {'title': 'Details', 'widget': StepDetailsWidget()},
+    {'title': 'Online Images', 'widget': const StepOnlineImagesWidget()},
+    {'title': 'Images', 'widget': const StepImagesWidget()},
+    {'title': 'Category', 'widget': const StepCategoryWidget()},
+    {'title': 'Extra Info', 'widget': const StepExtraInfoWidget()},
+  ];
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -24,28 +35,18 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: theme.colorScheme.surface,
-        title: Text(
-          'Create Item',
-          style: TextStyle(color: theme.colorScheme.onSurface),
-        ),
-      ),
+      appBar: const CloseableAppBar(title: 'Create Item'),
       body: Form(
         key: viewModel.formKey,
         child: Column(
           children: [
+            _buildScrollableStepper(theme),
             Expanded(
-              child: Stepper(
-                type: StepperType.horizontal,
-                currentStep: _currentStep,
-                onStepTapped: (step) => setState(() => _currentStep = step),
-                steps: [
-                  _buildStep(theme, 'Images', 0, const StepImagesWidget()),
-                  _buildStep(theme, 'Details', 1, const StepDetailsWidget()),
-                  _buildStep(theme, 'Category', 2, const StepCategoryWidget()),
-                ],
-                controlsBuilder: (context, details) => const SizedBox.shrink(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: _steps[_currentStep]
+                    ['widget'], // Render current step's content
               ),
             ),
           ],
@@ -55,16 +56,50 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
     );
   }
 
-  Step _buildStep(
-      ThemeData theme, String title, int stepIndex, Widget content) {
-    return Step(
-      title: Text(
-        title,
-        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+  Widget _buildScrollableStepper(ThemeData theme) {
+    const double stepWidth = 120.0; // Base width for each step.
+    const double stepSpacing = 16.0; // Spacing between steps.
+    final int count = _steps.length;
+    final double totalWidth = (count * stepWidth) + ((count - 1) * stepSpacing);
+
+    return SizedBox(
+      height: 90,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(
+          width: totalWidth,
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              canvasColor: theme.colorScheme.surfaceContainerHighest,
+            ),
+            child: Stepper(
+              type: StepperType.horizontal,
+              currentStep: _currentStep,
+              onStepTapped: (step) => setState(() => _currentStep = step),
+              steps: List.generate(count, (index) => _buildStep(theme, index)),
+              controlsBuilder: (context, details) => const SizedBox.shrink(),
+            ),
+          ),
+        ),
       ),
-      isActive: _currentStep >= stepIndex,
-      state: _stepState(stepIndex),
-      content: content,
+    );
+  }
+
+  /// Each step's title now has right padding except for the last step.
+  Step _buildStep(ThemeData theme, int index) {
+    const double stepSpacing = 16.0;
+    return Step(
+      title: Padding(
+        padding: EdgeInsets.only(
+            right: index == _steps.length - 1 ? 0 : stepSpacing),
+        child: Text(
+          _steps[index]['title'],
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+        ),
+      ),
+      isActive: _currentStep >= index,
+      state: _stepState(index),
+      content: const SizedBox.shrink(), // No content rendered here.
     );
   }
 
@@ -87,7 +122,7 @@ class _MultiStepCreateItemScreenState extends State<MultiStepCreateItemScreen> {
                 ),
                 child: const Text('Back'),
               ),
-            if (_currentStep < 2)
+            if (_currentStep < _steps.length - 1)
               ElevatedButton(
                 onPressed: () => setState(() => _currentStep++),
                 style: ElevatedButton.styleFrom(

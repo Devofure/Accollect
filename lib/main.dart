@@ -5,6 +5,7 @@ import 'package:accollect/core/utils/theme_provider.dart';
 import 'package:accollect/data/category_repository.dart';
 import 'package:accollect/data/collection_repository.dart';
 import 'package:accollect/data/item_repository.dart';
+import 'package:accollect/data/item_suggestions_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_command/flutter_command.dart';
 import 'package:provider/provider.dart';
@@ -23,6 +24,8 @@ void main() async {
         Provider<ICategoryRepository>.value(value: CategoryRepository()),
         Provider<ICollectionRepository>.value(value: CollectionRepository()),
         Provider<IItemRepository>.value(value: ItemRepository()),
+        Provider<IItemSuggestionRepository>.value(
+            value: ItemSuggestionRepository()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: MyApp(firebaseService: firebaseService),
