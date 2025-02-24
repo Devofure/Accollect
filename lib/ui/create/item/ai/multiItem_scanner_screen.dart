@@ -16,9 +16,7 @@ class _MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
   List<CameraDescription>? _cameras;
   bool _isDetecting = false;
   final BarcodeScanner _barcodeScanner = BarcodeScanner();
-
-  // List to store each scanned barcode info.
-  final List<Barcode> _scannedBarcodes = [];
+  String _scannedData = "";
 
   @override
   void initState() {
@@ -64,19 +62,11 @@ class _MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
       final InputImage inputImage = _convertCameraImageToInputImage(image);
       final List<Barcode> barcodes =
           await _barcodeScanner.processImage(inputImage);
-
       if (barcodes.isNotEmpty) {
         debugPrint("✅ Barcodes detected: ${barcodes.length}");
-        // Add each barcode that is not already in our list.
-        for (final barcode in barcodes) {
-          final String? rawValue = barcode.rawValue;
-          if (rawValue != null &&
-              !_scannedBarcodes.any((b) => b.rawValue == rawValue)) {
-            setState(() {
-              _scannedBarcodes.add(barcode);
-            });
-          }
-        }
+        setState(() {
+          _scannedData = barcodes.map((b) => b.rawValue ?? "").join("\n");
+        });
       } else {
         debugPrint("🚫 No barcodes detected.");
       }
@@ -89,10 +79,9 @@ class _MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
 
   /// Converts a [CameraImage] (YUV420 format) to an [InputImage] using NV21 conversion.
   InputImage _convertCameraImageToInputImage(CameraImage image) {
-    // Convert YUV420 image to NV21 format.
     final Uint8List nv21Bytes = convertYUV420ToNV21(image);
 
-    // Use sensor orientation from the first camera.
+    // Use the sensor orientation from the first camera.
     final int sensorOrientation = _cameras!.first.sensorOrientation;
     InputImageRotation rotation;
     if (sensorOrientation == 90) {
@@ -105,7 +94,6 @@ class _MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
       rotation = InputImageRotation.rotation0deg;
     }
 
-    // Create metadata with NV21 settings.
     final InputImageMetadata metadata = InputImageMetadata(
       size: Size(image.width.toDouble(), image.height.toDouble()),
       rotation: rotation,
@@ -154,14 +142,16 @@ class _MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
     super.dispose();
   }
 
-  /// Rotates the camera preview based on sensor orientation.
+  /// Builds a rotated preview based on the sensor orientation.
   Widget _buildCameraPreview() {
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
       return const Center(child: CircularProgressIndicator());
     }
-    // Get sensor orientation.
+    // Retrieve sensor orientation.
     final int sensorOrientation = _cameras!.first.sensorOrientation;
     int quarterTurns;
+    // For preview: if sensorOrientation is 90, rotate preview by 1 quarter turn;
+    // if 270, rotate by 3 quarter turns.
     if (sensorOrientation == 90) {
       quarterTurns = 1;
     } else if (sensorOrientation == 270) {
@@ -175,53 +165,21 @@ class _MultiItemScannerScreenState extends State<MultiItemScannerScreen> {
     );
   }
 
-  /// Builds an overlay list displaying each scanned item.
-  Widget _buildScannedItemsOverlay() {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        color: Colors.black.withValues(alpha: 0.5),
-        height: 150,
-        child: ListView.builder(
-          itemCount: _scannedBarcodes.length,
-          itemBuilder: (context, index) {
-            final barcode = _scannedBarcodes[index];
-            return ListTile(
-              leading: const Icon(Icons.qr_code, color: Colors.white),
-              title: Text(
-                barcode.rawValue ?? "Unknown",
-                style: const TextStyle(color: Colors.white),
-              ),
-              subtitle: Text(
-                barcode.format.name,
-                style: const TextStyle(color: Colors.white70),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Multi-Item Scanner")),
-      body: Stack(
+      body: Column(
         children: [
-          Column(
-            children: [
-              Expanded(child: _buildCameraPreview()),
-              // Optionally, display the list below the preview.
-              // Alternatively, you can overlay it on the preview as shown below.
-              // Container(
-              //   height: 150,
-              //   child: _buildScannedItemsOverlay(),
-              // ),
-            ],
+          Expanded(child: _buildCameraPreview()),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              "Scanned Data:\n$_scannedData",
+              style: const TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
           ),
-          // Overlay the scanned items list on top of the preview.
-          _buildScannedItemsOverlay(),
         ],
       ),
     );
