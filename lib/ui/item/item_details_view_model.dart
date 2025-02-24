@@ -20,12 +20,19 @@ class ItemDetailViewModel extends ChangeNotifier {
     required this.repository,
     required this.initialItem,
   }) {
+    favoriteImageUrl = initialItem.favoriteImageUrl;
     _itemStream = _createItemStream();
   }
 
   Stream<ItemUIModel?> _createItemStream() {
     return Stream.value(initialItem).asyncExpand(
-      (_) => repository.fetchItemStream(initialItem.key).handleError(
+      (_) => repository.fetchItemStream(initialItem.key).map((item) {
+        if (item != null && favoriteImageUrl != item.favoriteImageUrl) {
+          favoriteImageUrl = item.favoriteImageUrl;
+          notifyListeners();
+        }
+        return item;
+      }).handleError(
         (error, stackTrace) {
           _setError("Failed to load item", error, stackTrace);
         },
@@ -35,7 +42,7 @@ class ItemDetailViewModel extends ChangeNotifier {
 
   Future<void> updateFavoriteImage(String itemKey, String imageUrl) async {
     await repository.updateFavoriteImage(itemKey, imageUrl);
-    favoriteImageUrl = imageUrl; // Update locally
+    favoriteImageUrl = imageUrl;
     notifyListeners();
   }
 
