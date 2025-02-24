@@ -70,65 +70,18 @@ class ItemDetailScreen extends StatelessWidget {
             if (item.originalPrice?.isNotEmpty == true)
               _buildDetailRow('Original Price', item.originalPrice!, theme),
             if (item.notes?.isNotEmpty == true)
-              _buildDetailRow('Notes', item.notes!, theme),
+              _buildExpandableDetailRow(context, 'Notes', item.notes!, theme),
             if (item.collectionName?.isNotEmpty == true)
               _buildDetailRow('Collection', item.collectionName!, theme),
           ]),
           if (item.description?.isNotEmpty == true)
             _buildSectionCard(theme, '📝 Description', [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child:
-                    Text(item.description!, style: theme.textTheme.bodyMedium),
-              ),
+              _buildExpandableDetailRow(
+                  context, 'Description', item.description!, theme),
             ]),
           _buildAdditionalAttributesSection(item, theme),
         ],
       ),
-    );
-  }
-
-  Widget _buildImageCarousel(
-      List<String> imageUrls, List<String> onlineImageUrls, ThemeData theme) {
-    final allImages = [...imageUrls, ...onlineImageUrls];
-    if (allImages.isEmpty) return _buildPlaceholder(theme);
-
-    return CarouselSlider(
-      options: CarouselOptions(
-        height: 300,
-        enableInfiniteScroll: true,
-        enlargeCenterPage: true,
-        viewportFraction: 0.9,
-        autoPlay: true,
-      ),
-      items: allImages
-          .map((imageUrl) => _buildItemImage(imageUrl, theme))
-          .toList(),
-    );
-  }
-
-  Widget _buildItemImage(String imageUrl, ThemeData theme) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: CachedNetworkImage(
-        imageUrl: imageUrl,
-        width: double.infinity,
-        height: 300,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => _buildPlaceholder(theme),
-        errorWidget: (context, url, error) => _buildPlaceholder(theme),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholder(ThemeData theme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-      ),
-      child: Icon(Icons.image,
-          color: theme.colorScheme.onSurfaceVariant, size: 30),
     );
   }
 
@@ -154,6 +107,81 @@ class ItemDetailScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildImageCarousel(
+      List<String> imageUrls, List<String> onlineImageUrls, ThemeData theme) {
+    final allImages = [...imageUrls, ...onlineImageUrls];
+    if (allImages.isEmpty) return _buildPlaceholder(theme);
+
+    return Column(
+      children: [
+        CarouselSlider(
+          options: CarouselOptions(
+            height: 300,
+            enableInfiniteScroll: true,
+            enlargeCenterPage: true,
+            viewportFraction: 0.9,
+            autoPlay: true,
+            autoPlayInterval: const Duration(seconds: 4), // ⏳ Slower auto-play
+          ),
+          items: allImages
+              .map((imageUrl) => _buildItemImage(imageUrl, theme))
+              .toList(),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: allImages.asMap().entries.map((entry) {
+            return Container(
+              width: 8,
+              height: 8,
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildItemImage(String imageUrl, ThemeData theme) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
+        width: double.infinity,
+        height: 300,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => _buildPlaceholder(theme),
+        errorWidget: (context, url, error) => _buildPlaceholder(theme),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder(ThemeData theme) {
+    return Container(
+      height: 300,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Center(
+        child: Icon(Icons.image,
+            color: theme.colorScheme.onSurfaceVariant, size: 40),
+      ),
+    );
+  }
+
+  Widget _buildExpandableDetailRow(
+      BuildContext context, String label, String value, ThemeData theme) {
+    return GestureDetector(
+      onTap: () => _showFullTextDialog(context, label, value),
+      child: _buildDetailRow(label, value, theme),
+    );
+  }
+
   Widget _buildDetailRow(String label, String value, ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -171,6 +199,23 @@ class ItemDetailScreen extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _showFullTextDialog(BuildContext context, String title, String text) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(
+          child: Text(text),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Close")),
         ],
       ),
     );
@@ -195,6 +240,8 @@ class ItemDetailScreen extends StatelessWidget {
       BuildContext context, ItemDetailViewModel viewModel, ThemeData theme) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      // 🔥 Enables swipe-to-dismiss
       backgroundColor: theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
