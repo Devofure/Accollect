@@ -46,22 +46,28 @@ class ItemDetailScreen extends StatelessWidget {
                 description: 'This item might have been deleted or moved.',
               );
             }
-            return _buildItemDetails(context, item, theme);
+            return _buildItemDetails(context, item, viewModel);
           },
         ),
       ),
     );
   }
 
-  Widget _buildItemDetails(
-      BuildContext context, ItemUIModel item, ThemeData theme) {
+  Widget _buildItemDetails(BuildContext context, ItemUIModel item,
+      ItemDetailViewModel viewModel) {
+    final theme = Theme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildImageCarousel(
-              item.imageUrls ?? [], item.onlineImageUrls ?? [], theme),
+            item.imageUrls ?? [],
+            item.onlineImageUrls ?? [],
+            theme,
+            viewModel,
+            item.key,
+          ),
           const SizedBox(height: 24),
           _buildSectionCard(theme, '📌 General Info', [
             _buildDetailRow('Name', item.name, theme),
@@ -107,42 +113,43 @@ class ItemDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildImageCarousel(
-      List<String> imageUrls, List<String> onlineImageUrls, ThemeData theme) {
+  Widget _buildImageCarousel(List<String> imageUrls,
+      List<String> onlineImageUrls,
+      ThemeData theme,
+      ItemDetailViewModel viewModel,
+      String itemKey) {
     final allImages = [...imageUrls, ...onlineImageUrls];
     if (allImages.isEmpty) return _buildPlaceholder(theme);
 
-    return Column(
-      children: [
-        CarouselSlider(
-          options: CarouselOptions(
-            height: 300,
-            enableInfiniteScroll: true,
-            enlargeCenterPage: true,
-            viewportFraction: 0.9,
-            autoPlay: true,
-            autoPlayInterval: const Duration(seconds: 4), // ⏳ Slower auto-play
-          ),
-          items: allImages
-              .map((imageUrl) => _buildItemImage(imageUrl, theme))
-              .toList(),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: allImages.asMap().entries.map((entry) {
-            return Container(
-              width: 8,
-              height: 8,
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+    return CarouselSlider(
+      options: CarouselOptions(
+        height: 300,
+        enableInfiniteScroll: true,
+        enlargeCenterPage: true,
+        viewportFraction: 0.9,
+        autoPlay: true,
+      ),
+      items: allImages.map((imageUrl) {
+        return Stack(
+          children: [
+            _buildItemImage(imageUrl, theme),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: GestureDetector(
+                onTap: () => viewModel.updateFavoriteImage(itemKey, imageUrl),
+                child: Icon(
+                  imageUrl == viewModel.favoriteImageUrl
+                      ? Icons.favorite
+                      : Icons.favorite_border,
+                  color: Colors.redAccent,
+                  size: 28,
+                ),
               ),
-            );
-          }).toList(),
-        ),
-      ],
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 

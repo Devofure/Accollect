@@ -14,6 +14,8 @@ class ItemDetailViewModel extends ChangeNotifier {
 
   String? get errorMessage => _errorMessage;
 
+  String? favoriteImageUrl;
+
   ItemDetailViewModel({
     required this.repository,
     required this.initialItem,
@@ -29,6 +31,12 @@ class ItemDetailViewModel extends ChangeNotifier {
         },
       ),
     );
+  }
+
+  Future<void> updateFavoriteImage(String itemKey, String imageUrl) async {
+    await repository.updateFavoriteImage(itemKey, imageUrl);
+    favoriteImageUrl = imageUrl; // Update locally
+    notifyListeners();
   }
 
   Future<void> deleteItem() async {

@@ -25,6 +25,8 @@ abstract class IItemRepository {
   Future<void> deleteItem(String itemKey);
 
   Future<void> deleteAllItems();
+
+  updateFavoriteImage(String itemKey, String imageUrl);
 }
 
 class ItemRepository implements IItemRepository {
@@ -172,5 +174,10 @@ class ItemRepository implements IItemRepository {
         'itemsCount': FieldValue.increment(-1),
       });
     });
+  }
+
+  @override
+  Future<void> updateFavoriteImage(String itemKey, String imageUrl) async {
+    await _itemsRef.doc(itemKey).update({'favoriteImageUrl': imageUrl});
   }
 }

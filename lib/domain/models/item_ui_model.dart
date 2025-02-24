@@ -9,6 +9,7 @@ class ItemUIModel {
   final DateTime addedOn;
   final List<String>? imageUrls;
   final List<String>? onlineImageUrls;
+  final String? favoriteImageUrl;
   final String? collectionKey;
   final String? notes;
   final String? originalPrice;
@@ -23,6 +24,7 @@ class ItemUIModel {
     required this.addedOn,
     this.imageUrls,
     this.onlineImageUrls,
+    this.favoriteImageUrl,
     this.collectionKey,
     this.notes,
     this.originalPrice,
@@ -38,7 +40,8 @@ class ItemUIModel {
       if (category != null) 'category': category,
       if (imageUrls != null && imageUrls!.isNotEmpty) 'imageUrls': imageUrls,
       if (onlineImageUrls != null && onlineImageUrls!.isNotEmpty)
-        'imageUrls': onlineImageUrls,
+        'onlineImageUrls': onlineImageUrls,
+      if (favoriteImageUrl != null) 'favoriteImageUrl': favoriteImageUrl,
       if (collectionKey != null) 'collectionKey': collectionKey,
       if (notes != null) 'notes': notes,
       if (originalPrice != null) 'originalPrice': originalPrice,
@@ -59,6 +62,7 @@ class ItemUIModel {
       imageUrls: (json['imageUrls'] as List?)?.map((e) => e as String).toList(),
       onlineImageUrls:
           (json['onlineImageUrls'] as List?)?.map((e) => e as String).toList(),
+      favoriteImageUrl: json['favoriteImageUrl'],
       collectionKey: json['collectionKey'],
       notes: json['notes'],
       originalPrice: json['originalPrice'],
@@ -68,7 +72,6 @@ class ItemUIModel {
     );
   }
 
-  /// 🔥 Allows copying and modifying properties while keeping original values
   ItemUIModel copyWith({
     String? key,
     String? name,
@@ -78,6 +81,7 @@ class ItemUIModel {
     DateTime? addedOn,
     List<String>? imageUrls,
     List<String>? onlineImageUrls,
+    String? favoriteImageUrl,
     String? collectionKey,
     String? notes,
     String? originalPrice,
@@ -92,6 +96,7 @@ class ItemUIModel {
       addedOn: addedOn ?? this.addedOn,
       imageUrls: imageUrls ?? this.imageUrls,
       onlineImageUrls: onlineImageUrls ?? this.onlineImageUrls,
+      favoriteImageUrl: favoriteImageUrl ?? this.favoriteImageUrl,
       collectionKey: collectionKey ?? this.collectionKey,
       notes: notes ?? this.notes,
       originalPrice: originalPrice ?? this.originalPrice,
@@ -101,6 +106,14 @@ class ItemUIModel {
 }
 
 extension ItemUIModelExtensions on ItemUIModel {
-  String? get firstImageUrl =>
-      imageUrls?.isNotEmpty == true ? imageUrls!.first : null;
+  String? get firstImageUrl {
+    if (favoriteImageUrl != null) {
+      return favoriteImageUrl;
+    } else if (imageUrls?.isNotEmpty == true) {
+      return imageUrls!.first;
+    } else if (onlineImageUrls?.isNotEmpty == true) {
+      return onlineImageUrls!.first;
+    }
+    return null;
+  }
 }
